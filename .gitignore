@@ -1,0 +1,7 @@
+__pycache__/
+/venv
+/upload
+/.idea
+.git/
+*.log
+.data
