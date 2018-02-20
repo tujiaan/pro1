@@ -8,7 +8,9 @@ from . import api
 class InitDatabase(Resource):
     @api.doc('初始化数据库')
     def put(self):
-        print(db.get_tables_for_bind())
-        a=db.drop_all()
+        try:
+            db.drop_all()
+        except:
+            pass
         db.create_all()
         return 'a'
