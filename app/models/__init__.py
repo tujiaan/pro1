@@ -2,10 +2,7 @@ import datetime
 
 from bson import ObjectId
 
-# from app.ext import db
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
+from app.ext import db
 
 def objectid():
     return str(ObjectId())
@@ -77,6 +74,8 @@ class Facility(db.Model):
     ins = db.relationship('Ins')
     count = db.Column(db.Integer, comment='设施数量')
     expire_time = db.Column(db.DateTime, comment='过期时间')
+    knowledges = db.relationship('Knowledge', secondary=t_facility_knowledge,
+                            backref=db.backref('f_knowledges', lazy='dynamic'))
 
 
 class FacilityData(db.Model):
@@ -140,14 +139,14 @@ class Menu(db.Model):
     children = db.relationship("Menu")
     parent = db.relationship("Menu", remote_side=[id])
     label = db.Column(db.String(20), nullable=False, comment='标签')
-    level = db.Column(db.SmallInteger, server_default=db.FetchedValue(), comment='层级')
-    type = db.Column(db.SmallInteger, server_default=db.FetchedValue(), comment='类型')
+    level = db.Column(db.SmallInteger, comment='层级')
+    type = db.Column(db.SmallInteger,  comment='类型')
     style = db.Column(db.String(50), comment='样式')
     disabled = db.Column(db.Boolean, default=False, comment='是否可用')
     roles = db.relationship('Role', secondary=t_role_menu,
-                            backref=db.backref('role', lazy='dynamic'))
-    path = db.Column(db.String(200), server_default=db.FetchedValue(), comment='和url什么区别???')
-    order = db.Column(db.SmallInteger, server_default=db.FetchedValue(), comment='?????')
+                            backref=db.backref('menu_roles', lazy='dynamic'))
+    path = db.Column(db.String(200), comment='和url什么区别???')
+    order = db.Column(db.SmallInteger, comment='?????')
     url = db.Column(db.String(200), comment='和path什么区别???')
 
 
@@ -159,9 +158,9 @@ class Role(db.Model):
     disabled = db.Column(db.Boolean, default=True, comment='是否可用')
     description = db.Column(db.String(60), comment='权限描述')
     users = db.relationship('User', secondary=t_user_role,
-                            backref=db.backref('user', lazy='dynamic'))
+                            backref=db.backref('role_users', lazy='dynamic'))
     menus = db.relationship('Menu', secondary=t_role_menu,
-                            backref=db.backref('menu', lazy='dynamic'))
+                            backref=db.backref('role_menus', lazy='dynamic'))
 
 
 class Sensor(db.Model):
@@ -206,7 +205,7 @@ class User(db.Model):
     registion_id = db.Column(db.String(50), comment='?????')
     real_name = db.Column(db.String(50), comment='姓名')
     roles = db.relationship('Role', secondary=t_user_role,
-                            backref=db.backref('role', lazy='dynamic'))
+                            backref=db.backref('user_roles', lazy='dynamic'))
     manger_home = db.relationship('Home', lazy='dynamic')
     manger_ins = db.relationship('Ins', lazy='dynamic')
 
@@ -218,6 +217,6 @@ class UserAlarmRecord(db.Model):
     type = db.Column(db.Integer, default=0, comment='信息类型,0:消防,1,吧啦吧啦,2吧啦吧啦')
     content = db.Column(db.String(50), comment='')
     community_id = db.Column(db.String(24), db.ForeignKey('community.id'))
-    community = db.relationship('Comunity')
+    community = db.relationship('Community')
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='发布人id')
     user = db.relationship('User')
