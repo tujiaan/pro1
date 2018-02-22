@@ -77,8 +77,8 @@ class PasswordView(Resource):
 @api.route('/profile/')
 class ProfileView(Resource):
     @api.doc('获取用户信息')
-    @api.response(200, 'ok')
     @api.marshal_with(user_model)
+    @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
     @user_require
     def get(self):
