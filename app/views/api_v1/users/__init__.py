@@ -5,13 +5,10 @@ from app.ext import db
 from app.models import User
 from app.utils.auth import user_require
 from app.utils.auth.jwt import encode_jwt
-from .models import *
 from .parsers import *
 
 api = Namespace('User', description='用户相关接口')
-
-print(api.model('UserModel', {}))
-
+from .models import *
 
 @api.route('/register/')
 class RegisterView(Resource):

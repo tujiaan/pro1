@@ -1,6 +1,8 @@
-from flask_restplus import Model, fields
+from flask_restplus import fields
 
-user_model = Model('UserModel', {
+from . import api
+
+user_model = api.model('UserModel', {
     'id': fields.String,
     'disabled': fields.Boolean,
     'contract_tel': fields.String,
