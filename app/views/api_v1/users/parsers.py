@@ -7,3 +7,7 @@ login_parser.add_argument('password', type=str, help='密码', required=True, lo
 register_parser = login_parser.copy()
 register_parser.add_argument('contract_tel', type=str, help='电话号码', required=True, location='form')
 register_parser.add_argument('email', type=str, help='邮箱', required=True, location='form')
+
+password_parser = RequestParser()
+password_parser.add_argument('old_password', type=str, help='原密码', required=True, location='form')
+password_parser.add_argument('password', type=str, help='新密码', required=True, location='form')

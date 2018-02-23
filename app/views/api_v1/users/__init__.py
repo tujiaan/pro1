@@ -66,9 +66,15 @@ class PasswordView(Resource):
 
     @api.doc('修改密码')
     @api.header('jwt', 'JSON Web Token')
+    @api.expect(password_parser)
     @user_require
     def post(self):
-        pass
+        u = g.user
+        args = password_parser.parse_args()
+        if u.password == args.get('old_password'):
+            u.password = args.get('password')
+            db.session.commit()
+        return None, 204
 
 
 @api.route('/profile/')
