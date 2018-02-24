@@ -1,7 +1,7 @@
 from flask_restplus import Model, fields
 from . import api
 import base64
-#from ..facilities.models  import *
+
 from ..facilities.models import  facility_model
 ins_model = api.model('InsModel', {
     'id': fields.String,

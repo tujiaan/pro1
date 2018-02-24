@@ -7,7 +7,6 @@ facility_model = api.model('FacilityModel', {
     'ins_id':fields.String,
     'count':fields.Integer,
     'expire_time':fields.DateTime,
-    'institute':fields.Nested(ins_model),
-   # 'knowledge':fields.List(fields.Nested(knowledge_model))
+
 
 })

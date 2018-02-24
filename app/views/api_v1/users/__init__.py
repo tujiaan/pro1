@@ -112,14 +112,46 @@ class ProfileView(Resource):
             db.session.commit()
         return None, 204
 
-    api.route('/  /')
+    @api.doc('')
+    @api.route('/')
     class UsersFindView(Resource):
+       @api.marshal_with(user_model, as_list=True)
        @api.doc('查询所有用户信息')
        @api.marshal_with(user_model)
        @api.response(200, 'ok')
        def get(self):
-          list= User.query.all()
-          print(len(list))
-          return
+          list= User.query.offset(0).limit(5)
+
+          return list
+
+       @api.doc('增加用户')
+       @api.marshal_with(user_model)
+       @api.expect(register_parser)
+       @api.response(200, 'ok')
+       def post(self):
+           args=register_parser.parse_args()
+           user=User(**args)
+           db.session.add(user)
+           db.session.commit()
+           return user,200
 
 
+    @api.doc('根据id对用户操作')
+    @api.route('/<userid>')
+    class user(Resource):
+     @api.doc('根据id查询用户信息')
+     @api.marshal_with(user_model)
+     @api.response(200, 'ok')
+
+     def get(self,userid):
+         user=User.query.filter_by(id=userid).first()
+         return user
+
+     @api.doc('根据id删除用户')
+     @api.marshal_with(user_model)
+     @api.response(200, 'ok')
+     def delete(self,userid ):
+         user = User.query.filter_by(id=userid).first()
+         db.session.delete(user)
+         db.session.commit()
+         return None,200
