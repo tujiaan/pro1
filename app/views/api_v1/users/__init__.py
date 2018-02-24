@@ -113,7 +113,7 @@ class ProfileView(Resource):
         return None, 204
 
     api.route('/  /')
-    class usersFindView(Resource):
+    class UsersFindView(Resource):
        @api.doc('查询所有用户信息')
        @api.marshal_with(user_model)
        @api.response(200, 'ok')
