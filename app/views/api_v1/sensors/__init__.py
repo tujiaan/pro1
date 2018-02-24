@@ -2,6 +2,7 @@ from flask_restplus import Namespace
 from flask_restplus import  Resource
 from app.ext import db
 from app.models import Facility, Sensor
+from app.utils.tools.page_range import page_range
 from app.views.api_v1.sensors.parsers import sensor_parser, sensor_parser1
 
 api = Namespace('Sensors', description='传感器相关接口')
@@ -13,8 +14,9 @@ class SensorsView(Resource):
     @api.doc('查询传感器列表')
     @api.marshal_with(sensor_model)
     @api.response(200, 'ok')
+    @page_range()
     def get(self):
-        list = Sensor.query.offset(0).limit(5)
+        list = Sensor.query
         return list
 
     @api.doc('新增传感器')
