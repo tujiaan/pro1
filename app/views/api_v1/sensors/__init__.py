@@ -13,6 +13,7 @@ class SensorsView(Resource):
     @api.marshal_with(sensor_model, as_list=True)
     @api.doc('查询传感器列表')
     @api.marshal_with(sensor_model)
+    @api.doc(params={'from': '开始', 'count': '数量'})
     @api.response(200, 'ok')
     @page_range()
     def get(self):
