@@ -11,3 +11,12 @@ register_parser.add_argument('email', type=str, help='邮箱', required=True, lo
 password_parser = RequestParser()
 password_parser.add_argument('old_password', type=str, help='原密码', required=True, location='form')
 password_parser.add_argument('password', type=str, help='新密码', required=True, location='form')
+
+telephone_parser = RequestParser()
+telephone_parser.add_argument('old_contract_tel', type=str, help='原电话', required=True, location='form')
+telephone_parser.add_argument('contract_tel', type=str, help='新电话', required=True, location='form')
+
+email_parser = RequestParser()
+email_parser.add_argument('old_email', type=str, help='原邮箱', required=True, location='form')
+email_parser.add_argument('email', type=str, help='新邮箱', required=True, location='form')
+
