@@ -1,7 +1,7 @@
 import flask_restplus
 
 from app.views import api_v1_bp as api_bp
-from .facilities import api as facility_ns
+from app.views.api_v1.facilities import api as facility_ns
 from .gateways import api as gateway_ns
 from .homes import api as home_ns
 from .institutes import api as institut_ns

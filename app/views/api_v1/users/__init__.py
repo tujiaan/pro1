@@ -5,6 +5,7 @@ from app.ext import db
 from app.models import User
 from app.utils.auth import user_require
 from app.utils.auth.jwt import encode_jwt
+from app.utils.tools.page_range import page_range
 from .parsers import *
 
 api = Namespace('User', description='用户相关接口')
@@ -115,12 +116,14 @@ class ProfileView(Resource):
     @api.doc('')
     @api.route('/')
     class UsersFindView(Resource):
+       @api.doc(params={'from':'开始','count':'数量'})
        @api.marshal_with(user_model, as_list=True)
        @api.doc('查询所有用户信息')
        @api.marshal_with(user_model)
        @api.response(200, 'ok')
+       @page_range()
        def get(self):
-          list= User.query.offset(0).limit(5)
+          list= User.query
 
           return list
 
