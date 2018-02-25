@@ -7,6 +7,7 @@ facility_model = api.model('FacilityModel', {
     'ins_id':fields.String,
     'count':fields.Integer,
     'expire_time':fields.DateTime,
+    'ins':fields.Nested(ins_model)
 
 
 })
