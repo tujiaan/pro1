@@ -12,7 +12,7 @@ from .models import *
 
 @api.route('/')
 class FacilitiesDataView(Resource):
-    @api.doc('查询设施列表')
+    @api.doc('查询设施列表')####ok
    # @api.marshal_with(facility_data_model)
     @api.marshal_with(facility_data_model, as_list=True)
     @api.doc(params={'from': '开始', 'count': '数量'})
@@ -34,34 +34,36 @@ class FacilitiesDataView(Resource):
 
 @api.route('/<facilityid>')
 class FacilityDataView(Resource):
-    @api.doc('根据设施id查询详情')
+    @api.doc('根据设施id查询详情')##ok
     @api.marshal_with(facility_data_model)
     @api.response(200,'ok')
     def get(self,facilityid):
-        facility_data=FacilityData.query.filter_by(id=facilityid)
+        facility_data=FacilityData.query.filter_by(id=facilityid).first()
         return facility_data,200
-    @api.doc('更新设施详情')
+    @api.doc('更新设施详情')##ok
     @api.expect(f1_parser)
     @api.response(200,'ok')
     def put(self,facilityid):
-        facility_data1=FacilityData.query.filter_by(id=facilityid)
+        facility_data1=FacilityData.query.filter_by(id=facilityid).first()
         args=f1_parser.parse_args()
         facility_data = FacilityData()
         facility_data.facility_name = args['facility_name']
         p = args['facility_picture']
-        facility_data.facility_picture = p.read()
-        if facility_data.facility_name:
+        if p :
+         facility_data.facility_picture = p.read()
+        if facility_data.facility_name is not None:
             facility_data1.facility_name=facility_data.facility_name
         else:pass
-        if facility_data.facility_picture:
+        if facility_data.facility_picture is not None:
             facility_data1.facility_picture=  facility_data.facility_picture
         else:pass
         db.session.commit()
         return None,200
-    @api.doc('删除设施')
+
+    @api.doc('删除设施')##ok
     @api.response(200, 'ok')
     def delete(self,facilityid):
-        facility_data = FacilityData.query.filter_by(id=facilityid)
+        facility_data = FacilityData.query.filter_by(id=facilityid).first()
         db.session.delete(facility_data)
         db.session.commit()
         return None,200
