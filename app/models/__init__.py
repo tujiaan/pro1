@@ -69,7 +69,7 @@ class Facility(db.Model):
     __tablename__ = 'facility'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     facility_id = db.Column(db.String(24), db.ForeignKey('facility_data.id'), comment='设施id')
-    facility = db.relationship('Ins')
+    facility = db.relationship('FacilityData')
     ins_id = db.Column(db.String(24), db.ForeignKey('ins.id'), comment='机构id')
     ins = db.relationship('Ins')
     count = db.Column(db.Integer, comment='设施数量')

@@ -5,6 +5,7 @@ from app.ext import db
 from app.models import User
 from app.utils.auth import user_require
 from app.utils.auth.jwt import encode_jwt
+from app.utils.tools.page_range import page_range
 from .parsers import *
 
 api = Namespace('User', description='用户相关接口')
@@ -87,8 +88,73 @@ class ProfileView(Resource):
     def get(self):
         return g.user
 
-    @api.doc('修改用户信息')
+    @api.doc('修改用户电话')
     @api.header('jwt', 'JSON Web Token')
     @user_require
+    @api.expect(telephone_parser)
     def post(self):
-        pass
+        u = g.user
+        args = telephone_parser.parse_args()
+        if u.contract_tel == args.get('old_contract_tel'):
+            u.contract_tel= args.get('contract_tel')
+            db.session.commit()
+        return None, 204
+
+
+    @api.doc('修改用户邮箱')
+    @api.header('jwt', 'JSON Web Token')
+    @user_require
+    @api.expect(email_parser)
+    def post(self):
+        u = g.user
+        args = email_parser.parse_args()
+        if u.email == args.get('old_email'):
+            u.email= args.get('email')
+            db.session.commit()
+        return None, 204
+
+    @api.doc('')
+    @api.route('/')
+    class UsersFindView(Resource):
+       @api.doc(params={'from':'开始','count':'数量'})
+       @api.marshal_with(user_model, as_list=True)
+       @api.doc('查询所有用户信息')
+       @api.marshal_with(user_model)
+       @api.response(200, 'ok')
+       @page_range()
+       def get(self):
+          list= User.query
+
+          return list
+
+       @api.doc('增加用户')
+       @api.marshal_with(user_model)
+       @api.expect(register_parser)
+       @api.response(200, 'ok')
+       def post(self):
+           args=register_parser.parse_args()
+           user=User(**args)
+           db.session.add(user)
+           db.session.commit()
+           return user,200
+
+
+    @api.doc('根据id对用户操作')
+    @api.route('/<userid>')
+    class user(Resource):
+     @api.doc('根据id查询用户信息')
+     @api.marshal_with(user_model)
+     @api.response(200, 'ok')
+
+     def get(self,userid):
+         user=User.query.filter_by(id=userid).first()
+         return user
+
+     @api.doc('根据id删除用户')
+     @api.marshal_with(user_model)
+     @api.response(200, 'ok')
+     def delete(self,userid ):
+         user = User.query.filter_by(id=userid).first()
+         db.session.delete(user)
+         db.session.commit()
+         return None,200
