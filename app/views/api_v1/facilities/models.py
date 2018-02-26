@@ -11,10 +11,11 @@ facility_model = api.model('FacilityModel', {
 
 
 })
-facility_data_picture_model=api.model('FacilityDataModel',{
+facility_data_picture_model=api.model('FacilityPictureModel',{
          'id':fields.String,
-         'facility_picture':fields.String(attribute=lambda x :base64.b64encode(x.facility_picture))
+         'facility_picture':fields.String(attribute=lambda x :base64.b64encode(x ))
 })
+
 facility_data_model = api.model('FacilityDataModel', {
     'id': fields.String,
     'facility_name':fields.String,
