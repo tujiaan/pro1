@@ -9,7 +9,7 @@ home_model = api.model('HomeModel', {
     'detail_address': fields.String,
     'link_name': fields.String,
     'telephone': fields.String,
-    'longtitude': fields.Float,
+    'longitude': fields.Float,
     'latitude':fields.Float,
     'alternate_phone':fields.String
 })
