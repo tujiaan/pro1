@@ -31,6 +31,12 @@ t_user_home = db.Table(
     db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
     db.Column('home_id', db.String(24), db.ForeignKey('home.id'))
 )
+t_user_ins = db.Table(
+    'user_ins',
+    db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
+    db.Column('ins_id', db.String(24), db.ForeignKey('ins.id'))
+)
+
 
 
 class Ins(db.Model):
@@ -180,9 +186,9 @@ class SensorAlarm(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True, comment='')
     sensor_id = db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='网关id')
     sensor = db.relationship('Sensor')
-    aobject = db.Column(db.String(50), comment='报警项目')
-    number = db.Column(db.String(11), comment='报警数值')
-    alm_time = db.Column(db.DateTime, comment='报警时间')
+    alarm_object = db.Column(db.String(50), comment='报警项目')
+    alarm_value = db.Column(db.Float, comment='报警数值')
+    alarm_time = db.Column(db.DateTime, comment='报警时间')
     confirm_time = db.Column(db.DateTime, comment='确认时间')
     is_timeout = db.Column(db.Boolean, default=False, comment='是否超时')
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='确认人id')

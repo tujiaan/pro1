@@ -37,7 +37,7 @@ class SensorsView(Resource):
         @api.marshal_with(sensor_model)
         @api.response(200, 'ok')
         def get(self,sensorid):
-            sensor=Sensor.query.filter_by(id=sensorid).first()
+            sensor=Sensor.query.get_or_404(sensorid)
             return sensor,200
 
         @api.doc('删除传感器')

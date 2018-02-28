@@ -37,9 +37,10 @@ class InstitutesViews(Resource):
         institute.ins_address=args['ins_address']
         if args['ins_picture']:
             institute.ins_picture=args['ins_picture'].read()
-            db.session.add(institute)
-            db.session.commit()
-            return None,200
+        else:pass
+        db.session.add(institute)
+        db.session.commit()
+        return None,200
 
 @api.route('/<insid>')
 class InstituteView(Resource):
@@ -47,7 +48,7 @@ class InstituteView(Resource):
     @api.marshal_with(institute_model)
     @api.response(200,'ok')
     def get(self,insid):
-        institute=Ins.query.filter_by(id=insid).first()
+        institute=Ins.query.get_or_404(insid)
         return institute,200
 
 
@@ -55,39 +56,40 @@ class InstituteView(Resource):
     @api.expect(institutes_parser1)
     @api.response(200,'ok')
     def put(self,insid):
-        institute = Ins.query.filter_by(id=insid).first()
+        institute = Ins.query.get_or_404(insid)
         args = institutes_parser1.parse_args()
-        if args['name'] :
+        if 'name'in args and args['name'] :
             institute.name=args['name']
         else:pass
-        if args['admin_user_id']:
+        if 'admin_user_id'in args and args['admin_user_id']:
             institute.admin_user_id=args['admin_user_id']
         else:pass
-        if args['type']:
+        if 'type'in args and args['type']:
             institute.type=args['type']
         else:pass
-        if args['ins_address']:
+        if 'ins_address'in args and args['ins_address']:
             institute.ins_address=args['ins_address']
         else:pass
-        if args['note']:
+        if 'note'in args and args['note']:
             institute.note=args['note']
         else:pass
-        if args['longitude']:
+        if 'longitude'in args and args['longitude']:
             institute.longitude=args['longitude']
         else:pass
-        if args['latitude']:
+        if 'latitude'in args and args['latitude']:
             institute.latitude=args['latitude']
         else:pass
-        if args['ins_picture']:
+        try:
             institute.ins_picture = args['ins_picture'].read()
-        else:pass
-        db.session.commit(institute)
+        except:
+            pass
+        db.session.commit()
         return None,200
 
     @api.doc('根据id删除机构')
     @api.response(200,'ok')
     def delete(self,insid):
-        institute = Ins.query.filter_by(id=insid).first()
+        institute = Ins.query.get_or_404(insid)
         db.session.delete(institute)
         db.session.commit()
         return None,200
