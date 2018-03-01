@@ -5,6 +5,7 @@ from app.models import Ins
 from app.utils.tools.page_range import page_range
 from app.views.api_v1.institutes.parser import institutes_parser, institutes_parser1
 
+
 api = Namespace('Institutes', description='组织相关接口')
 #from app.views.api_v1.institutes.model import institute_model
 from .model import *
@@ -93,7 +94,13 @@ class InstituteView(Resource):
         db.session.delete(institute)
         db.session.commit()
         return None,200
-
+@api.route('/<insid>/user')
+class InsUserView(Resource):
+    @api.doc('查询机构下面的用户列表')
+    @api.marshal_with(user_model,as_list=True)
+    def get(self,insid):
+        ins=Ins.query.get_or_404(insid)
+        return ins.user,200
 
 
 

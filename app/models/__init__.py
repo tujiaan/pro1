@@ -140,6 +140,8 @@ class Knowledge(db.Model):
     type = db.Column(db.String(50), comment='知识类型   (0.自救 1.逃生 2.灭火 3.新闻 4.其他)')
     content = db.Column(db.Text, comment='知识正文')
     title = db.Column(db.String(50), comment='知识标题')
+    facility=db.relationship('Facility',secondary=t_facility_knowledge,
+                       backref=db.backref('f_facility',lazy='dynamic'))
 
 
 class Menu(db.Model):

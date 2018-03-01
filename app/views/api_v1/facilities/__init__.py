@@ -121,6 +121,14 @@ class FacilitesView(Resource):
             return None,200
 
 ##################################################@api.doc('查询机构设施关联)
+@api.route('/<facilityid>/knowledgedata')
+class FacilityKnowledgeView(Resource):
+    @api.doc('查询设施的知识')
+    @api.marshal_with( knowledges_model,as_list=True)
+    @api.response(200,'ok')
+    def get(self,facilityid):
+        facility=Facility.query.get_or_404(facilityid)
+        return facility.knowledges,200
 
 
 

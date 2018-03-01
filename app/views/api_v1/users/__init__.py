@@ -6,7 +6,8 @@ from app.models import User
 from app.utils.auth import user_require
 from app.utils.auth.jwt import encode_jwt
 from app.utils.tools.page_range import page_range
-from app.views.api_v1.homes import home_model
+from app.views.api_v1.institutes import institute_model
+from app.views.api_v1.roles import role_model
 
 from .parsers import *
 
@@ -160,6 +161,15 @@ class ProfileView(Resource):
          db.session.delete(user)
          db.session.commit()
          return None,200
+
+@api.route('/<userid>/ins')
+class UserHomeView(Resource):
+    @api.doc('查询用户名下的机构')
+    @api.marshal_with(institute_model,as_list=True)
+    def get(self,userid):
+        user=User.query.get_or_404(userid)
+        return user.ins,200
+
 @api.route('/<userid>/home')
 class UserHomeView(Resource):
     @api.doc('查询用户名下的家庭')
@@ -167,3 +177,10 @@ class UserHomeView(Resource):
     def get(self,userid):
         user=User.query.get_or_404(userid)
         return user.home,200
+@api.route('/<userid>/role')
+class UserRoleView(Resource):
+    @api.doc('查询用户的角色')
+    @api.marshal_with(role_model,as_list=True)
+    def get(self,userid):
+        user=User.query.get_or_404(userid)
+        return user.roles,200
