@@ -4,6 +4,7 @@ from app.ext import db
 from app.models import Home
 from app.utils.tools.page_range import page_range
 from app.views.api_v1.homes.parser import home_parser, home_parser1
+from app.views.api_v1.users import user_model
 
 api = Namespace('Home', description='家庭相关接口')
 from.model import *
@@ -85,6 +86,15 @@ class HomeView(Resource):
 
         db.session.commit()
         return None,200
+@api.route('/<homeid>/users')
+class HomeUserView(Resource):
+    api.doc('查找家庭下的用户')
+    @api.marshal_with(user_model,as_list=True)
+    def get(self,homeid):
+        home=Home.query.get_or_404(homeid)
+        return home.user,200
+
+
 
 
 

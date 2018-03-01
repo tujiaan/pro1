@@ -6,6 +6,8 @@ from app.models import User
 from app.utils.auth import user_require
 from app.utils.auth.jwt import encode_jwt
 from app.utils.tools.page_range import page_range
+from app.views.api_v1.homes import home_model
+
 from .parsers import *
 
 api = Namespace('User', description='用户相关接口')
@@ -158,3 +160,10 @@ class ProfileView(Resource):
          db.session.delete(user)
          db.session.commit()
          return None,200
+@api.route('/<userid>/home')
+class UserHomeView(Resource):
+    @api.doc('查询用户名下的家庭')
+    @api.marshal_with(home_model,as_list=True)
+    def get(self,userid):
+        user=User.query.get_or_404(userid)
+        return user.home,200
