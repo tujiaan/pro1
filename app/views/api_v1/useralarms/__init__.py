@@ -1,0 +1,61 @@
+from flask_restplus import Namespace, Resource
+
+from app.ext import db
+from app.models import UserAlarmRecord
+from app.utils.tools.page_range import page_range
+from app.views.api_v1.useralarms.parser import useralarmrecord_parser, useralarmrecord1_parser
+
+api=Namespace('UserAlarmsRecords',description='用户报警记录相关操作')
+from .models import *
+@api.route('/')
+class UserAlarmRecordsView(Resource):
+    @api.doc('查询用户报警记录列表')
+    @api.marshal_with(useralarmrecord_model,as_list=True)
+    @api.response(200,'ok')
+    @api.doc(params={'from':'开始','count':'数量'})
+    @page_range()
+    def get(self):
+        list=UserAlarmRecord.query
+        return list,200
+    @api.doc('新增用户报警记录(用户提交传感器报警信息)')
+    @api.expect(useralarmrecord_parser,validate=True)
+    @api.response(200,'ok')
+    def post(self):
+        args=useralarmrecord_parser.parse_args()
+        useralarmrecord=UserAlarmRecord(**args)
+        db.session.add(useralarmrecord)
+        db.session.commit()
+        return None,200
+@api.route('/<useralarmrecordid>')
+class UserAlarmRecordView(Resource):
+    # 查询用户报警记录的详情？？？应该是对应传感器的报警详情
+    @api.doc('更新用户报警信息（报警确认如果是的要加if_confirm字段）')
+    @api.expect(useralarmrecord1_parser)
+    @api.response(200,'ok')
+    def put(self,useralarmrecordid):
+        useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
+        args=useralarmrecord1_parser.parse_args()
+        if args['type']:
+            useralarmrecord.type=args['type']
+        else:pass
+        if args['content']:
+            useralarmrecord.content=args['content']
+        else:pass
+        if args['community_id']:
+            useralarmrecord.community_id=args['community_id']
+        else:pass
+        if args['user_id']:
+            useralarmrecord.user_id=args['user_id']
+        else:pass
+        db.session.commit()
+        return None,200
+
+    @api.doc('删除用户报警记录')
+    @api.response(200, 'ok')
+    def delete(self,useralarmrecordid):
+        useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
+        db.session.delete(useralarmrecord)
+        db.session.commit()
+        return None,200
+
+

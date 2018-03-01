@@ -31,6 +31,12 @@ t_user_home = db.Table(
     db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
     db.Column('home_id', db.String(24), db.ForeignKey('home.id'))
 )
+t_user_ins = db.Table(
+    'user_ins',
+    db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
+    db.Column('ins_id', db.String(24), db.ForeignKey('ins.id'))
+)
+
 
 
 class Ins(db.Model):
@@ -45,8 +51,10 @@ class Ins(db.Model):
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     longtitude = db.Column(db.Float(asdecimal=True), comment='经度')
     # administrator_Id = db.Column(db.String(50),comment='管理员?????也用下面的方式吧')
-    admin_user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='管理员id')
-    admin_user = db.relationship('User')
+   # user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='用户id')
+    user = db.relationship('User', secondary=t_user_ins,
+                          backref=db.backref('f_user', lazy='dynamic'))
+
 
 
 class Community(db.Model):
@@ -111,12 +119,15 @@ class Home(db.Model):
     name = db.Column(db.String(255), comment='家庭名称')
     community_id = db.Column(db.String(24), db.ForeignKey('community.id'), comment='社区id')
     community = db.relationship('Community')
-    admin_user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='管理员id')
-    admin_user = db.relationship('User')
-    detail_adress = db.Column(db.String(255), comment='家庭地址')
+    #user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='用户id')
+   # user = db.relationship('User')
+    user = db.relationship('User', secondary=t_user_home,
+                          backref=db.backref('f1_user', lazy='dynamic'))
+
+    detail_address = db.Column(db.String(255), comment='家庭地址')
     link_name = db.Column(db.String(50), comment='主人姓名')
     telephone = db.Column(db.String(50), comment='电话号码')
-    longtitude = db.Column(db.Float(asdecimal=True), comment='经度')
+    longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     alternate_phone = db.Column(db.String(50), comment='备用电话')
     gateways = db.relationship('Gateway', lazy='dynamic')
@@ -180,9 +191,9 @@ class SensorAlarm(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True, comment='')
     sensor_id = db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='网关id')
     sensor = db.relationship('Sensor')
-    aobject = db.Column(db.String(50), comment='报警项目')
-    number = db.Column(db.String(11), comment='报警数值')
-    alm_time = db.Column(db.DateTime, comment='报警时间')
+    alarm_object = db.Column(db.String(50), comment='报警项目')
+    alarm_value = db.Column(db.Float, comment='报警数值')
+    alarm_time = db.Column(db.DateTime, comment='报警时间')
     confirm_time = db.Column(db.DateTime, comment='确认时间')
     is_timeout = db.Column(db.Boolean, default=False, comment='是否超时')
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='确认人id')
@@ -206,8 +217,14 @@ class User(db.Model):
     real_name = db.Column(db.String(50), comment='姓名')
     roles = db.relationship('Role', secondary=t_user_role,
                             backref=db.backref('user_roles', lazy='dynamic'))
-    manger_home = db.relationship('Home', lazy='dynamic')
-    manger_ins = db.relationship('Ins', lazy='dynamic')
+    #home = db.relationship('Home', lazy='dynamic')
+    home = db.relationship('Home', secondary=t_user_home,
+                         backref=db.backref('f_home', lazy='dynamic'))
+
+
+    ins = db.relationship('Ins',  secondary=t_user_ins,
+                        backref=db.backref('f_ins', lazy='dynamic'))
+
 
 
 class UserAlarmRecord(db.Model):
