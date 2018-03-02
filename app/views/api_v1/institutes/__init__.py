@@ -3,6 +3,7 @@ from flask_restplus import Namespace, Resource
 from app.ext import db
 from app.models import Ins
 from app.utils.tools.page_range import page_range
+from app.views.api_v1.communities import community_model
 from app.views.api_v1.institutes.parser import institutes_parser, institutes_parser1
 
 
@@ -101,6 +102,16 @@ class InsUserView(Resource):
     def get(self,insid):
         ins=Ins.query.get_or_404(insid)
         return ins.user,200
+
+@api.route('/<insid>/community')
+class InsCommunityView(Resource):
+    @api.doc('查询机构覆盖的社区')
+    @api.marshal_with(community_model,as_list=True)
+    @api.response(200,'ok')
+    def get(self,insid):
+        ins=Ins.query.get_or_404(insid)
+        return ins.community.all(),200
+
 
 
 

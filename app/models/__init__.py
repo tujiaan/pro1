@@ -49,7 +49,7 @@ class Ins(db.Model):
     ins_address = db.Column(db.String(255), comment='机构地址')
     note = db.Column(db.Text, comment='备注')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
-    longtitude = db.Column(db.Float(asdecimal=True), comment='经度')
+    longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     # administrator_Id = db.Column(db.String(50),comment='管理员?????也用下面的方式吧')
    # user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='用户id')
     user = db.relationship('User', secondary=t_user_ins,
@@ -62,11 +62,11 @@ class Community(db.Model):
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     name = db.Column(db.String(255), comment='社区名')
-    cmunity_pic = db.Column(db.LargeBinary, comment='社区图片')
-    detail_adress = db.Column(db.String(255), comment='详细地址')
+    community_picture = db.Column(db.LargeBinary, comment='社区图片')
+    detail_address = db.Column(db.String(255), comment='详细地址')
     save_distance = db.Column(db.Integer, comment='求救距离')
     eva_distance = db.Column(db.Integer, comment='疏散距离')
-    longtitude = db.Column(db.Float(asdecimal=True), comment='经度')
+    longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     ins_id = db.Column(db.String(24), db.ForeignKey('ins.id'), comment='机构id')
     ins = db.relationship('Ins')
@@ -94,12 +94,7 @@ class FacilityData(db.Model):
     facility_picture = db.Column(db.LargeBinary, comment='设施图片')
 
 
-class FamilyMember(db.Model):
-    __tablename__ = 'family_member'
-    ##???? 这表是做什么的###
-    id = db.Column(db.String(50), primary_key=True, comment='')
-    member_name = db.Column(db.String(11), comment='')
-    member_tel = db.Column(db.String(50), comment='')
+
 
 
 class Gateway(db.Model):
@@ -212,7 +207,7 @@ class User(db.Model):
     username = db.Column(db.String(20), index=True, comment='用户名)')
     password = db.Column(db.String(32), comment='密码')
     email = db.Column(db.String(60), comment='email')
-    salt = db.Column(db.String(50), comment='不知道有没有必要')
+    salt = db.Column(db.String(50), comment='加密盐')
     createTime = db.Column(db.DateTime, default=datetime.datetime.now, comment='创建时间')
     lastTime = db.Column(db.DateTime, comment='最后登陆时间')
     registion_id = db.Column(db.String(50), comment='?????')
