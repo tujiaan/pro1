@@ -52,6 +52,7 @@ class Ins(db.Model):
     longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     # administrator_Id = db.Column(db.String(50),comment='管理员?????也用下面的方式吧')
    # user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='用户id')
+    community=db.relationship('Community')
     user = db.relationship('User', secondary=t_user_ins,
                           backref=db.backref('f_user', lazy='dynamic'))
 

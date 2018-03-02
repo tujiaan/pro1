@@ -110,7 +110,7 @@ class InsCommunityView(Resource):
     @api.response(200,'ok')
     def get(self,insid):
         ins=Ins.query.get_or_404(insid)
-        return ins.community.all(),200
+        return ins.community,200
 
 
 
