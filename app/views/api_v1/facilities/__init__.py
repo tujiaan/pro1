@@ -1,7 +1,7 @@
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Facility, FacilityData
+from app.models import Facility, FacilityData,Knowledge
 from app.utils.tools.page_range import page_range
 from app.views.api_v1.facilities.parser import facility_parser, facility_parser1, f_parser, f1_parser
 
@@ -32,7 +32,7 @@ class FacilitiesDataView(Resource):
         db.session.commit()
         return None,200
 
-@api.route('/<facilityid>')
+@api.route('/<facilityid>/')
 class FacilityDataView(Resource):
     @api.doc('根据设施id查询详情')##ok
     @api.marshal_with(facility_data_model)
@@ -93,7 +93,7 @@ class FacilitesInsView(Resource):
         db.session.commit()
         return  None,200
 
-@api.route('/facility-ins/<facilityid>')
+@api.route('/facility-ins/<facilityid>/')
 class FacilitesView(Resource):
         @api.doc('删除机构设施关联')##ok
         @api.response(200, 'ok')
@@ -120,15 +120,50 @@ class FacilitesView(Resource):
             db.session.commit()
             return None,200
 
-##################################################@api.doc('查询机构设施关联)
-@api.route('/<facilityid>/knowledge')
-class FacilityKnowledgeView(Resource):
+
+@api.route('/<facilityid>/knowledges/')
+class FacilityKnowledgesView(Resource):
     @api.doc('查询设施的知识')
     @api.marshal_with( knowledges_model,as_list=True)
+    @ api.doc(params={'from': '开始', 'count': '数量'})
+    @ page_range()
     @api.response(200,'ok')
     def get(self,facilityid):
         facility=Facility.query.get_or_404(facilityid)
         return facility.knowledges.all(),200
+
+@api.route('/<facilityid>/knowledges/<knowledgeid>/')
+class FacilityKnowledgeView(Resource):
+    @api.doc('给设施绑定知识')
+    @api.response(200,'ok')
+    @api.response(404,'Not Found')
+    def post(self,facilityid,knowledgeid):
+       # try:
+            facility=Facility.query.get_or_404(facilityid)
+            print(facility)
+            knowledge=Knowledge.query.get_or_404(knowledgeid)
+            print(knowledge)
+            facility.knowledges.append(knowledge)
+
+            db.session.commit()
+            return '绑定成功',200
+      #  except:
+         #   return '已经绑定'
+
+    @api.doc('解除设施绑定知识')
+    @api.response(200, 'ok')
+    @api.response(404, 'Not Found')
+    def delete(self, facilityid, knowledgeid):
+        try:
+            facility = Facility.query.get_or_404(facilityid)
+            knowledge = Knowledge.query.get_or_404(knowledgeid)
+
+            facility.knowledges.remove(knowledge)
+            db.session.commit()
+            return None,200
+        except:
+          return'已经解除'
+
 
 
 

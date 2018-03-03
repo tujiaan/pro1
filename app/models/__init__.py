@@ -11,30 +11,36 @@ def objectid():
 t_user_role = db.Table(
     'user_role',
     db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
-    db.Column('role_id', db.String(24), db.ForeignKey('role.id'))
+    db.Column('role_id', db.String(24), db.ForeignKey('role.id')),
+    db.UniqueConstraint('user_id', 'role_id', name='uix_role_user')
 )
 
 t_role_menu = db.Table(
     'role_menu',
     db.Column('role_id', db.String(24), db.ForeignKey('role.id')),
-    db.Column('menu_id', db.String(24), db.ForeignKey('menu.id'))
+    db.Column('menu_id', db.String(24), db.ForeignKey('menu.id')),
+    db.UniqueConstraint('menu_id', 'role_id', name='uix_role_menu')
+
 )
 
 t_facility_knowledge = db.Table(
     'facility_knowledge',
     db.Column('knowledge_id', db.String(24), db.ForeignKey('knowledge.id')),
-    db.Column('facility_id', db.String(24), db.ForeignKey('facility.id'))
+    db.Column('facility_id', db.String(24), db.ForeignKey('facility.id')),
+    db.UniqueConstraint('knowledge_id', 'facility_id', name='uix_facility_knowledge')
 )
 
 t_user_home = db.Table(
     'user_home',
     db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
-    db.Column('home_id', db.String(24), db.ForeignKey('home.id'))
+    db.Column('home_id', db.String(24), db.ForeignKey('home.id')),
+    db.UniqueConstraint('user_id', 'home_id', name='uix_home_user')
 )
 t_user_ins = db.Table(
     'user_ins',
     db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
-    db.Column('ins_id', db.String(24), db.ForeignKey('ins.id'))
+    db.Column('ins_id', db.String(24), db.ForeignKey('ins.id')),
+    db.UniqueConstraint('user_id', 'ins_id', name='uix_ins_user')
 )
 
 
@@ -55,6 +61,7 @@ class Ins(db.Model):
     community=db.relationship('Community')
     user = db.relationship('User', secondary=t_user_ins,
                           backref=db.backref('f_user', lazy='dynamic'))
+
 
 
 
@@ -115,8 +122,7 @@ class Home(db.Model):
     name = db.Column(db.String(255), comment='家庭名称')
     community_id = db.Column(db.String(24), db.ForeignKey('community.id'), comment='社区id')
     community = db.relationship('Community')
-    #user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='用户id')
-   # user = db.relationship('User')
+
     user = db.relationship('User', secondary=t_user_home,
                           backref=db.backref('f1_user', lazy='dynamic'))
 
@@ -127,6 +133,7 @@ class Home(db.Model):
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     alternate_phone = db.Column(db.String(50), comment='备用电话')
     gateways = db.relationship('Gateway', lazy='dynamic')
+    sensor=db.relationship('Sensor',lazy='dynamic')
 
 
 class Knowledge(db.Model):
@@ -180,7 +187,11 @@ class Sensor(db.Model):
     gateway = db.relationship('Gateway')
     sensor_place = db.Column(db.String(255), comment='位置')
     sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾 1.温度 2.燃气 3.电流)')
-    alarms = db.relationship('SensorAlarm', lazy='dynamic')
+    start_time=db.Column(db.DateTime,comment='开始时间')
+    end_time=db.Column(db.DateTime,comment='结束时间')
+    max_value=db.Column(db.Float,comment='阈值')
+    alarms_history = db.relationship('SensorAlarm', lazy='dynamic')
+    home_id=db.Column(db.String(24),db.ForeignKey('home.id'),comment='家庭id')
 
 
 class SensorAlarm(db.Model):

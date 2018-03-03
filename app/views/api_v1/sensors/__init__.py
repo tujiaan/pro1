@@ -3,6 +3,7 @@ from flask_restplus import  Resource
 from app.ext import db
 from app.models import Facility, Sensor
 from app.utils.tools.page_range import page_range
+from app.views.api_v1.sensoralarms import sensoralarms_model
 from app.views.api_v1.sensors.parsers import sensor_parser, sensor_parser1
 
 api = Namespace('Sensors', description='传感器相关接口')
@@ -23,13 +24,13 @@ class SensorsView(Resource):
     @api.doc('新增传感器')
     #@api.marshal_with(sensor_model)
     @api.response(200, 'ok')
-    @api.expect(sensor_parser)
+    @api.expect(sensor_parser,validate=True)
     def post(self):
         args=sensor_parser.parse_args()
         sensor=Sensor(**args)
         db.session.add(sensor)
         db.session.commit()
-        return None,200 ###需要先设置home表才可以
+        return None,200
     @api.doc('')
     @api.route('/<sensorid>')
     class SensorsView(Resource):
@@ -53,14 +54,41 @@ class SensorsView(Resource):
         @api.response(200, 'ok')
         @api.expect(sensor_parser1)
         def put(self,sensorid):
-            sensor1=Sensor.query.filter_by(id=sensorid).first()
+            sensor1=Sensor.query.get_or_404(sensorid)
             args=sensor_parser.parse_args()
 
-            if args.get('gateway_id'):
+            if args['gateway_id']:
                 sensor1.gateway_id=args.get('gateway_id')
-            if args.get('sensor_type'):
+            else:pass
+            if args['sensor_type']:
                  sensor1.sensor_type=args.get('sensor_type')
-            if args.get('sensor_place'):
+            else:pass
+            if args['sensor_place']:
                 sensor1.sensor_place=args.get('sensor_place')
+            else:pass
+            if args['start_time']:
+                sensor1.start_time=args.get('start_time')
+            else:pass
+            if args['end_time']:
+                sensor1.end_time=args.get('end_time')
+            else:pass
+            if args['max_value']:
+                sensor1.max_value=args.get('max_value')
+            else:pass
+
             db.session.commit()
             return None,200
+
+
+@api.route('/<sensorid>/sensoralarm')
+class SensorAlarmsView(Resource):
+    @api.doc('查询传感器的报警历史')
+    @api.marshal_with(sensoralarms_model,as_list=True)
+    @api.doc(params={'from':'开始','count':'数量'})
+    @api.response(200,'ok')
+    @page_range()
+    def get(self,sensorid):
+        sensor=Sensor.query.get_or_404(sensorid)
+        return sensor.alarms_history,200
+
+
