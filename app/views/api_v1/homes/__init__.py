@@ -20,7 +20,7 @@ class HomesView(Resource):
     @api.marshal_with(home_model)
     @api.marshal_with(home_model,as_list=True)
     @api.response(200,'ok')
-    @api.doc(params={'from':'开始','count':'数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
         list=Home.query
@@ -91,7 +91,9 @@ class HomeView(Resource):
         return None,200
 @api.route('/<homeid>/users')
 class HomeUsersView(Resource):
-    api.doc('查找家庭下的用户')
+    @api.doc('查找家庭下的用户')
+    @api.doc(params={'page': '页数', 'limit': '数量'})
+    @page_range()
     @api.marshal_with(user_model,as_list=True)
     def get(self,homeid):
         home=Home.query.get_or_404(homeid)
@@ -102,14 +104,14 @@ class HomeUserView(Resource):
     @api.doc('增加家庭成员/用户绑定家庭')
     @api.response(200,'ok')
     def post(self,homeid,userid):
-        #try:
+        try:
             home=Home.query.get_or_404(homeid)
             user=User.query.get_or_404(userid)
             home.user.append(user)
             db.session.commit()
             return '添加成员成功',200
-       # except:
-           # return '成员已经存在',200
+        except:
+                 return '成员已经存在',200
 
     @api.doc('删除家庭成员/解除用户绑定家庭')
     @api.response(200, 'ok')
@@ -128,6 +130,8 @@ class HomeUserView(Resource):
 @api.route('/<homeid>,<distance>/ins')
 class HomeInsView(Resource):
     @api.doc('查询家庭附近的机构')
+    @api.doc(params={'page': '页数', 'limit': '数量'})
+    @page_range()
     @api.marshal_with(institute_model,as_list=True)
     @api.response(200,'ok')
     def get(self,homeid,distance):
@@ -161,7 +165,7 @@ class HomeInsView(Resource):
 class HomeSensorView(Resource):
     @api.doc('查询家中的传感器')
     @api.marshal_with(sensor_model, as_list=True)
-    @api.doc(params={'from':'开始','count':'数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
 
     def get(self,homeid):

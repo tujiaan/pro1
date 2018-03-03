@@ -13,7 +13,7 @@ class CommunitiesView(Resource):
     @api.doc('查询所有的社区列表')
     @api.marshal_with(community_model,as_list=True)
     @api.response(200,'ok')
-    @api.doc(params={'from':'开始','count':'数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
         community=Community.query
@@ -114,7 +114,7 @@ class CommunityView(Resource):
 class CommunityHome(Resource):
     @api.doc('查询社区覆盖的家庭')
     @api.marshal_with(home_model,as_list=True)
-    @api.doc(params={'from': '开始', 'count': '数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     @api.response(200,'ok')
     def get(self,communityid):

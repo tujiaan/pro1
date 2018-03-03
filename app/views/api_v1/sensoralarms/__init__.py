@@ -12,7 +12,7 @@ class SensorAlarmsView(Resource):
     @api.doc('查询传感器报警记录列表')
     @api.marshal_with(sensoralarms_model,as_list=True)
     @api.response(200,'ok')
-    @api.doc(params={'from':'开始','count':'数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
         list=SensorAlarm.query
