@@ -20,8 +20,8 @@ WTF_CSRF_ENABLED = False
 # sudo docker run --name yiyiwei-db -d --env MYSQL_ROOT_PASSWORD=yangjiawei --env MYSQL_DATABASE=yiyiwei --env MYSQL_USER=yiyiwei --env MYSQL_PASSWORD=yiyiwei -p 3306:3306  mysql:5.5
 
 ##Sqlalchemy
-#SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:huitong-tech.com@184.170.220.88:3306/firefighting'
-SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:root@127.0.0.1:3306/firefighting'
+SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:huitong-tech.com@184.170.220.88:3306/firefighting'
+#SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:root@127.0.0.1:3306/firefighting'
 # SQLALCHEMY_DATABASE_URI='sqlite:////tmp/test.db'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
