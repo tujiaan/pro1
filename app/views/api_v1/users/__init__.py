@@ -1,8 +1,8 @@
-from flask import g
+from flask import g, flash
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import User
+from app.models import User, Role
 from app.utils.auth import user_require
 from app.utils.auth.jwt import encode_jwt
 from app.utils.tools.page_range import page_range
@@ -142,9 +142,9 @@ class ProfileView(Resource):
            return user,200
 
 
-    @api.doc('根据id对用户操作')
-    @api.route('/<userid>')
-    class user(Resource):
+
+@api.route('/<userid>')
+class user(Resource):
      @api.doc('根据id查询用户信息')
      @api.marshal_with(user_model)
      @api.response(200, 'ok')
@@ -162,6 +162,9 @@ class ProfileView(Resource):
          db.session.commit()
          return None,200
 
+
+
+
 @api.route('/<userid>/ins')
 class UserHomeView(Resource):
     @api.doc('查询用户名下的机构')
@@ -174,13 +177,48 @@ class UserHomeView(Resource):
 class UserHomeView(Resource):
     @api.doc('查询用户名下的家庭')
     @api.marshal_with(home_model,as_list=True)
+    @api.doc(params={'from': '开始', 'count': '数量'})
+    @page_range()
     def get(self,userid):
         user=User.query.get_or_404(userid)
         return user.home,200
-@api.route('/<userid>/role')
-class UserRoleView(Resource):
+@api.route('/<userid>/roles')
+class UserRolesVsiew(Resource):
     @api.doc('查询用户的角色')
     @api.marshal_with(role_model,as_list=True)
+    @ api.doc(params={'from': '开始', 'count': '数量'})
+    @ page_range()
     def get(self,userid):
         user=User.query.get_or_404(userid)
-        return user.roles,200
+        return user.roles.all(),200
+
+
+@api.route('/<userid>/roles/<roleid>')
+class UserRoleView(Resource):
+    @api.doc('给用户绑定角色')
+    @api.response(200,'ok')
+    def post(self,userid,roleid):
+        try:
+            user=User.query.get_or_404(userid)
+            role=Role.query.get_or_404(roleid)
+
+
+            user.roles.append(role)
+            db.session.commit()
+            return None,200
+        except:return '该条记录已存在',400
+
+    @api.doc('给用户解除角色')
+    @api.response(200, 'ok')
+    def delete(self, userid, roleid):
+        try:
+                user = User.query.get_or_404(userid)
+                role = Role.query.get_or_404(roleid)
+                user.roles.remove(role)
+                db.session.commit()
+                return None,200
+        except:return '用户已不具备该角色',200
+
+
+
+

@@ -1,10 +1,11 @@
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Home, Ins
+from app.models import Home, Ins, User
 from app.utils.tools.page_range import page_range
 from app.views.api_v1.homes.parser import home_parser, home_parser1
 from app.views.api_v1.institutes import institute_model
+from app.views.api_v1.sensors import sensor_model
 from app.views.api_v1.users import user_model
 import math
 
@@ -89,12 +90,39 @@ class HomeView(Resource):
         db.session.commit()
         return None,200
 @api.route('/<homeid>/users')
-class HomeUserView(Resource):
+class HomeUsersView(Resource):
     api.doc('查找家庭下的用户')
     @api.marshal_with(user_model,as_list=True)
     def get(self,homeid):
         home=Home.query.get_or_404(homeid)
         return home.user,200
+
+@api.route('/<homeid>/users/<userid>')
+class HomeUserView(Resource):
+    @api.doc('增加家庭成员/用户绑定家庭')
+    @api.response(200,'ok')
+    def post(self,homeid,userid):
+        #try:
+            home=Home.query.get_or_404(homeid)
+            user=User.query.get_or_404(userid)
+            home.user.append(user)
+            db.session.commit()
+            return '添加成员成功',200
+       # except:
+           # return '成员已经存在',200
+
+    @api.doc('删除家庭成员/解除用户绑定家庭')
+    @api.response(200, 'ok')
+    def delete(self, homeid, userid):
+            try:
+                home = Home.query.get_or_404(homeid)
+                user = User.query.get_or_404(userid)
+                home.user.remove(user)
+                db.session.commit()
+                return '删除成员成功', 200
+            except:
+                return '成员不存在存在',200
+
 
 
 @api.route('/<homeid>,<distance>/ins')
@@ -129,6 +157,18 @@ class HomeInsView(Resource):
             if distance>=getDistance(home.latitude,home.longitude,i.latitude,i.latitude):
                 list.append((ins,distance))
         return sorted(list,key=lambda l:l[1])
+@api.route('/<homeid>/sensors')
+class HomeSensorView(Resource):
+    @api.doc('查询家中的传感器')
+    @api.marshal_with(sensor_model, as_list=True)
+    @api.doc(params={'from':'开始','count':'数量'})
+    @page_range()
+
+    def get(self,homeid):
+        home=Home.query.get_or_404(homeid)
+        return home.sensor,200
+
+
 
 
 

@@ -114,6 +114,8 @@ class CommunityView(Resource):
 class CommunityHome(Resource):
     @api.doc('查询社区覆盖的家庭')
     @api.marshal_with(home_model,as_list=True)
+    @api.doc(params={'from': '开始', 'count': '数量'})
+    @page_range()
     @api.response(200,'ok')
     def get(self,communityid):
         community=Community.query.get_or_404(communityid)

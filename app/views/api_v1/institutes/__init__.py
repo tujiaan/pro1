@@ -1,7 +1,7 @@
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Ins
+from app.models import Ins, User
 from app.utils.tools.page_range import page_range
 from app.views.api_v1.communities import community_model
 from app.views.api_v1.institutes.parser import institutes_parser, institutes_parser1
@@ -95,19 +95,54 @@ class InstituteView(Resource):
         db.session.delete(institute)
         db.session.commit()
         return None,200
-@api.route('/<insid>/user')
-class InsUserView(Resource):
+@api.route('/<insid>/users')
+class InsUsesrView(Resource):
     @api.doc('查询机构下面的用户列表')
     @api.marshal_with(user_model,as_list=True)
+    @api.doc(params={'from': '开始', 'count': '数量'})
+    @page_range()
     def get(self,insid):
         ins=Ins.query.get_or_404(insid)
         return ins.user,200
+
+@api.route('/<insid>/users/<userid>')
+class InsUserView(Resource):
+    @api.doc('增加机构成员/用户绑定机构')
+    @api.response(200,'ok')
+    def post(self,insid,userid):
+        try:
+            ins=Ins.query.get_or_404(insid)
+            user=User.query.get_or_404(userid)
+            ins.user.append(user)
+            db.session.commit()
+            return '添加成功',200
+        except:
+            return '成员已经存在',200
+
+    @api.doc('删除机构成员/解除用户绑定机构')
+    @api.response(200, 'ok')
+    def delete(self, insid, userid):
+        try:
+            ins = Ins.query.get_or_404(insid)
+            user = User.query.get_or_404(userid)
+            ins.user.remove(user)
+            db.session.commit()
+            return '删除成功', 200
+        except:
+            return '成员不存在', 200
+
+
+
+
+
 
 @api.route('/<insid>/community')
 class InsCommunityView(Resource):
     @api.doc('查询机构覆盖的社区')
     @api.marshal_with(community_model,as_list=True)
     @api.response(200,'ok')
+    @api.doc(params={'from': '开始', 'count': '数量'})
+    @page_range()
     def get(self,insid):
         ins=Ins.query.get_or_404(insid)
         return ins.community,200
