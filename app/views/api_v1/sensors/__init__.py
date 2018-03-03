@@ -14,7 +14,7 @@ class SensorsView(Resource):
     @api.marshal_with(sensor_model, as_list=True)
     @api.doc('查询传感器列表')
     @api.marshal_with(sensor_model)
-    @api.doc(params={'from': '开始', 'count': '数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @api.response(200, 'ok')
     @page_range()
     def get(self):
@@ -84,7 +84,7 @@ class SensorsView(Resource):
 class SensorAlarmsView(Resource):
     @api.doc('查询传感器的报警历史')
     @api.marshal_with(sensoralarms_model,as_list=True)
-    @api.doc(params={'from':'开始','count':'数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @api.response(200,'ok')
     @page_range()
     def get(self,sensorid):

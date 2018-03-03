@@ -15,7 +15,7 @@ class FacilitiesDataView(Resource):
     @api.doc('查询设施列表')####ok
    # @api.marshal_with(facility_data_model)
     @api.marshal_with(facility_data_model, as_list=True)
-    @api.doc(params={'from': '开始', 'count': '数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
         list = FacilityData.query
@@ -75,7 +75,7 @@ class FacilityDataView(Resource):
 @api.route('/facility-ins/')##ok
 class FacilitesInsView(Resource):
     @api.doc("查询设施关联机构列表")
-    @api.doc(params={'from':'开始','count':'数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @api.marshal_with(facility_model,as_list=True)
     @api.response(200,'ok')
     @page_range()
@@ -125,7 +125,7 @@ class FacilitesView(Resource):
 class FacilityKnowledgesView(Resource):
     @api.doc('查询设施的知识')
     @api.marshal_with( knowledges_model,as_list=True)
-    @ api.doc(params={'from': '开始', 'count': '数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @ page_range()
     @api.response(200,'ok')
     def get(self,facilityid):
@@ -138,17 +138,16 @@ class FacilityKnowledgeView(Resource):
     @api.response(200,'ok')
     @api.response(404,'Not Found')
     def post(self,facilityid,knowledgeid):
-       # try:
-            facility=Facility.query.get_or_404(facilityid)
-            print(facility)
-            knowledge=Knowledge.query.get_or_404(knowledgeid)
-            print(knowledge)
+        try:
+            facility = Facility.query.get_or_404(facilityid)
+
+            knowledge = Knowledge.query.get_or_404(knowledgeid)
+
             facility.knowledges.append(knowledge)
 
             db.session.commit()
-            return '绑定成功',200
-      #  except:
-         #   return '已经绑定'
+            return '绑定成功', 200
+        except: return '已经绑定'
 
     @api.doc('解除设施绑定知识')
     @api.response(200, 'ok')

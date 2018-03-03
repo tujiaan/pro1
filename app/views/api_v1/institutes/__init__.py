@@ -16,7 +16,7 @@ class InstitutesViews(Resource):
     @api.doc('查询所有机构列表')
     @api.marshal_with(institute_model, as_list=True )
     @api.response(200,'ok')
-    @api.doc(params={'from': '开始', 'count': '数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
         list = Ins .query
@@ -99,7 +99,7 @@ class InstituteView(Resource):
 class InsUsesrView(Resource):
     @api.doc('查询机构下面的用户列表')
     @api.marshal_with(user_model,as_list=True)
-    @api.doc(params={'from': '开始', 'count': '数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self,insid):
         ins=Ins.query.get_or_404(insid)

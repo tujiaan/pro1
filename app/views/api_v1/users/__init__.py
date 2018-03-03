@@ -119,7 +119,7 @@ class ProfileView(Resource):
     @api.doc('')
     @api.route('/')
     class UsersFindView(Resource):
-       @api.doc(params={'from':'开始','count':'数量'})
+       @api.doc(params={'page':'页数','limit':'数量'})
        @api.marshal_with(user_model, as_list=True)
        @api.doc('查询所有用户信息')
        @api.marshal_with(user_model)
@@ -168,7 +168,9 @@ class user(Resource):
 @api.route('/<userid>/ins')
 class UserHomeView(Resource):
     @api.doc('查询用户名下的机构')
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @api.marshal_with(institute_model,as_list=True)
+    @page_range()
     def get(self,userid):
         user=User.query.get_or_404(userid)
         return user.ins,200
@@ -177,7 +179,7 @@ class UserHomeView(Resource):
 class UserHomeView(Resource):
     @api.doc('查询用户名下的家庭')
     @api.marshal_with(home_model,as_list=True)
-    @api.doc(params={'from': '开始', 'count': '数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self,userid):
         user=User.query.get_or_404(userid)
@@ -186,7 +188,7 @@ class UserHomeView(Resource):
 class UserRolesVsiew(Resource):
     @api.doc('查询用户的角色')
     @api.marshal_with(role_model,as_list=True)
-    @ api.doc(params={'from': '开始', 'count': '数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @ page_range()
     def get(self,userid):
         user=User.query.get_or_404(userid)

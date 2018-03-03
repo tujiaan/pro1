@@ -5,24 +5,24 @@ from flask import request
 from flask_restplus import reqparse
 
 range_parser = reqparse.RequestParser()
-range_parser.add_argument('from', type=int, help='开始', required=False, location='args')
-range_parser.add_argument('count', type=int, help='数量', required=False, location='args')
+range_parser.add_argument('page', type=int, help='页数', required=False, location='args')
+range_parser.add_argument('limit', type=int, help='数量', required=False, location='args')
 
 
 class Range(object):
-    start = None
-    offset = None
+    page = None
+    limit= None
 
     def __init__(self, string):
         if string is not None:
-            a = parse.search("items={start:d}-{offset:d}", string)
-            b = parse.search("items={start:d}-", string)
-            c = parse.search("items=-{offset:d}", string)
+            a = parse.search("items={page:d}-{limit:d}", string)
+            b = parse.search("items={page:d}-", string)
+            c = parse.search("items=-{limit:d}", string)
             s = a or b or c
             if s:
                 s = s.named
-                self.start = s.get('start', None)
-                self.offset = s.get('offset', None)
+                self.page = s.get('page', None)
+                self.limit = s.get('limit', None)
 
 
 def page_range(s=0, o=None):
@@ -39,13 +39,13 @@ def page_range(s=0, o=None):
                 result = result[0]
             r = Range(request.headers.get('Range'))
             r2 = range_parser.parse_args()
-            start = r.start or r2.get('from') or s
-            offset = r.offset or r2.get('count') or o
+            page = r.page or r2.get('page') or s
+            limit = r.limit or r2.get('limit') or o
             totle = result.count()
-            if offset is  None:
-                offset=totle-start
-            result = result.offset(start).limit(offset)
-            header['Content-Range'] = f'items {start}-{start+offset if start+offset<totle else totle}/{totle}'
+          #  if offset is  None:
+             #   offset=totle-start
+            result = result.offset(0).limit(page*limit)
+            header['Content-Range'] = f'items {page}-{page*limit if page*limit<=totle else totle}/{totle}'
             return result.all(), code, header
 
         return warpper

@@ -12,7 +12,7 @@ class RolesView(Resource ):
     @api.doc('查询角色列表')
     @api.marshal_with(role_model,as_list=True)
     @api.response(200,'ok')
-    @api.doc(params={'from':'开始','count':'数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
         list=Role.query

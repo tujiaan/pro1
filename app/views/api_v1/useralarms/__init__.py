@@ -12,7 +12,7 @@ class UserAlarmRecordsView(Resource):
     @api.doc('查询用户报警记录列表')
     @api.marshal_with(useralarmrecord_model,as_list=True)
     @api.response(200,'ok')
-    @api.doc(params={'from':'开始','count':'数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
         list=UserAlarmRecord.query

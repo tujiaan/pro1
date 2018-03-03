@@ -11,7 +11,7 @@ from .models import *
 @api.route('/')
 class Knowledges(Resource):
     @api.doc('查询知识列表')
-    @api.doc(params={'from':'开始','count':'数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @api.marshal_with(knowledges_model,as_list=True)
     @api.response(200,'ok')
     @page_range()
@@ -65,7 +65,7 @@ class KnowledgeFacilityView(Resource):
     @api.doc('根据知识查找对应的设施')
     @api.marshal_with(facility_model,as_list=True)
     @api.response(200,'ok')
-    @api.doc(params={'from': '开始', 'count': '数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self,knowledgeid) :
         knowledge=Knowledge.query.get_or_404(knowledgeid)
