@@ -1,10 +1,12 @@
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Home
+from app.models import Home, Ins
 from app.utils.tools.page_range import page_range
 from app.views.api_v1.homes.parser import home_parser, home_parser1
+from app.views.api_v1.institutes import institute_model
 from app.views.api_v1.users import user_model
+import math
 
 api = Namespace('Home', description='家庭相关接口')
 from.model import *
@@ -93,6 +95,41 @@ class HomeUserView(Resource):
     def get(self,homeid):
         home=Home.query.get_or_404(homeid)
         return home.user,200
+
+
+@api.route('/<homeid>,<distance>/ins')
+class HomeInsView(Resource):
+    @api.doc('查询家庭附近的机构')
+    @api.marshal_with(institute_model,as_list=True)
+    @api.response(200,'ok')
+    def get(self,homeid,distance):
+        home=Home.query.get_or_404(homeid)
+        ins=Ins.query.all()
+        list=[]
+
+        def getDistance(latA, lonA, latB, lonB):
+            ra = 6378140  # radius of equator: meter
+            rb = 6356755  # radius of polar: meter
+            flatten = (ra - rb) / ra  # Partial rate of the earth
+            # change angle to radians
+            radLatA = math.radians(latA)
+            radLonA =math. radians(lonA)
+            radLatB = math.radians(latB)
+            radLonB = math.radians(lonB)
+
+            pA = math.atan(rb / ra * math.tan(radLatA))
+            pB = math.atan(rb / ra * math.tan(radLatB))
+            x = math.acos(math.sin(pA) * math.sin(pB) +math. cos(pA) * math.cos(pB) * math.cos(radLonA - radLonB))
+            c1 = (math.sin(x) - x) * (math.sin(pA) +math. sin(pB)) ** 2 / math.cos(x / 2) ** 2
+            c2 = (math.sin(x) + x) * (math.sin(pA) - math.sin(pB)) ** 2 / math.sin(x / 2) ** 2
+            dr = flatten / 8 * (c1 - c2)
+            distance = ra * (x + dr)
+            return distance
+        for i in ins:
+            if distance>=getDistance(home.latitude,home.longitude,i.latitude,i.latitude):
+                list.append((ins,distance))
+        return sorted(list,key=lambda l:l[1])
+
 
 
 

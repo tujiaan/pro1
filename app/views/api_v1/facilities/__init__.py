@@ -63,7 +63,7 @@ class FacilityDataView(Resource):
     @api.doc('删除设施')##ok
     @api.response(200, 'ok')
     def delete(self,facilityid):
-        facility_data = FacilityData.query.filter_by(id=facilityid).first()
+        facility_data = FacilityData.query.get_or_404(facilityid)
         db.session.delete(facility_data)
         db.session.commit()
         return None,200
@@ -74,7 +74,7 @@ class FacilityDataView(Resource):
 
 @api.route('/facility-ins/')##ok
 class FacilitesInsView(Resource):
-    @api.doc("查询设施关联列表")
+    @api.doc("查询设施关联机构列表")
     @api.doc(params={'from':'开始','count':'数量'})
     @api.marshal_with(facility_model,as_list=True)
     @api.response(200,'ok')
@@ -121,14 +121,14 @@ class FacilitesView(Resource):
             return None,200
 
 ##################################################@api.doc('查询机构设施关联)
-@api.route('/<facilityid>/knowledgedata')
+@api.route('/<facilityid>/knowledge')
 class FacilityKnowledgeView(Resource):
     @api.doc('查询设施的知识')
     @api.marshal_with( knowledges_model,as_list=True)
     @api.response(200,'ok')
     def get(self,facilityid):
         facility=Facility.query.get_or_404(facilityid)
-        return facility.knowledges,200
+        return facility.knowledges.all(),200
 
 
 
