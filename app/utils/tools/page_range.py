@@ -42,9 +42,8 @@ def page_range(s=0, o=None):
             page = r.page or r2.get('page') or s
             limit = r.limit or r2.get('limit') or o
             totle = result.count()
-          #  if offset is  None:
-             #   offset=totle-start
-            result = result.offset(0).limit(page*limit)
+
+            result = result.offset((int(page)-1)*limit).limit(limit)
             header['Content-Range'] = f'items {page}-{page*limit if page*limit<=totle else totle}/{totle}'
             return result.all(), code, header
 

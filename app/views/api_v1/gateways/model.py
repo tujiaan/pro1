@@ -4,6 +4,6 @@ gateway_model = api.model('Gateway', {
     'id': fields.String,
      'home_id':fields.String,
     'useable':fields.Boolean
-#暂不写关联
+
 
 })

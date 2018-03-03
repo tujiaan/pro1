@@ -23,6 +23,7 @@ jedi==0.11.1
 Jinja2==2.10
 jsonschema==2.6.0
 MarkupSafe==1.0
+parse==1.8.2
 parso==0.1.1
 pickleshare==0.7.4
 prompt-toolkit==1.0.15
