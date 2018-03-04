@@ -10,7 +10,7 @@ api = Namespace('Knowledges', description='知识相关接口')
 from .models import *
 @api.route('/')
 class Knowledges(Resource):
-    @page_format(code=200,message='ok')
+    @page_format(code=200,msg='ok')
     @api.doc('查询知识列表')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @api.marshal_with(knowledges_model,as_list=True)

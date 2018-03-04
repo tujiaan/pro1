@@ -56,7 +56,7 @@ def page_range(s=1, o=10):
         return warpper
 
     return decorator
-def page_format(code=0,message=''):
+def page_format(code=0,msg=''):
     def decorator(method):
         @functools.wraps(method)
         def warpper(*args, **kwargs):
@@ -73,7 +73,7 @@ def page_format(code=0,message=''):
             s = a.named
             result={
                 'code':code,
-                'message':message,
+                'msg':msg,
                 'count':s.get('total', None),
                 'data':result
             }
