@@ -119,7 +119,7 @@ class ProfileView(Resource):
     @api.doc('')
     @api.route('/')
     class UsersFindView(Resource):
-       @page_format(code='200',message='success')
+       @page_format(code='200',msg='success')
        @api.doc(params={'page':'页数','limit':'数量'})
        @api.marshal_with(user_model, as_list=True)
        @api.doc('查询所有用户信息')

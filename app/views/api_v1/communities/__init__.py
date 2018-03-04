@@ -113,6 +113,7 @@ class CommunityView(Resource):
         return None,200
 @api.route('/<communityid>/homes')
 class CommunityHome(Resource):
+    @page_format(code=0,msg='ok')
     @api.doc('查询社区覆盖的家庭')
     @api.marshal_with(home_model,as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})

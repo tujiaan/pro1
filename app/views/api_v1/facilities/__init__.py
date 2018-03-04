@@ -2,7 +2,7 @@ from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import Facility, FacilityData,Knowledge
-from app.utils.tools.page_range import page_range
+from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.facilities.parser import facility_parser, facility_parser1, f_parser, f1_parser
 
 api = Namespace('Facilities', description='设备相关接口')
@@ -12,15 +12,16 @@ from .models import *
 
 @api.route('/')
 class FacilitiesDataView(Resource):
-    @api.doc('查询设施列表')####ok
-   # @api.marshal_with(facility_data_model)
+    @page_format(code=0,msg='ok')
+    @api.doc('查询设施列表')
+
     @api.marshal_with(facility_data_model, as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
         list = FacilityData.query
         return list, 200
-    @api.doc('新增设施')##ok但是有大小的限制
+    @api.doc('新增设施')
     @api.expect(f_parser)
     def post(self):
         args=f_parser.parse_args()
@@ -34,13 +35,13 @@ class FacilitiesDataView(Resource):
 
 @api.route('/<facilityid>/')
 class FacilityDataView(Resource):
-    @api.doc('根据设施id查询详情')##ok
+    @api.doc('根据设施id查询详情')
     @api.marshal_with(facility_data_model)
     @api.response(200,'ok')
     def get(self,facilityid):
         facility_data=FacilityData.query.filter_by(id=facilityid).first()
         return facility_data,200
-    @api.doc('更新设施详情')##ok
+    @api.doc('更新设施详情')
     @api.expect(f1_parser)
     @api.response(200,'ok')
     def put(self,facilityid):
@@ -60,7 +61,7 @@ class FacilityDataView(Resource):
         db.session.commit()
         return None,200
 
-    @api.doc('删除设施')##ok
+    @api.doc('删除设施')
     @api.response(200, 'ok')
     def delete(self,facilityid):
         facility_data = FacilityData.query.get_or_404(facilityid)
@@ -72,8 +73,9 @@ class FacilityDataView(Resource):
 
 
 
-@api.route('/facility-ins/')##ok
+@api.route('/facility-ins/')
 class FacilitesInsView(Resource):
+    @page_format(code=0,msg='ok')
     @api.doc("查询设施关联机构列表")
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @api.marshal_with(facility_model,as_list=True)
@@ -83,7 +85,7 @@ class FacilitesInsView(Resource):
        list=Facility.query
        return list,200
 
-    @api.doc('新增设施机构关联')##ok
+    @api.doc('新增设施机构关联')
     @api.response(200,'ok')
     @api.expect(facility_parser)
     def post(self):
@@ -123,6 +125,7 @@ class FacilitesView(Resource):
 
 @api.route('/<facilityid>/knowledges/')
 class FacilityKnowledgesView(Resource):
+    @page_format(code=0,msg='ok')
     @api.doc('查询设施的知识')
     @api.marshal_with( knowledges_model,as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
@@ -134,6 +137,7 @@ class FacilityKnowledgesView(Resource):
 
 @api.route('/<facilityid>/knowledges/<knowledgeid>/')
 class FacilityKnowledgeView(Resource):
+
     @api.doc('给设施绑定知识')
     @api.response(200,'ok')
     @api.response(404,'Not Found')

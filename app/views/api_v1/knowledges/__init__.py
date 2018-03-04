@@ -65,7 +65,7 @@ class KnowledgeView(Resource):
         return None,200
 @api.route('/<knowledgeid>/facility')
 class KnowledgeFacilityView(Resource):
-    @page_format(code='200', message='successs')
+    @page_format(code='200', msg='successs')
     @api.doc('根据知识查找对应的设施')
     @api.marshal_with(facility_model,as_list=True)
     @api.response(200,'ok')
