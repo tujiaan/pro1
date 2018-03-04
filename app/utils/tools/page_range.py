@@ -25,11 +25,11 @@ class Range(object):
                 self.limit = s.get('limit', None)
 
 
-def page_range(s=0, o=None):
+def page_range(s=1, o=10):
     def decorator(method):
         @functools.wraps(method)
         def warpper(*args, **kwargs):
-            result = (method(*args, **kwargs))
+            result = method(*args, **kwargs)
             code = None
             header = {}
             if isinstance(result, tuple):
@@ -46,6 +46,33 @@ def page_range(s=0, o=None):
             result = result.offset((int(page)-1)*limit).limit(limit)
             header['Content-Range'] = f'items {page}-{page*limit if page*limit<=totle else totle}/{totle}'
             return result.all(), code, header
+
+        return warpper
+
+    return decorator
+def page_format(code=0,message=''):
+    def decorator(method):
+        @functools.wraps(method)
+        def warpper(*args, **kwargs):
+            result = method(*args, **kwargs)
+            c = None
+            header = {}
+            if isinstance(result, tuple):
+                l = len(result)
+                c = result[1] if l > 1 else None
+                header = result[2] if l > 2 else {}
+                result = result[0]
+
+            a = parse.search("items {page:d}-{limit:d}/{total:d}", header.get('Content-Range'))
+            s = a.named
+            result={
+                'code':code,
+                'message':message,
+                'count':s.get('total', None),
+                'data':result
+            }
+
+            return result, c, header
 
         return warpper
 

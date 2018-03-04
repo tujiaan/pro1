@@ -5,7 +5,7 @@ from app.ext import db
 from app.models import User, Role
 from app.utils.auth import user_require
 from app.utils.auth.jwt import encode_jwt
-from app.utils.tools.page_range import page_range
+from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.institutes import institute_model
 from app.views.api_v1.roles import role_model
 
@@ -119,6 +119,7 @@ class ProfileView(Resource):
     @api.doc('')
     @api.route('/')
     class UsersFindView(Resource):
+       @page_format(code='200',message='success')
        @api.doc(params={'page':'页数','limit':'数量'})
        @api.marshal_with(user_model, as_list=True)
        @api.doc('查询所有用户信息')
@@ -128,7 +129,7 @@ class ProfileView(Resource):
        def get(self):
           list= User.query
 
-          return list
+          return list,200
 
        @api.doc('增加用户')
        @api.marshal_with(user_model)
