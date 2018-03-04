@@ -2,7 +2,7 @@ from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import Community
-from app.utils.tools.page_range import page_range
+from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.communities.parser import community_parser, community_parser1
 
 
@@ -11,6 +11,7 @@ from .models import *
 @api.route('/')
 class CommunitiesView(Resource):
     @api.doc('查询所有的社区列表')
+    @page_format(code=0,msg='ok')
     @api.marshal_with(community_model,as_list=True)
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})

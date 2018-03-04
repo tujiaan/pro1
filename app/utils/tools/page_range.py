@@ -30,8 +30,7 @@ def page_range(s=1, o=10):
         @functools.wraps(method)
         def warpper(*args, **kwargs):
             result = (method(*args, **kwargs))
-            print(result)
-            print("####")
+
             code = None
             header = {}
             if isinstance(result, tuple):
@@ -39,8 +38,7 @@ def page_range(s=1, o=10):
                 code = result[1] if l > 1 else None
                 header = result[2] if l > 2 else {}
                 result = result[0]
-                print(result)
-                print('##########')
+
             r = Range(request.headers.get('Range'))
             r2 = range_parser.parse_args()
             page = r.page or r2.get('page') or s
@@ -48,8 +46,7 @@ def page_range(s=1, o=10):
             totle = result.count()
 
             result = result.offset((int(page)-1)*limit).limit(limit)
-            print(result)
-            print('################')
+
             header['Content-Range'] = f'items {page}-{limit if page*limit<=totle else totle}/{totle}'
             return result.all(), code, header
 

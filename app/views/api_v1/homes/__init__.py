@@ -96,8 +96,10 @@ class HomeUsersView(Resource):
     @page_range()
     @api.marshal_with(user_model,as_list=True)
     def get(self,homeid):
-        home=Home.query.get_or_404(homeid)
-        return home.user,200
+        try:
+            home=Home.query.get_or_404(homeid)
+            return home.user,200
+        except: return[],404
 
 @api.route('/<homeid>/users/<userid>')
 class HomeUserView(Resource):
