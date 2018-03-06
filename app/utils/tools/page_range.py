@@ -29,7 +29,7 @@ def page_range(s=1, o=10):
     def decorator(method):
         @functools.wraps(method)
         def warpper(*args, **kwargs):
-            result = (method(*args, **kwargs))
+            result = method(*args, **kwargs)
 
             code = None
             header = {}
@@ -39,11 +39,13 @@ def page_range(s=1, o=10):
                 header = result[2] if l > 2 else {}
                 result = result[0]
 
+
             r = Range(request.headers.get('Range'))
             r2 = range_parser.parse_args()
             page = r.page or r2.get('page') or s
             limit = r.limit or r2.get('limit') or o
             totle = result.count()
+
 
             result = result.offset((int(page)-1)*limit).limit(limit)
 

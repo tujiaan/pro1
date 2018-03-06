@@ -121,7 +121,7 @@ class CommunityHome(Resource):
     @api.response(200,'ok')
     def get(self,communityid):
         community=Community.query.get_or_404(communityid)
-        return community.homes.all()
+        return community.homes.all(),200
 
 
 

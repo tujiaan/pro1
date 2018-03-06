@@ -2,7 +2,7 @@ from flask_restplus import Namespace
 from flask_restplus import  Resource
 from app.ext import db
 from app.models import Facility, Sensor
-from app.utils.tools.page_range import page_range
+from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms import sensoralarms_model
 from app.views.api_v1.sensors.parsers import sensor_parser, sensor_parser1
 
@@ -11,6 +11,7 @@ from .model import *
 @api.doc('')
 @api.route('/')
 class SensorsView(Resource):
+    @page_format(code=0,msg='ok')
     @api.marshal_with(sensor_model, as_list=True)
     @api.doc('查询传感器列表')
     @api.marshal_with(sensor_model)
@@ -82,6 +83,7 @@ class SensorsView(Resource):
 
 @api.route('/<sensorid>/sensoralarm')
 class SensorAlarmsView(Resource):
+    @page_format(code=0,msg='ok')
     @api.doc('查询传感器的报警历史')
     @api.marshal_with(sensoralarms_model,as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})

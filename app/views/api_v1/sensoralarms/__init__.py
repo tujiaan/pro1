@@ -2,13 +2,14 @@ from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import SensorAlarm
-from app.utils.tools.page_range import page_range
+from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms.parser import sensoralarms_parser
 
 api=Namespace('Sensoralarms',description='传感器报警相关操作')
 from .models import *
 @api.route('/')
 class SensorAlarmsView(Resource):
+    @page_format(code=0,msg='ok')
     @api.doc('查询传感器报警记录列表')
     @api.marshal_with(sensoralarms_model,as_list=True)
     @api.response(200,'ok')

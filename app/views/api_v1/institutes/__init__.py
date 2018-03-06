@@ -2,7 +2,7 @@ from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import Ins, User
-from app.utils.tools.page_range import page_range
+from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.communities import community_model
 from app.views.api_v1.institutes.parser import institutes_parser, institutes_parser1
 
@@ -13,6 +13,7 @@ from .model import *
 
 @api.route('/')
 class InstitutesViews(Resource):
+    @page_format(code=0,msg='ok')
     @api.doc('查询所有机构列表')
     @api.marshal_with(institute_model, as_list=True )
     @api.response(200,'ok')
@@ -97,6 +98,7 @@ class InstituteView(Resource):
         return None,200
 @api.route('/<insid>/users')
 class InsUsesrView(Resource):
+    @page_format(code=0,msg='ok')
     @api.doc('查询机构下面的用户列表')
     @api.marshal_with(user_model,as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
@@ -138,6 +140,7 @@ class InsUserView(Resource):
 
 @api.route('/<insid>/community')
 class InsCommunityView(Resource):
+    @page_format(code=0,msg='ok')
     @api.doc('查询机构覆盖的社区')
     @api.marshal_with(community_model,as_list=True)
     @api.response(200,'ok')

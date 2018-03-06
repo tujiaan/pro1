@@ -4,6 +4,7 @@ from flask_restplus import Namespace, Resource
 from app.ext import db
 from app.models import User, Role
 from app.utils.auth import user_require
+from app.utils.auth.auth import role_require
 from app.utils.auth.jwt import encode_jwt
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.institutes import institute_model
@@ -33,13 +34,17 @@ class RegisterView(Resource):
 
 @api.route('/login/')
 class LoginView(Resource):
+    #@api.header('jwt', 'JSON Web Token')
     @api.doc('登陆')
     @api.expect(login_parser, validate=True)
-    @api.response(201, '注册成功')
-    @api.response(409, '用户重复')
+    @api.response(201, '登录成功')
+    @api.response(409, '用户不存在')
+    #@role_require(['homeuser','119user','propertyuser',])
     def post(self):
         args = login_parser.parse_args()
+        print(args)
         u = User.query.filter_by(username=args.get('username'), password=args.get('password')).first()
+        print(user)
         if u is not None:
             jwt = encode_jwt(user_id=u.id)
             return {'jwt': jwt}, 200
@@ -49,13 +54,36 @@ class LoginView(Resource):
 @api.route('/roles/')
 class RolesView(Resource):
     @api.doc('获取权限')
+    @api.marshal_with(role_model,as_list=True)
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
     @user_require
     def get(self):
         u = g.user
-        print(u.roles)
-        return None
+        print(u)
+        return u.roles,200
+@api.route('/homes/')
+class UserHomeView1(Resource):
+    @api.doc('查询自己关联的家庭')
+    @page_format(code='0', msg='success')
+    @api.marshal_with(home_model,as_list=True)
+    @api.header('jwt', 'JSON Web Token')
+    @user_require
+    @page_range()
+    def get(self):
+        return g.user.home,200
+
+@api.route('/ins/')
+class UserHomeView1(Resource):
+    @page_format(code='0', msg='success')
+    @api.doc('查询自己关联的机构')
+    @api.marshal_with(institute_model,as_list=True)
+    @api.header('jwt', 'JSON Web Token')
+    @user_require
+    @page_range()
+    def get(self):
+        return g.user.ins,200
+
 
 
 @api.route('/password/')
@@ -83,7 +111,7 @@ class PasswordView(Resource):
 
 @api.route('/profile/')
 class ProfileView(Resource):
-    @api.doc('获取用户信息')
+    @api.doc('获取用户个人信息')
     @api.marshal_with(user_model)
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
@@ -108,6 +136,7 @@ class ProfileView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @user_require
     @api.expect(email_parser)
+    @api.response(200,'ok')
     def post(self):
         u = g.user
         args = email_parser.parse_args()
@@ -116,47 +145,56 @@ class ProfileView(Resource):
             db.session.commit()
         return None, 204
 
-    @api.doc('')
+
     @api.route('/')
     class UsersFindView(Resource):
-       @page_format(code='200',msg='success')
+       @api.header('jwt', 'JSON Web Token')
+       @page_format(code='0',msg='success')
        @api.doc(params={'page':'页数','limit':'数量'})
        @api.marshal_with(user_model, as_list=True)
        @api.doc('查询所有用户信息')
        @api.marshal_with(user_model)
        @api.response(200, 'ok')
        @page_range()
+       @role_require(['admin','superadmin'])
        def get(self):
           list= User.query
 
           return list,200
 
-       @api.doc('增加用户')
-       @api.marshal_with(user_model)
-       @api.expect(register_parser)
-       @api.response(200, 'ok')
-       def post(self):
-           args=register_parser.parse_args()
-           user=User(**args)
-           db.session.add(user)
-           db.session.commit()
-           return user,200
+     #  @api.doc('增加用户')
+
+      # @api.marshal_with(user_model)
+      # @api.expect(register_parser)
+      # @api.response(200, 'ok')
+       #@user_require
+     #  def post(self):
+      #     args=register_parser.parse_args()
+       #    user=User(**args)
+           #print(user)
+       #    db.session.add(user)
+        #   db.session.commit()
+       #    return user,200
 
 
 
 @api.route('/<userid>')
 class user(Resource):
+
      @api.doc('根据id查询用户信息')
      @api.marshal_with(user_model)
      @api.response(200, 'ok')
-
+     @api.header('jwt', 'JSON Web Token')
+     @role_require(['admin','superadmin'])
      def get(self,userid):
-         user=User.query.filter_by(id=userid).first()
+         user=User.query.get_or_404(userid)
          return user
 
+     @api.header('jwt', 'JSON Web Token')
      @api.doc('根据id删除用户')
-     @api.marshal_with(user_model)
+
      @api.response(200, 'ok')
+     @role_require(['admin','superadmin'])
      def delete(self,userid ):
          user = User.query.filter_by(id=userid).first()
          db.session.delete(user)
@@ -168,38 +206,50 @@ class user(Resource):
 
 @api.route('/<userid>/ins')
 class UserHomeView(Resource):
-    @api.doc('查询用户名下的机构')
+    @page_format(code=0,msg='ok')
+    @api.doc('查询用户关联的机构')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @api.marshal_with(institute_model,as_list=True)
     @page_range()
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin','superadmin'])
     def get(self,userid):
         user=User.query.get_or_404(userid)
         return user.ins,200
 
 @api.route('/<userid>/home')
 class UserHomeView(Resource):
-    @api.doc('查询用户名下的家庭')
+    @page_format(code=0, msg='ok')
+    @api.doc('查询用户关联的家庭')
     @api.marshal_with(home_model,as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     @page_range()
     def get(self,userid):
         user=User.query.get_or_404(userid)
         return user.home,200
+
 @api.route('/<userid>/roles')
 class UserRolesVsiew(Resource):
+    @page_format(code=0, msg='ok')
     @api.doc('查询用户的角色')
     @api.marshal_with(role_model,as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @ page_range()
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     def get(self,userid):
         user=User.query.get_or_404(userid)
-        return user.roles.all(),200
+        return user.roles,200
 
 
 @api.route('/<userid>/roles/<roleid>')
 class UserRoleView(Resource):
     @api.doc('给用户绑定角色')
     @api.response(200,'ok')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin','superadmin'     ])
     def post(self,userid,roleid):
         try:
             user=User.query.get_or_404(userid)
@@ -213,6 +263,8 @@ class UserRoleView(Resource):
 
     @api.doc('给用户解除角色')
     @api.response(200, 'ok')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin','superadmin'  ])
     def delete(self, userid, roleid):
         try:
                 user = User.query.get_or_404(userid)

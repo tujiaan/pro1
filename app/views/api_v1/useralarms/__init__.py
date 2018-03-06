@@ -2,13 +2,14 @@ from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import UserAlarmRecord
-from app.utils.tools.page_range import page_range
+from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.useralarms.parser import useralarmrecord_parser, useralarmrecord1_parser
 
 api=Namespace('UserAlarmsRecords',description='用户报警记录相关操作')
 from .models import *
 @api.route('/')
 class UserAlarmRecordsView(Resource):
+    @page_format(code=0,msg='ok')
     @api.doc('查询用户报警记录列表')
     @api.marshal_with(useralarmrecord_model,as_list=True)
     @api.response(200,'ok')

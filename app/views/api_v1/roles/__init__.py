@@ -2,13 +2,14 @@ from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import Role
-from app.utils.tools.page_range import page_range
+from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.roles.parser import roles_parser, roles_parser1
 
 api=Namespace('Roles',description='角色相关操作')
 from .models import *
 @api.route('/')
 class RolesView(Resource ):
+    @page_format(code=0,msg='ok')
     @api.doc('查询角色列表')
     @api.marshal_with(role_model,as_list=True)
     @api.response(200,'ok')

@@ -2,7 +2,7 @@ from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import Home, Ins, User
-from app.utils.tools.page_range import page_range
+from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.homes.parser import home_parser, home_parser1
 from app.views.api_v1.institutes import institute_model
 from app.views.api_v1.sensors import sensor_model
@@ -91,15 +91,16 @@ class HomeView(Resource):
         return None,200
 @api.route('/<homeid>/users')
 class HomeUsersView(Resource):
+    @page_format(code=0,msg='ok')
     @api.doc('查找家庭下的用户')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     @api.marshal_with(user_model,as_list=True)
     def get(self,homeid):
-        try:
+
             home=Home.query.get_or_404(homeid)
             return home.user,200
-        except: return[],404
+
 
 @api.route('/<homeid>/users/<userid>')
 class HomeUserView(Resource):
@@ -163,6 +164,8 @@ class HomeInsView(Resource):
             if distance>=getDistance(home.latitude,home.longitude,i.latitude,i.latitude):
                 list.append((ins,distance))
         return sorted(list,key=lambda l:l[1])
+
+
 @api.route('/<homeid>/sensors')
 class HomeSensorView(Resource):
     @api.doc('查询家中的传感器')
