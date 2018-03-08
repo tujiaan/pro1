@@ -60,26 +60,29 @@ class RolesView(Resource):
     @user_require
     def get(self):
         u = g.user
-        print(u)
+       # print(u)
         return u.roles,200
+
 @api.route('/homes/')
 class UserHomeView1(Resource):
     @api.doc('查询自己关联的家庭')
-    @page_format(code='0', msg='success')
-    @api.marshal_with(home_model,as_list=True)
     @api.header('jwt', 'JSON Web Token')
     @user_require
+    @page_format(code='0', msg='success')
+    @api.marshal_with(home_model,as_list=True)
+
     @page_range()
     def get(self):
         return g.user.home,200
 
 @api.route('/ins/')
 class UserHomeView1(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @user_require
     @page_format(code='0', msg='success')
     @api.doc('查询自己关联的机构')
     @api.marshal_with(institute_model,as_list=True)
-    @api.header('jwt', 'JSON Web Token')
-    @user_require
+
     @page_range()
     def get(self):
         return g.user.ins,200
@@ -149,6 +152,7 @@ class ProfileView(Resource):
     @api.route('/')
     class UsersFindView(Resource):
        @api.header('jwt', 'JSON Web Token')
+       @role_require(['admin', 'superadmin'])
        @page_format(code='0',msg='success')
        @api.doc(params={'page':'页数','limit':'数量'})
        @api.marshal_with(user_model, as_list=True)
@@ -156,10 +160,11 @@ class ProfileView(Resource):
        @api.marshal_with(user_model)
        @api.response(200, 'ok')
        @page_range()
-       @role_require(['admin','superadmin'])
+
        def get(self):
           list= User.query
-
+          print(type(list))
+          print(list)
           return list,200
 
      #  @api.doc('增加用户')
@@ -190,9 +195,10 @@ class user(Resource):
          user=User.query.get_or_404(userid)
          return user
 
+
+
      @api.header('jwt', 'JSON Web Token')
      @api.doc('根据id删除用户')
-
      @api.response(200, 'ok')
      @role_require(['admin','superadmin'])
      def delete(self,userid ):
@@ -206,25 +212,26 @@ class user(Resource):
 
 @api.route('/<userid>/ins')
 class UserHomeView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     @page_format(code=0,msg='ok')
     @api.doc('查询用户关联的机构')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @api.marshal_with(institute_model,as_list=True)
     @page_range()
-    @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin','superadmin'])
+
     def get(self,userid):
         user=User.query.get_or_404(userid)
         return user.ins,200
 
 @api.route('/<userid>/home')
 class UserHomeView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     @page_format(code=0, msg='ok')
     @api.doc('查询用户关联的家庭')
     @api.marshal_with(home_model,as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin'])
     @page_range()
     def get(self,userid):
         user=User.query.get_or_404(userid)
@@ -232,15 +239,20 @@ class UserHomeView(Resource):
 
 @api.route('/<userid>/roles')
 class UserRolesVsiew(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     @page_format(code=0, msg='ok')
     @api.doc('查询用户的角色')
     @api.marshal_with(role_model,as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @ page_range()
-    @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin'])
+    @page_range()
     def get(self,userid):
+
         user=User.query.get_or_404(userid)
+        #print(user.roles)
+        #print([i.id for i in user.roles])
+        #list=Role.query.filter_by(id in [i.id for i in user.roles] )
+
         return user.roles,200
 
 
@@ -249,17 +261,16 @@ class UserRoleView(Resource):
     @api.doc('给用户绑定角色')
     @api.response(200,'ok')
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin','superadmin'     ])
+    @role_require(['admin','superadmin'   ])
     def post(self,userid,roleid):
         try:
             user=User.query.get_or_404(userid)
             role=Role.query.get_or_404(roleid)
-
-
             user.roles.append(role)
             db.session.commit()
             return None,200
         except:return '该条记录已存在',400
+
 
     @api.doc('给用户解除角色')
     @api.response(200, 'ok')

@@ -2,6 +2,7 @@ from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import Facility, FacilityData,Knowledge
+from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.facilities.parser import facility_parser, facility_parser1, f_parser, f1_parser
 
@@ -14,14 +15,19 @@ from .models import *
 class FacilitiesDataView(Resource):
     @page_format(code=0,msg='ok')
     @api.doc('查询设施列表')
-
     @api.marshal_with(facility_data_model, as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     @page_range()
     def get(self):
         list = FacilityData.query
         return list, 200
+
+
     @api.doc('新增设施')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin','superadmin'])
     @api.expect(f_parser)
     def post(self):
         args=f_parser.parse_args()
@@ -39,11 +45,14 @@ class FacilityDataView(Resource):
     @api.marshal_with(facility_data_model)
     @api.response(200,'ok')
     def get(self,facilityid):
-        facility_data=FacilityData.query.filter_by(id=facilityid).first()
+        facility_data=FacilityData.query.get_or_404(facilityid)
         return facility_data,200
+
     @api.doc('更新设施详情')
     @api.expect(f1_parser)
     @api.response(200,'ok')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     def put(self,facilityid):
         facility_data1=FacilityData.query.filter_by(id=facilityid).first()
         args=f1_parser.parse_args()
@@ -63,6 +72,8 @@ class FacilityDataView(Resource):
 
     @api.doc('删除设施')
     @api.response(200, 'ok')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     def delete(self,facilityid):
         facility_data = FacilityData.query.get_or_404(facilityid)
         db.session.delete(facility_data)
@@ -88,6 +99,8 @@ class FacilitesInsView(Resource):
     @api.doc('新增设施机构关联')
     @api.response(200,'ok')
     @api.expect(facility_parser)
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     def post(self):
         args=facility_parser.parse_args()
         facility=Facility(**args)
@@ -107,6 +120,8 @@ class FacilitesView(Resource):
         @api.doc('更新机构设施关联')#ok
         @api.response(200,'ok')
         @api.expect(facility_parser1)
+        @api.header('jwt', 'JSON Web Token')
+        @role_require(['admin', 'superadmin'])
         def put(self,facilityid):
             args=facility_parser1.parse_args()
             facility=Facility.query.filter_by(facility_id=facilityid).first()
@@ -137,7 +152,8 @@ class FacilityKnowledgesView(Resource):
 
 @api.route('/<facilityid>/knowledges/<knowledgeid>/')
 class FacilityKnowledgeView(Resource):
-
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     @api.doc('给设施绑定知识')
     @api.response(200,'ok')
     @api.response(404,'Not Found')
@@ -156,6 +172,8 @@ class FacilityKnowledgeView(Resource):
     @api.doc('解除设施绑定知识')
     @api.response(200, 'ok')
     @api.response(404, 'Not Found')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     def delete(self, facilityid, knowledgeid):
         try:
             facility = Facility.query.get_or_404(facilityid)

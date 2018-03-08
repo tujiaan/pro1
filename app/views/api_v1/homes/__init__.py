@@ -1,7 +1,10 @@
+from flask import request, g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import Home, Ins, User
+from app.utils.auth import decode_jwt
+from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.homes.parser import home_parser, home_parser1
 from app.views.api_v1.institutes import institute_model
@@ -16,6 +19,8 @@ from.model import *
 
 @api.route('/')
 class HomesView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     @api.doc('查询家庭列表')
     @api.marshal_with(home_model)
     @api.marshal_with(home_model,as_list=True)
@@ -29,109 +34,139 @@ class HomesView(Resource):
     @api.doc('新增家庭')
     @api.expect(home_parser)
     @api.response(200,'ok')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin','homeuser'])
     def post(self):
+
         args=home_parser.parse_args()
         home=Home(**args)
         db.session.add(home)
         db.session.commit()
         return None,200
 
-@api.route('/<homeid>')
+@api.route('/<homeid>')######这个权限要不要放开？？？？
 class HomeView(Resource):
     @api.doc('根据家庭id查找家庭')
     @api.marshal_with(home_model)
     @api.response(200,'ok')
     def get(self,homeid):
-        home=Home.query.filter_by(id=homeid).first()
+        home=Home.query.get_or_404(homeid)
         return home,200
 
     @api.doc('根据家庭id删除家庭')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser','admin','superadmin'])
     @api.response(200,'ok')
     def delete(self,homeid):
-        home = Home.query.filter_by(id=homeid).first()
-        db.session.delete(home)
-        db.session.commit()
-        return None,200
+        home = Home.query.get_or_404(homeid)
+
+        if home.admin_user_id==g.user.id or 'admin' in [i.name for i in g.user.roles]or 'superadmin'in[i.name for i in g.user.roles]  :
+            db.session.delete(home)
+            db.session.commit()
+            return None,200
+        else: return '权限不足',200
+
+
     @api.doc('根据家庭id更新家庭')
     @api.expect(home_parser1)
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser', 'admin', 'superadmin'])
+
     def put(self,homeid):
         args=home_parser1.parse_args()
         home1=Home(**args)
-        home = Home.query.filter_by(id=homeid).first()
+        home = Home.query.get_or_404(homeid)
+        if home.admin_user_id == g.user.id or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+            if home1.admin_user_id:
+                home.admin_user_id=home1.admin_user_id
+            else:pass
+            if home1.alternate_phone:
+                home.alternate_phone=home1.alternate_phone
+            else:pass
+            if home1.community:
+                home.community=home1.community
+            else:pass
+            if home1.community_id:
+             home.community_id=home1.community_id
+            else:pass
+            if home1.latitude:
+             home.latitude=home1.latitude
+            else:pass
+            if home1.longitude:
+             home.longitude=home1.longitude
+            else:pass
+            if home1.link_name:
+             home.link_name=home1.link_name
+            else:pass
+            if home1.telephone:
+                home.telephone=home1.telephone
+            else:pass
+            if home1.name:
+             home.name=home1.name
+            else:pass
+            db.session.commit()
+            return home,200
+        else: return '权限不足',200
 
-        if home1.admin_user_id:
-            home.admin_user_id=home1.admin_user_id
-        else:pass
-        if home1.alternate_phone:
-            home.alternate_phone=home1.alternate_phone
-        else:pass
-        if home1.community:
-            home.community=home1.community
-        else:pass
-        if home1.community_id:
-            home.community_id=home1.community_id
-        else:pass
-        if home1.latitude:
-            home.latitude=home1.latitude
-        else:pass
-        if home1.longitude:
-            home.longitude=home1.longitude
-        else:pass
-        if home1.link_name:
-            home.link_name=home1.link_name
-        else:pass
-        if home1.telephone:
-            home.telephone=home1.telephone
-        else:pass
-        if home1.name:
-            home.name=home1.name
-        else:pass
 
-        db.session.commit()
-        return None,200
+
 @api.route('/<homeid>/users')
 class HomeUsersView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser', 'admin', 'superadmin'])
     @page_format(code=0,msg='ok')
     @api.doc('查找家庭下的用户')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     @api.marshal_with(user_model,as_list=True)
     def get(self,homeid):
-
-            home=Home.query.get_or_404(homeid)
+        home=Home.query.get_or_404(homeid)
+        if home.admin_user_id == g.user.id or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
             return home.user,200
+        else:return '权限不足',200
 
 
 @api.route('/<homeid>/users/<userid>')
 class HomeUserView(Resource):
     @api.doc('增加家庭成员/用户绑定家庭')
     @api.response(200,'ok')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser', 'admin', 'superadmin'])
     def post(self,homeid,userid):
-        try:
+
             home=Home.query.get_or_404(homeid)
             user=User.query.get_or_404(userid)
-            home.user.append(user)
-            db.session.commit()
-            return '添加成员成功',200
-        except:
-                 return '成员已经存在',200
+            if user not in home.user:
+                if home.admin_user_id == g.user.id or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+                    home.user.append(user)
+                    db.session.commit()
+                    return '添加成员成功',200
+                else:
+                    return '权限不足',200
+            else:return '成员已经存在',301
 
     @api.doc('删除家庭成员/解除用户绑定家庭')
     @api.response(200, 'ok')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser', 'admin', 'superadmin'])
     def delete(self, homeid, userid):
-            try:
-                home = Home.query.get_or_404(homeid)
-                user = User.query.get_or_404(userid)
-                home.user.remove(user)
-                db.session.commit()
-                return '删除成员成功', 200
-            except:
-                return '成员不存在存在',200
+        home = Home.query.get_or_404(homeid)
+        user = User.query.get_or_404(userid)
+        if user in home.user:
+          if home.admin_user_id == g.user.id or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+            home.user.remove(user)
+            db.session.commit()
+            return '删除成员成功', 200
+          else:return '权限不足',200
+        else:return '成员不存在',301
 
 
 
 @api.route('/<homeid>,<distance>/ins')
 class HomeInsView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser', 'admin', 'superadmin'])
+    @page_format(code=0,msg='ok')
     @api.doc('查询家庭附近的机构')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
@@ -160,10 +195,13 @@ class HomeInsView(Resource):
             dr = flatten / 8 * (c1 - c2)
             distance = ra * (x + dr)
             return distance
-        for i in ins:
-            if distance>=getDistance(home.latitude,home.longitude,i.latitude,i.latitude):
-                list.append((ins,distance))
-        return sorted(list,key=lambda l:l[1])
+
+        if home in g.user.home or 'admin' in g.user.roles.name or 'superadmin' in g.user.roles.name:
+            for i in ins:
+                if distance>=getDistance(home.latitude,home.longitude,i.latitude,i.latitude):
+                    list.append((ins,distance))
+            return sorted(list,key=lambda l:l[1])
+        else:return '权限不足',200
 
 
 @api.route('/<homeid>/sensors')
@@ -171,11 +209,16 @@ class HomeSensorView(Resource):
     @api.doc('查询家中的传感器')
     @api.marshal_with(sensor_model, as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @page_range()
 
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser', 'admin', 'superadmin'])
+    @page_format(code=0,msg='ok')
+    @page_range()
     def get(self,homeid):
         home=Home.query.get_or_404(homeid)
-        return home.sensor,200
+        if home in g.user.home or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+            return home.sensor,200
+        else:return '权限不足',200
 
 
 
