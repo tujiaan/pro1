@@ -52,6 +52,8 @@ class Ins(db.Model):
     type = db.Column(db.String(255), comment='机构类型')
     name = db.Column(db.String(50), comment='机构名称')
     ins_picture = db.Column(db.LargeBinary, comment='机构图片')
+    location_id=db.Column(db.String(50),db.ForeignKey('location.id'),comment='位置')
+
     ins_address = db.Column(db.String(255), comment='机构地址')
     note = db.Column(db.Text, comment='备注')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
@@ -61,6 +63,13 @@ class Ins(db.Model):
     community=db.relationship('Community')
     user = db.relationship('User', secondary=t_user_ins,
                           backref=db.backref('f_user', lazy='dynamic') , lazy='dynamic' )
+
+    class Location (db.Model):
+        __tablename__='location'
+        id = db.Column(db.String(24), default=objectid, primary_key=True)
+        province = db.Column(db.String(25), comment='省/市')
+        district = db.Column(db.String(50), comment='区')
+        street= db.Column(db.LargeBinary, comment='街道')
 
 
 

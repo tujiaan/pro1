@@ -2,7 +2,7 @@ from flask import g, flash
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import User, Role
+from app.models import User, Role, Ins
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.auth.jwt import encode_jwt
@@ -53,14 +53,15 @@ class LoginView(Resource):
 
 @api.route('/roles/')
 class RolesView(Resource):
+    @user_require
+    @api.header('jwt', 'JSON Web Token')
+    @page_format(code=0, msg='200')
     @api.doc('获取权限')
     @api.marshal_with(role_model,as_list=True)
     @api.response(200, 'ok')
-    @api.header('jwt', 'JSON Web Token')
-    @user_require
+    @page_range()
     def get(self):
         u = g.user
-       # print(u)
         return u.roles,200
 
 @api.route('/homes/')
@@ -153,6 +154,7 @@ class ProfileView(Resource):
     class UsersFindView(Resource):
        @api.header('jwt', 'JSON Web Token')
        @role_require(['admin', 'superadmin'])
+       #@role_require(['superadmin'])
        @page_format(code='0',msg='success')
        @api.doc(params={'page':'页数','limit':'数量'})
        @api.marshal_with(user_model, as_list=True)
@@ -160,12 +162,12 @@ class ProfileView(Resource):
        @api.marshal_with(user_model)
        @api.response(200, 'ok')
        @page_range()
-
        def get(self):
-          list= User.query
-          print(type(list))
-          print(list)
-          return list,200
+        if 'admin 'not in [i.name for i in g.user.roles]:
+         list= User.query
+         return list,200
+
+
 
      #  @api.doc('增加用户')
 
@@ -192,17 +194,19 @@ class user(Resource):
      @api.header('jwt', 'JSON Web Token')
      @role_require(['admin','superadmin'])
      def get(self,userid):
-         user=User.query.get_or_404(userid)
-         return user
+         user = User.query.get_or_404(userid)
+         if 'superadmin'in g.user.roles or 'admin'not in [i.name for i in user.roles]:
+             return user,200
+         else:return '权限不足',200
 
 
 
      @api.header('jwt', 'JSON Web Token')
-     @api.doc('根据id删除用户')
+     @api.doc('根据id删除用户')######事实上根本是用不到删除这个根表
      @api.response(200, 'ok')
-     @role_require(['admin','superadmin'])
+     @role_require([ ])
      def delete(self,userid ):
-         user = User.query.filter_by(id=userid).first()
+         user = User.query.get_or_404(userid)
          db.session.delete(user)
          db.session.commit()
          return None,200
@@ -258,32 +262,53 @@ class UserRolesVsiew(Resource):
 
 @api.route('/<userid>/roles/<roleid>')
 class UserRoleView(Resource):
-    @api.doc('给用户绑定角色')
+    @api.doc('给用户绑定角色/增加xx用户')
     @api.response(200,'ok')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin','superadmin'   ])
     def post(self,userid,roleid):
-        try:
-            user=User.query.get_or_404(userid)
-            role=Role.query.get_or_404(roleid)
-            user.roles.append(role)
-            db.session.commit()
-            return None,200
-        except:return '该条记录已存在',400
+        user = User.query.get_or_404(userid)
+
+        role = Role.query.get_or_404(roleid)
+        if role.name!='admin'or 'superadmin'in [i.name for i in g.user.roles]:
+            try:
+
+                user.roles.append(role)
+                db.session.commit()
+                return None,200
+            except:return '该条记录已存在',400
+        elif role.name=='admin'and 'superadmin'in [i.name for i in g.user.roles]:
+            try:
+
+                user.roles.append(role)
+                db.session.commit()
+                return None,200
+            except:return '该条记录已存在',400
+        else:return '权限不足',301
 
 
-    @api.doc('给用户解除角色')
+    @api.doc('给用户解除角色/删除xx用户')
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin','superadmin'  ])
     def delete(self, userid, roleid):
-        try:
-                user = User.query.get_or_404(userid)
-                role = Role.query.get_or_404(roleid)
-                user.roles.remove(role)
-                db.session.commit()
-                return None,200
-        except:return '用户已不具备该角色',200
+        user = User.query.get_or_404(userid)
+        role = Role.query.get_or_404(roleid)
+        if role.name != 'admin' or 'superadmin' in [i.name for i in g.user.roles]:
+           try:
+
+            user.roles.remove(role)
+            db.session.commit()
+            return None,200
+           except:return '用户已不具备该角色',200
+        elif   role.name == 'admin' and 'superadmin' in [i.name for i in g.user.roles]:
+           try:
+
+            user.roles.remove(role)
+            db.session.commit()
+            return None,200
+           except:return '用户已不具备该角色',200
+        else:return'权限不足',301
 
 
 

@@ -14,9 +14,11 @@ institute_model = api.model('InstituteModel', {
     'ins_address': fields.String,
     'ins_picture': fields.Nested(institute_picture_model),
     'admin_user_id': fields.String,
+    'location_id':fields.String,
     'note': fields.String,
     'longitude': fields.Float,
-    'latitude': fields.Float
+    'latitude': fields.Float,
+
 
 })
 user_model = api.model('UserModel', {

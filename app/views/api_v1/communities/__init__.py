@@ -1,7 +1,9 @@
+from flask import g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Community
+from app.models import Community, Ins
+from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.communities.parser import community_parser, community_parser1
 
@@ -10,7 +12,9 @@ api=Namespace('Community',description='社区相关操作')
 from .models import *
 @api.route('/')
 class CommunitiesView(Resource):
-    @api.doc('查询所有的社区列表')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', '119user','superadmin'])
+    @api.doc('查询所有的社区列表')#
     @page_format(code=0,msg='ok')
     @api.marshal_with(community_model,as_list=True)
     @api.response(200,'ok')
@@ -20,7 +24,9 @@ class CommunitiesView(Resource):
         community=Community.query
         return community,200
 
-    @api.doc('新增社区')
+    @api.doc('新增社区')#
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     @api.expect(community_parser,validate=True)
     @api.response(200,'ok')
     def post(self):
@@ -55,16 +61,26 @@ class CommunitiesView(Resource):
         return None,200
 @api.route('/<communityid>')
 class CommunityView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin','119user','insuser' ,'superadmin'])
     @api.doc('查询特定的小区信息')
     @api.marshal_with(community_model)
     @api.response(200,'ok')
     def get(self,communityid):
         community=Community.query.get_or_404(communityid)
-        return community,200
+
+        if 'insuser'not in [i.name for i in g.user.role]:
+            return community,200
+        else:
+            ins=Ins.query.filter(Ins.admin_user_id==g.user.id).first()
+            return ins.community,200
 
 
     @api.doc('更新社区的信息')
     @api.expect(community_parser1)
+    @api.header('jwt', 'JSON Web Token')
+
+    @role_require(['admin','superadmin' ])
     @api.response(200,'ok')
     def put(self,communityid):
         args=community_parser1.parse_args()
@@ -105,6 +121,8 @@ class CommunityView(Resource):
         return None,200
 
     @api.doc('删除社区')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin',  'superadmin'])
     @api.response(200,'ok')
     def delete(self,communityid):
         community=Community.query.get_or_404(communityid)
@@ -113,6 +131,8 @@ class CommunityView(Resource):
         return None,200
 @api.route('/<communityid>/homes')
 class CommunityHome(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', '119user', 'insuser', 'superadmin'])
     @page_format(code=0,msg='ok')
     @api.doc('查询社区覆盖的家庭')
     @api.marshal_with(home_model,as_list=True)
@@ -121,7 +141,7 @@ class CommunityHome(Resource):
     @api.response(200,'ok')
     def get(self,communityid):
         community=Community.query.get_or_404(communityid)
-        return community.homes.all(),200
+        return community.homes,200
 
 
 

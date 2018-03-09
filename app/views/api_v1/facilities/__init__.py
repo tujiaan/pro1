@@ -1,3 +1,4 @@
+from flask import g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
@@ -13,12 +14,13 @@ from .models import *
 
 @api.route('/')
 class FacilitiesDataView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     @page_format(code=0,msg='ok')
     @api.doc('查询设施列表')
     @api.marshal_with(facility_data_model, as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin'])
+
     @page_range()
     def get(self):
         list = FacilityData.query
@@ -49,26 +51,23 @@ class FacilityDataView(Resource):
         return facility_data,200
 
     @api.doc('更新设施详情')
-    @api.expect(f1_parser)
+    @api.expect(facility_parser1)
     @api.response(200,'ok')
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin'])
+    @role_require(['admin', 'superadmin','insuser'])
     def put(self,facilityid):
-        facility_data1=FacilityData.query.filter_by(id=facilityid).first()
-        args=f1_parser.parse_args()
-        facility_data = FacilityData()
-        facility_data.facility_name = args['facility_name']
-        p = args['facility_picture']
-        if p :
-         facility_data.facility_picture = p.read()
-        if facility_data.facility_name is not None:
-            facility_data1.facility_name=facility_data.facility_name
-        else:pass
-        if facility_data.facility_picture is not None:
-            facility_data1.facility_picture=  facility_data.facility_picture
-        else:pass
+      facility=Facility.query.get_or_404(facilityid)
+      args=facility_parser1.parse_args()
+      if 'insuser'not in [i.anme for i in g.user.role]:
         db.session.commit()
         return None,200
+      elif'insuser' in [i.anme for i in g.user.role] and facility.ins.type!='property':
+          db.session.commit()
+          return None,200
+      else:return '权限不足',301
+   
+        
+        
 
     @api.doc('删除设施')
     @api.response(200, 'ok')

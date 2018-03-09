@@ -17,8 +17,8 @@ from .model import *
 class InstitutesViews(Resource):
     @page_format(code=0,msg='ok')
     @api.doc('查询所有机构列表')
-    @api.header('jwt', 'JSON Web Token')
-    @role_require([ 'admin', 'superadmin'])
+    #@api.header('jwt', 'JSON Web Token')
+    #@role_require([ 'admin', 'superadmin','119user'])
     @api.marshal_with(institute_model, as_list=True )
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
@@ -26,8 +26,8 @@ class InstitutesViews(Resource):
     def get(self):
         list = Ins .query
         return list, 200
-    @api.doc('新增机构')
-    @api.expect(institutes_parser)
+    @api.doc('新增机构')#
+    @api.expect(institutes_parser,validate=True)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     @api.response(200,'ok')
@@ -42,15 +42,20 @@ class InstitutesViews(Resource):
         institute.latitude=args['latitude']
         institute.longitude=args['longitude']
         institute.ins_address=args['ins_address']
+        institute.location_id=args['location_id']
         if args['ins_picture']:
             institute.ins_picture=args['ins_picture'].read()
         else:pass
+
+        institute.admin_user_id=args['admin_user_id']
         db.session.add(institute)
         db.session.commit()
         return None,200
 
-@api.route('/<insid>')
+@api.route('/<insid>')#####???????
 class InstituteView(Resource):
+   # @api.header('jwt', 'JSON Web Token')
+    #@role_require(['insuser', 'admin', 'superadmin'])
     @api.doc('根据机构id查询机构')
     @api.marshal_with(institute_model)
     @api.response(200,'ok')
@@ -59,7 +64,7 @@ class InstituteView(Resource):
         return institute,200
 
 
-    @api.doc('根据id更新机构信息')
+    @api.doc('根据id更新机构信息')#
     @api.expect(institutes_parser1)
     @api.response(200,'ok')
     @api.header('jwt', 'JSON Web Token')
@@ -86,6 +91,9 @@ class InstituteView(Resource):
             if 'longitude'in args and args['longitude']:
                 institute.longitude=args['longitude']
             else:pass
+            if args['location']:
+                institute.location_id=args['location']
+            else:pass
             if 'latitude'in args and args['latitude']:
                 institute.latitude=args['latitude']
             else:pass
@@ -96,7 +104,7 @@ class InstituteView(Resource):
             db.session.commit()
             return institute,200
 
-    @api.doc('根据id删除机构')
+    @api.doc('根据id删除机构')#
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     @api.marshal_with(institute_model, as_list=True)
@@ -108,8 +116,8 @@ class InstituteView(Resource):
         return None,200
 @api.route('/<insid>/users')
 class InsUsesrView(Resource):
-    @api.header('jwt', 'JSON Web Token')
-    @role_require(['insuser', 'admin', 'superadmin'])
+   # @api.header('jwt', 'JSON Web Token')
+   # @role_require(['insuser', 'admin', 'superadmin'])
     @page_format(code=0,msg='ok')
     @api.doc('查询机构下面的用户列表')
     @api.marshal_with(user_model,as_list=True)
@@ -117,9 +125,9 @@ class InsUsesrView(Resource):
     @page_range()
     def get(self,insid):
         ins=Ins.query.get_or_404(insid)
-        if g.user.id==ins.admin_user_id or 'admin'in [i.name for i in g.user.roles] or 'superadmin'in [i.name for i in g.user.roles] :
-            return ins.user,200
-        else:return '权限不足，200'
+        #if g.user.id==ins.admin_user_id or 'admin'in [i.name for i in g.user.roles] or 'superadmin'in [i.name for i in g.user.roles] :
+        return ins.user,200
+        #else:return '权限不足，200'
 
 @api.route('/<insid>/users/<userid>')
 class InsUserView(Resource):

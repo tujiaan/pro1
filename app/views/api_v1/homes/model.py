@@ -11,5 +11,6 @@ home_model = api.model('HomeModel', {
     'telephone': fields.String,
     'longitude': fields.Float,
     'latitude':fields.Float,
-    'alternate_phone':fields.String
+    'alternate_phone':fields.String,
+    'admin_user_id':fields.String
 })
