@@ -23,10 +23,10 @@ class RegisterView(Resource):
     @api.response(409, '用户重复')
     def post(self):
         args = register_parser.parse_args()
-        u1 = User.query.filter(User.contract_tel==args.get('contract_tel')  ).first()
+        u1 = User.query.filter(User.contract_tel==args.get('contract_tel')).first()
         if u1 is not None:
             return None, 409
-        u2 = User.query.filter(User.email==args.get('email')  ).first()
+        u2 = User.query.filter(User.email==args.get('email')).first()
         if u2 is not None:
             return None, 409
         else:
@@ -169,8 +169,8 @@ class ProfileView(Resource):
         def post(self):
             u = g.user
             args = username_parser.parse_args()
-            if u.email == args.get('old_username'):
-                u.email = args.get('username')
+            if u.username == args.get('old_username'):
+                u.username = args.get('username')
                 db.session.commit()
             return None, 204
 @api.route('/')

@@ -141,7 +141,8 @@ class Home(db.Model):
     longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     alternate_phone = db.Column(db.String(50), comment='备用电话')
-    gateways = db.relationship('Gateway', lazy='dynamic')
+    #gateways = db.relationship('Gateway', lazy='dynamic')
+    gateway_id=db.Column(db.String(50),db.ForeignKey('gateway.id'),comment='网关id')
     sensor=db.relationship('Sensor',lazy='dynamic')
 
 

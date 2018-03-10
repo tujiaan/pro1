@@ -6,6 +6,7 @@ from app.models import Home, Ins, User
 from app.utils.auth import decode_jwt
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
+from app.views.api_v1.gateways import gateway_model
 from app.views.api_v1.homes.parser import home_parser, home_parser1
 from app.views.api_v1.institutes import institute_model
 from app.views.api_v1.sensors import sensor_model
@@ -31,7 +32,7 @@ class HomesView(Resource):
         list=Home.query
         if 'admin'or 'superadmin'in [i.name for i in g.user.roles]:
             return list,200
-        else:return list.filter(g.user in [Home.user] )#####
+        else:return list.filter(g.user in [Home.user] )###########################
 
     @api.doc('新增家庭')
     @api.expect(home_parser)
@@ -69,7 +70,7 @@ class HomeView(Resource):
         else: return '权限不足',200
 
 
-    @api.doc('根据家庭id更新家庭')
+    @api.doc('根据家庭id更新家庭')######待测
     @api.expect(home_parser1,validate=True)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser', 'admin', 'superadmin'])
@@ -84,6 +85,10 @@ class HomeView(Resource):
             else:pass
             if home1.alternate_phone:
                 home.alternate_phone=home1.alternate_phone
+            else:pass
+            if home1.gateway_id:
+              #  if 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+                home.gateway_id=home1.gateway_id
             else:pass
             if home1.community:
                 home.community=home1.community
@@ -111,6 +116,29 @@ class HomeView(Resource):
             db.session.commit()
             return home,200
         else: return '权限不足',200
+
+@api.route('/<homeid>,<gatewayid>')######待测
+class HomeGatewayView(Resource):
+    @api.doc('给家庭绑定网关')
+    @api.response(200,'ok')
+    @api.marshal_with(gateway_model)
+    @role_require(['admin','superadmin'])
+    @api.header('jwt', 'JSON Web Token')
+    def post(self,homeid,gatewayid):
+        home=Home.query.get_or_404(homeid)
+        home.gateway_id=gatewayid
+        db.session.commit()
+        return home,200
+
+    @api.doc('删除家庭的网关')######待测
+    @api.response(200, 'ok')
+    @role_require(['admin', 'superadmin'])
+    @api.header('jwt', 'JSON Web Token')
+    def delete(self,homeid,gatewayid):
+        home = Home.query.get_or_404(homeid)
+        db.session.delete(home)
+        db.session.commit()
+        return None,200
 
 
 
@@ -223,6 +251,8 @@ class HomeSensorView(Resource):
         if home not in g.user.home:
             return'权限不足',200
         else:return home.sensor,200
+
+
 
 
 
