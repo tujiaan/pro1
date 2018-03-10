@@ -122,23 +122,30 @@ class HomeGatewayView(Resource):
     @api.doc('给家庭绑定网关')
     @api.response(200,'ok')
     @api.marshal_with(gateway_model)
-    @role_require(['admin','superadmin'])
+    @role_require(['homeuser','admin','superadmin'])
     @api.header('jwt', 'JSON Web Token')
     def post(self,homeid,gatewayid):
         home=Home.query.get_or_404(homeid)
-        home.gateway_id=gatewayid
-        db.session.commit()
-        return home,200
+
+        if 'homeuser'in [i.name for i in g.user.roles] and g.user.id!=home.admin_user_id:
+            return '权限不足',301
+        else:
+            home.gateway_id = gatewayid
+            db.session.commit()
+            return home,200
 
     @api.doc('删除家庭的网关')######待测
     @api.response(200, 'ok')
-    @role_require(['admin', 'superadmin'])
+    @role_require(['homeuser','admin', 'superadmin'])
     @api.header('jwt', 'JSON Web Token')
     def delete(self,homeid,gatewayid):
         home = Home.query.get_or_404(homeid)
-        db.session.delete(home)
-        db.session.commit()
-        return None,200
+        if 'homeuser'in [i.name for i in g.user.roles] and g.user.id!=home.admin_user_id:
+            return '权限不足',301
+        else:
+            db.session.delete(home)
+            db.session.commit()
+            return None,200
 
 
 
