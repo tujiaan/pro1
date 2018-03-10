@@ -128,8 +128,10 @@ class ProfileView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @user_require
     def get(self):
-        return g.user
+     return g.user
 
+@api.route('/telephone/')
+class ProfileView(Resource):
     @api.doc('修改用户电话')
     @api.header('jwt', 'JSON Web Token')
     @user_require
@@ -142,7 +144,8 @@ class ProfileView(Resource):
             db.session.commit()
         return None, 204
 
-
+@api.route('/email/')
+class ProfileView(Resource):
     @api.doc('修改用户邮箱')
     @api.header('jwt', 'JSON Web Token')
     @user_require
@@ -156,9 +159,22 @@ class ProfileView(Resource):
             db.session.commit()
         return None, 204
 
-
-    @api.route('/')
-    class UsersFindView(Resource):
+@api.route('/username/')
+class ProfileView(Resource):
+        @api.doc('修改用户名')
+        @api.header('jwt', 'JSON Web Token')
+        @user_require
+        @api.expect(username_parser)
+        @api.response(200, 'ok')
+        def post(self):
+            u = g.user
+            args = username_parser.parse_args()
+            if u.email == args.get('old_username'):
+                u.email = args.get('username')
+                db.session.commit()
+            return None, 204
+@api.route('/')
+class UsersFindView(Resource):
        @api.header('jwt', 'JSON Web Token')
        @role_require(['admin', 'superadmin'])
        #@role_require(['superadmin'])

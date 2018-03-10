@@ -10,7 +10,7 @@ institutes_parser.add_argument('note',type=str,help='备注',required=True,locat
 #institutes_parser.add_argument('admin_user_id',type=str,help='管理员id',required=True,location='form')
 institutes_parser.add_argument('longitude',type=float,help='机构经度',required=True,location='form')
 institutes_parser.add_argument('latitude',type=float,help='机构纬度',required=True,location='form')
-institutes_parser.add_argument('admin_user_id',type=float,help='机构管理员id',required=True,location='form')
+institutes_parser.add_argument('admin_user_id',type=str,help='机构管理员id',required=True,location='form')
 institutes_parser.add_argument('location_id',type=str,help='位置id',required=True,location='form')
 
 

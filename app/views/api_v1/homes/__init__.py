@@ -20,7 +20,7 @@ from.model import *
 @api.route('/')
 class HomesView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin'])
+    @role_require(['admin','homeuser' 'superadmin'])
     @api.doc('查询家庭列表')
     @api.marshal_with(home_model)
     @api.marshal_with(home_model,as_list=True)
@@ -29,7 +29,9 @@ class HomesView(Resource):
     @page_range()
     def get(self):
         list=Home.query
-        return list,200
+        if 'admin'or 'superadmin'in [i.name for i in g.user.roles]:
+            return list,200
+        else:return list.filter(g.user in [Home.user] )#####
 
     @api.doc('新增家庭')
     @api.expect(home_parser)

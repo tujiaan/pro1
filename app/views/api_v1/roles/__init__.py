@@ -2,6 +2,7 @@ from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import Role
+from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.roles.parser import roles_parser, roles_parser1
 
@@ -9,6 +10,8 @@ api=Namespace('Roles',description='角色相关操作')
 from .models import *
 @api.route('/')
 class RolesView(Resource ):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     @page_format(code=0,msg='ok')
     @api.doc('查询角色列表')
     @api.marshal_with(role_model,as_list=True)
@@ -18,7 +21,7 @@ class RolesView(Resource ):
     def get(self):
         list=Role.query
         return list,200
-    @api.doc('新建角色')
+    @api.doc('新建角色')########用不上
     @api.expect(roles_parser)
     @api.response(200,'ok')
     def post(self):
@@ -29,7 +32,7 @@ class RolesView(Resource ):
         return None,200
 @api.route('/<roleid>')
 class RoleView(Resource):
-    @api.doc('删除角色')
+    @api.doc('删除角色')#####用不上
     @api.response(200,'ok')
     def delete(self,roleid):
         role=Role.query.get_or_404(roleid)

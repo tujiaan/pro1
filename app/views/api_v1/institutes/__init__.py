@@ -17,15 +17,20 @@ from .model import *
 class InstitutesViews(Resource):
     @page_format(code=0,msg='ok')
     @api.doc('查询所有机构列表')
-    #@api.header('jwt', 'JSON Web Token')
-    #@role_require([ 'admin', 'superadmin','119user'])
+    @api.header('jwt', 'JSON Web Token')
+    @role_require([ 'admin', 'superadmin','119user'])
     @api.marshal_with(institute_model, as_list=True )
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
-        list = Ins .query
-        return list, 200
+        list = Ins.query
+        if ('admin'or'superadmin')in [i.name for i in g.user.roles]:
+
+            return list, 200
+        else:
+            return list.filter(Ins.admin_user_id==g.user.id)
+
     @api.doc('新增机构')#
     @api.expect(institutes_parser,validate=True)
     @api.header('jwt', 'JSON Web Token')
@@ -35,7 +40,9 @@ class InstitutesViews(Resource):
         args=institutes_parser.parse_args()
         institute=Ins()
         institute.name=args['name']
-        institute.admin_user_id=args['admin_user_id']
+        if'insuser'in[i.name for i in [User.query.get_or_404(args['admin_user_id']).roles]]:
+            institute.admin_user_id=args['admin_user_id']
+        else:return '非机构用户无法绑定到机构',301
         institute.type=args['type']
         institute.ins_address=args['ins_address']
         institute.note=args['note']
@@ -106,6 +113,7 @@ class InstituteView(Resource):
                 pass
             db.session.commit()
             return institute,200
+        else:return'权限不足',301
 
     @api.doc('根据id删除机构')#
     @api.header('jwt', 'JSON Web Token')
@@ -119,8 +127,8 @@ class InstituteView(Resource):
         return None,200
 @api.route('/<insid>/users')
 class InsUsesrView(Resource):
-   # @api.header('jwt', 'JSON Web Token')
-   # @role_require(['insuser', 'admin', 'superadmin'])
+    #@api.header('jwt', 'JSON Web Token')
+    #@role_require(['insuser', 'admin', 'superadmin'])
     @page_format(code=0,msg='ok')
     @api.doc('查询机构下面的用户列表')
     @api.marshal_with(user_model,as_list=True)
@@ -128,7 +136,7 @@ class InsUsesrView(Resource):
     @page_range()
     def get(self,insid):
         ins=Ins.query.get_or_404(insid)
-        #if g.user.id==ins.admin_user_id or 'admin'in [i.name for i in g.user.roles] or 'superadmin'in [i.name for i in g.user.roles] :
+        #if g.user.id==ins.admin_user_id or 'admin'ior 'superadmin'in [i.name for i in g.user.roles] :
         return ins.user,200
         #else:return '权限不足，200'
 
