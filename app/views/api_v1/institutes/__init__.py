@@ -72,12 +72,15 @@ class InstituteView(Resource):
     def put(self,insid):
         institute = Ins.query.get_or_404(insid)
         args = institutes_parser1.parse_args()
-        if institute.admin_user_id==g.user.id or'admin' in g.user.roles.name or 'superadmin' in g.user.roles.name:
+        if 'insuser'in [i.name for i in g .user.roles]and institute.admin_user_id==g.user.id or'admin' in g.user.roles.name or 'superadmin' in g.user.roles.name:
             if 'name'in args and args['name'] :
                 institute.name=args['name']
             else:pass
+
             if 'admin_user_id'in args and args['admin_user_id']:
-                institute.admin_user_id=args['admin_user_id']
+                if 'admin' in g.user.roles.name or 'superadmin' in g.user.roles.name:
+                    institute.admin_user_id=args['admin_user_id']
+                else: pass
             else:pass
             if 'type'in args and args['type']:
                 institute.type=args['type']

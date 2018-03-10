@@ -23,13 +23,20 @@ class RegisterView(Resource):
     @api.response(409, '用户重复')
     def post(self):
         args = register_parser.parse_args()
-        u = User.query.filter_by(username=args.get('username')).first()
-        if u is not None:
+        u1 = User.query.filter(User.contract_tel==args.get('contract_tel')  ).first()
+        if u1 is not None:
             return None, 409
-        u = User(**args)
-        db.session.add(u)
-        db.session.commit()
-        return {'id': u.id}, 201
+        u2 = User.query.filter(User.email==args.get('email')  ).first()
+        if u2 is not None:
+            return None, 409
+        else:
+            u = User(**args)
+            u.role_id=1;
+            db.session.add(u)
+            u.roles.append(Role.query.get_or_404(1))
+            db.session.commit()
+
+            return {'id': u.id}, 201
 
 
 @api.route('/login/')
@@ -268,23 +275,24 @@ class UserRoleView(Resource):
     @role_require(['admin','superadmin'   ])
     def post(self,userid,roleid):
         user = User.query.get_or_404(userid)
-
         role = Role.query.get_or_404(roleid)
-        if role.name!='admin'or 'superadmin'in [i.name for i in g.user.roles]:
-            try:
+        if role.name!='superadmin':
+            if role.name not in ['admin','superadmin'  ]   or 'superadmin'in [i.name for i in g.user.roles]:
+                try:
 
-                user.roles.append(role)
-                db.session.commit()
-                return None,200
-            except:return '该条记录已存在',400
-        elif role.name=='admin'and 'superadmin'in [i.name for i in g.user.roles]:
-            try:
+                    user.roles.append(role)
+                    db.session.commit()
+                    return None,200
+                except:return '该条记录已存在',400
+            elif role.name=='admin'and 'superadmin'in [i.name for i in g.user.roles]:
+                try:
 
-                user.roles.append(role)
-                db.session.commit()
-                return None,200
-            except:return '该条记录已存在',400
-        else:return '权限不足',301
+                    user.roles.append(role)
+                    db.session.commit()
+                    return None,200
+                except:return '该条记录已存在',400
+            else:return '权限不足',301
+        else: pass
 
 
     @api.doc('给用户解除角色/删除xx用户')
@@ -294,7 +302,7 @@ class UserRoleView(Resource):
     def delete(self, userid, roleid):
         user = User.query.get_or_404(userid)
         role = Role.query.get_or_404(roleid)
-        if role.name != 'admin' or 'superadmin' in [i.name for i in g.user.roles]:
+        if role.name not in ['admin','superadmin'  ] or 'superadmin' in [i.name for i in g.user.roles]:
            try:
 
             user.roles.remove(role)

@@ -2,7 +2,7 @@ from flask import g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import SensorAlarm
+from app.models import SensorAlarm, Home
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms.parser import sensoralarms_parser, sensoralarms_parser1
@@ -64,11 +64,21 @@ class SensorAlarmView(Resource):
     @api.response(200, 'ok')
     def put(self,sensoralarmid):
         sensoralarm=SensorAlarm.query.get_or_404(sensoralarmid)
-        if sensoralarm.sensor not in [i.sensor for i in g.user.home]:
-            return '权限不足',301
+        if 'homeuser'in [i.name for i in g .user.role]:
+            home=Home.query.get_or_404( sensoralarm.sensor.home_id)
+            if home.admin_user_id==g.user.id:
+                sensoralarm.is_confirm==True
+                db.session.commit()
+                return None,200
+            else: return '权限不足',301
         else:
-            sensoralarm.is_confirm=True
+            sensoralarm.is_confirm==True
             db.session.commit()
-            return sensoralarm,200
+            return None, 200
+
+
+
+
+
 
 

@@ -18,6 +18,7 @@ def role_function(r):
                 try:
                     identity = decode_jwt(jwt_str)
                     g.user = User.query.get(identity['user_id']) if identity['user_id'] else None
+
                 except Exception as e:
                     print(e)
             if g.user is None:

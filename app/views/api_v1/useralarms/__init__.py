@@ -1,7 +1,9 @@
+from flask import g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import UserAlarmRecord
+from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.useralarms.parser import useralarmrecord_parser, useralarmrecord1_parser
 
@@ -9,6 +11,9 @@ api=Namespace('UserAlarmsRecords',description='用户报警记录相关操作')
 from .models import *
 @api.route('/')
 class UserAlarmRecordsView(Resource):
+
+    @api.header('jwt', 'JSON Web Token')
+    #@role_require(['admin', 'superadmin', 'insuser'])
     @page_format(code=0,msg='ok')
     @api.doc('查询用户报警记录列表')
     @api.marshal_with(useralarmrecord_model,as_list=True)
@@ -17,7 +22,11 @@ class UserAlarmRecordsView(Resource):
     @page_range()
     def get(self):
         list=UserAlarmRecord.query
-        return list,200
+        if('admin'or'superadmin') in [i.name for i in g. user. role]:
+            return list,200
+        elif'homeuser'in [i.name for i in g. user. role]:
+          ###############################################  ################################################
+            return list.filter(UserAlarmRecord.user)
     @api.doc('新增用户报警记录(用户提交传感器报警信息)')
     @api.expect(useralarmrecord_parser,validate=True)
     @api.response(200,'ok')

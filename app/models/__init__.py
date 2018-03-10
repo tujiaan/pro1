@@ -231,8 +231,9 @@ class User(db.Model):
     salt = db.Column(db.String(50), comment='加密盐')
     createTime = db.Column(db.DateTime, default=datetime.datetime.now, comment='创建时间')
     lastTime = db.Column(db.DateTime, comment='最后登陆时间')
-    registion_id = db.Column(db.String(50), comment='?????')
+    #registion_id = db.Column(db.String(50), comment='?????')
     real_name = db.Column(db.String(50), comment='姓名')
+    role_id=db.Column(db.String(50),db.ForeignKey('role.id'), comment='姓名')
     roles = db.relationship('Role', secondary=t_user_role,
                             backref=db.backref('user_roles',
                              lazy='dynamic'),lazy='dynamic')

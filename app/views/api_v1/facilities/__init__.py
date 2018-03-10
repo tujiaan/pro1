@@ -61,7 +61,7 @@ class FacilityDataView(Resource):
       if 'insuser'not in [i.anme for i in g.user.role]:
         db.session.commit()
         return None,200
-      elif'insuser' in [i.anme for i in g.user.role] and facility.ins.type!='property':
+      elif facility.ins.admin_user_id==g.user.id and facility.ins.type!='property':
           db.session.commit()
           return None,200
       else:return '权限不足',301
@@ -120,7 +120,7 @@ class FacilitesView(Resource):
         @api.response(200,'ok')
         @api.expect(facility_parser1)
         @api.header('jwt', 'JSON Web Token')
-        @role_require(['admin', 'superadmin'])
+        @role_require(['admin', 'superadmin','insuser'])
         def put(self,facilityid):
             args=facility_parser1.parse_args()
             facility=Facility.query.filter_by(facility_id=facilityid).first()
@@ -133,8 +133,14 @@ class FacilitesView(Resource):
             if args.get('expire_time'):
                 facility.expire_time=args.get('expire_time')
             else:pass
-            db.session.commit()
-            return None,200
+            if 'insuser'not in [i.namme for i in g.user.role]:
+                db.session.commit()
+                return None,200
+            elif facility.ins.admin_user_id==g.user.id:
+                db.session.commit()
+                return None, 200
+            else:return '权限不足',301
+
 
 
 @api.route('/<facilityid>/knowledges/')
