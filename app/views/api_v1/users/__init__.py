@@ -110,6 +110,7 @@ class PasswordView(Resource):
     @api.doc('修改密码')
     @api.header('jwt', 'JSON Web Token')
     @api.expect(password_parser)
+    @api.response(200,'ok')
     @user_require
     def post(self):
         u = g.user
@@ -117,7 +118,9 @@ class PasswordView(Resource):
         if u.password == args.get('old_password'):
             u.password = args.get('password')
             db.session.commit()
-        return None, 204
+            return None, 200
+        else:
+            return '权限不足',204
 
 
 @api.route('/profile/')
@@ -142,7 +145,9 @@ class ProfileView(Resource):
         if u.contract_tel == args.get('old_contract_tel'):
             u.contract_tel= args.get('contract_tel')
             db.session.commit()
-        return None, 204
+            return None,200
+        else:
+            return '号码不正确', 500
 
 @api.route('/email/')
 class ProfileView(Resource):

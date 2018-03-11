@@ -120,7 +120,7 @@ class Gateway(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     useable = db.Column(db.Boolean, default=True, comment='是否可用')
     home_id = db.Column(db.String(24), db.ForeignKey('home.id'), comment='家庭id')
-    home = db.relationship('Home')
+    #home = db.relationship('Home')
     sensors = db.relationship('Sensor', lazy='dynamic')
 
 
