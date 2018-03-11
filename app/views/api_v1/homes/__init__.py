@@ -117,13 +117,14 @@ class HomeView(Resource):
             return home,200
         else: return '权限不足',200
 
-@api.route('/<homeid>,<gatewayid>')######待测
+@api.route('/<homeid> ,<gatewayid>')######待测
 class HomeGatewayView(Resource):
     @api.doc('给家庭绑定网关')
     @api.response(200,'ok')
     @api.marshal_with(gateway_model)
-    @role_require(['homeuser','admin','superadmin'])
     @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser','admin','superadmin'])
+
     def post(self,homeid,gatewayid):
         home=Home.query.get_or_404(homeid)
 

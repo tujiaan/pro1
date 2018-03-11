@@ -2,7 +2,8 @@ from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import Gateway
-from app.utils.auth import user_require
+
+from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.gateways.parser import gateway_parser
 
@@ -11,7 +12,7 @@ from .model import *
 @api.route('/<gatewayid>')
 class GatewayView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @user_require(['admin', 'superadmin'])
+    @role_require(['admin', 'superadmin'])
     @api.doc('查询特定的网关')
     @api.marshal_with(gateway_model)
     @api.response(200,'ok')
@@ -20,9 +21,9 @@ class GatewayView(Resource):
         return gateway
 
 @api.route('/')
-class GatewayView(Resource):
+class GatewayView1(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @user_require(['admin','superadmin'])
+    @role_require(['admin','superadmin'])
     @page_format(code=0,msg='ok')
     @api.doc('查询所有的网关')
     @api.marshal_with(gateway_model,as_list=True)
@@ -33,7 +34,7 @@ class GatewayView(Resource):
         return list,200
 
     @api.header('jwt', 'JSON Web Token')
-    @user_require(['admin', 'superadmin'])
+    @role_require(['admin', 'superadmin'])
     @api.doc('新增网关')
     @api.response(200,'ok')
     @api.response(409,'重复')
@@ -47,15 +48,15 @@ class GatewayView(Resource):
         return gateway,200
 
 @api.route('/<gatewayid>')
-class GatewayView1(Resource):
+class GatewayView2(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @user_require(['admin', 'superadmin'])
+    @role_require(['admin', 'superadmin'])
     @api.doc('删除网关')
     @api.response(200,'ok')
-
+    @api.response(404, '记录不存在')
     def delete(self,gatewayid):
         gateway=Gateway.query.get_or_404(gatewayid)
-        db.session.delete(gatewayid)
+        db.session.delete(gateway)
         db.session.commit()
         return None,200
 
