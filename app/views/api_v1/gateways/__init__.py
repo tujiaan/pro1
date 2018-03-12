@@ -29,7 +29,7 @@ class GatewayView1(Resource):
     @api.marshal_with(gateway_model,as_list=True)
     @api.response(200,'ok')
     @page_range()
-    def get(self,gatewayid):
+    def get(self):
         list=Gateway.query
         return list,200
 

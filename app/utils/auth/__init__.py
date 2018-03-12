@@ -18,7 +18,7 @@ def user_require(method):
 
             except Exception as e:
                 print(e)
-        else:return {'message':'请登录'}
+        else:return {'message':'请登录'},401
         if g.user is None:
             return {'message': '请注册'}, 401
         return method(*args, **kwargs)

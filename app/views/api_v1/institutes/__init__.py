@@ -39,8 +39,9 @@ class InstitutesViews(Resource):
     def post(self):
         args=institutes_parser.parse_args()
         institute=Ins()
+        user=User.query.get_or_404(args['admin_user_id'])
         institute.name=args['name']
-        if'insuser'in[i.name for i in [User.query.get_or_404(args['admin_user_id']).roles]]:
+        if'insuser'in[i.name for i in user.roles]:
             institute.admin_user_id=args['admin_user_id']
         else:return '非机构用户无法绑定到机构',301
         institute.type=args['type']

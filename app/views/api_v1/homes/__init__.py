@@ -37,6 +37,7 @@ class HomesView(Resource):
     @api.doc('新增家庭')
     @api.expect(home_parser)
     @api.response(200,'ok')
+    @api.marshal_with(home_model)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser'])
     def post(self):
@@ -45,7 +46,7 @@ class HomesView(Resource):
         home=Home(**args)
         db.session.add(home)
         db.session.commit()
-        return None,200
+        return home,200
 
 @api.route('/<homeid>')
 class HomeView(Resource):
@@ -72,6 +73,7 @@ class HomeView(Resource):
 
     @api.doc('根据家庭id更新家庭')######待测
     @api.expect(home_parser1,validate=True)
+    @api.marshal_with(home_model)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser', 'admin', 'superadmin'])
 
@@ -87,7 +89,7 @@ class HomeView(Resource):
                 home.alternate_phone=home1.alternate_phone
             else:pass
             if home1.gateway_id:
-              #  if 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+               if 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
                 home.gateway_id=home1.gateway_id
             else:pass
             if home1.community:
@@ -135,7 +137,7 @@ class HomeGatewayView(Resource):
             db.session.commit()
             return home,200
 
-    @api.doc('删除家庭的网关')######待测
+    @api.doc('删除家庭的网关')
     @api.response(200, 'ok')
     @role_require(['homeuser','admin', 'superadmin'])
     @api.header('jwt', 'JSON Web Token')
@@ -149,21 +151,24 @@ class HomeGatewayView(Resource):
             return None,200
 
 
-
 @api.route('/<homeid>/users')
 class HomeUsersView(Resource):
-    @api.header('jwt', 'JSON Web Token')
+
     @role_require(['homeuser', 'admin', 'superadmin'])
-    @page_format(code=0,msg='ok')
+    @page_format(code=0, msg='ok')
     @api.doc('查找家庭下的所有用户')
+    @api.header('jwt', 'JSON Web Token')
+    @api.response(401, '权限不足')
     @api.doc(params={'page': '页数', 'limit': '数量'})
+    @api.marshal_with(user_model, as_list=True)
     @page_range()
-    @api.marshal_with(user_model,as_list=True)
-    def get(self,homeid):
-        home=Home.query.get_or_404(homeid)
-        if g.user.id in[i.id for i in home.user]or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
-            return home.user,200
-        else:return '权限不足',200
+    def get(self, homeid):
+        home = Home.query.get_or_404(homeid)
+        if g.user.id in [i.id for i in home.user] or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [
+            i.name for i in g.user.roles]:
+            return home.user, 200
+        else:
+            return User.query.filter(User.id==g.user.id), 401
 
 
 @api.route('/<homeid>/users/<userid>')

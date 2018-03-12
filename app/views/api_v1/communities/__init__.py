@@ -3,6 +3,7 @@ from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import Community, Ins
+from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.communities.parser import community_parser, community_parser1
@@ -23,6 +24,20 @@ class CommunitiesView(Resource):
     def get(self):
         community=Community.query
         return community,200
+
+    @api.route('/showlist')
+    class CommunitiesView(Resource):
+        @api.header('jwt', 'JSON Web Token')
+        @user_require
+        @api.doc('查询所有的社区列表')  #
+        @page_format(code=0, msg='ok')
+        @api.marshal_with(community1_model, as_list=True)
+        @api.response(200, 'ok')
+        @api.doc(params={'page': '页数', 'limit': '数量'})
+        @page_range()
+        def get(self):
+            community = Community.query
+            return community, 200
 
     @api.doc('新增社区')#
     @api.header('jwt', 'JSON Web Token')

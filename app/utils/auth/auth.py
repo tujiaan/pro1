@@ -21,6 +21,7 @@ def role_function(r):
 
                 except Exception as e:
                     print(e)
+
             if g.user is None:
                 return {'message': '请登陆'}, 401
             if isinstance(r, list):
@@ -38,7 +39,7 @@ def role_function(r):
                 if i in user_roles:
                     return method(*args, **kwargs)
             else:
-                return {'message': '权限不足'}, 401
+                return {'message': '权限不足'}, 402
 
         return warpper
 

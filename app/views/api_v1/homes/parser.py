@@ -10,6 +10,7 @@ home_parser.add_argument('longitude',type=int,help='家庭经度',required=True,
 home_parser.add_argument('latitude',type=str,help='家庭纬度',required=True,location='form')
 home_parser.add_argument('alternate_phone',type=str,help='备用电话',required=True,location='form')
 home_parser.add_argument('admin_user_id',type=str,help='管理员id',required=True,location='form')
+home_parser.add_argument('gateway_id',type=str,help='网关id',required=True,location='form')
 
 home_parser1=RequestParser()
 home_parser1.add_argument('name',type=str,help='家庭名称',required=False,location='form')
@@ -23,4 +24,5 @@ home_parser1.add_argument('latitude',type=str,help='家庭纬度',required=False
 home_parser1.add_argument('alternate_phone',type=str,help='备用电话',required=False,location='form')
 home_parser1.add_argument('admin_user_id',type=str,help='管理员id',required=False,location='form')
 home_parser1.add_argument('gateway_id',type=str,help='网关id',required=False,location='form')
+
 

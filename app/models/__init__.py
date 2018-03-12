@@ -69,7 +69,7 @@ class Ins(db.Model):
         id = db.Column(db.String(24), default=objectid, primary_key=True)
         province = db.Column(db.String(25), comment='省/市')
         district = db.Column(db.String(50), comment='区')
-        street= db.Column(db.LargeBinary, comment='街道')
+        street= db.Column(db.String(50), comment='街道')
 
 
 
@@ -119,7 +119,7 @@ class Gateway(db.Model):
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     useable = db.Column(db.Boolean, default=True, comment='是否可用')
-    home_id = db.Column(db.String(24), db.ForeignKey('home.id'), comment='家庭id')
+    home_id = db.Column(db.String(24),  comment='家庭id')
     #home = db.relationship('Home')
     sensors = db.relationship('Sensor', lazy='dynamic')
 
@@ -183,8 +183,8 @@ class Role(db.Model):
     name = db.Column(db.String(30), nullable=False)
     disabled = db.Column(db.Boolean, default=True, comment='是否可用')
     description = db.Column(db.String(60), comment='权限描述')
-    users = db.relationship('User', secondary=t_user_role,
-                            backref=db.backref('user_roles', lazy='dynamic') , lazy='dynamic')
+    #users = db.relationship('User', secondary=t_user_role,
+                           # backref=db.backref('user_roles', lazy='dynamic') , lazy='dynamic')
     menus = db.relationship('Menu', secondary=t_role_menu,
                             backref=db.backref('role_menus', lazy='dynamic') , lazy='dynamic')
 
@@ -232,19 +232,17 @@ class User(db.Model):
     salt = db.Column(db.String(50), comment='加密盐')
     createTime = db.Column(db.DateTime, default=datetime.datetime.now, comment='创建时间')
     lastTime = db.Column(db.DateTime, comment='最后登陆时间')
-    #registion_id = db.Column(db.String(50), comment='?????')
+
     real_name = db.Column(db.String(50), comment='姓名')
-    role_id=db.Column(db.String(50),db.ForeignKey('role.id'), comment='姓名')
     roles = db.relationship('Role', secondary=t_user_role,
                             backref=db.backref('user_roles',
-                             lazy='dynamic'),lazy='dynamic')
-    #home = db.relationship('Home', lazy='dynamic')
+                                               lazy='dynamic'), lazy='dynamic')
+
     home = db.relationship('Home', secondary=t_user_home,
-                         backref=db.backref('f_home', lazy='dynamic') , lazy='dynamic')
+                           backref=db.backref('f_home', lazy='dynamic'), lazy='dynamic')
 
-
-    ins = db.relationship('Ins',  secondary=t_user_ins,
-                        backref=db.backref('f_ins', lazy='dynamic') , lazy='dynamic')
+    ins = db.relationship('Ins', secondary=t_user_ins,
+                          backref=db.backref('f_ins', lazy='dynamic'), lazy='dynamic')
 
 
 

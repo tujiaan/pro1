@@ -31,7 +31,7 @@ class RegisterView(Resource):
             return None, 409
         else:
             u = User(**args)
-            u.role_id=1;
+           # u.role_id=1;
             db.session.add(u)
             u.roles.append(Role.query.get_or_404(1))
             db.session.commit()
@@ -99,13 +99,13 @@ class UserHomeView1(Resource):
 
 @api.route('/password/')
 class PasswordView(Resource):
-    @api.doc('找回密码')
-    @api.response(200, 'ok')
-    @api.header('jwt', 'JSON Web Token')
-    @user_require
-    def get(self):
-        u = g.user
-        return u.password
+   # @api.doc('找回密码')
+   # @api.response(200, 'ok')
+    #@api.header('jwt', 'JSON Web Token')
+   # @user_require
+  #  def get(self):
+       # u = g.user
+       # return u.password
 
     @api.doc('修改密码')
     @api.header('jwt', 'JSON Web Token')
@@ -147,7 +147,7 @@ class ProfileView(Resource):
             db.session.commit()
             return None,200
         else:
-            return '号码不正确', 500
+            return '号码不正确', 201
 
 @api.route('/email/')
 class ProfileView(Resource):
@@ -191,25 +191,17 @@ class UsersFindView(Resource):
        @api.response(200, 'ok')
        @page_range()
        def get(self):
-        if 'admin 'not in [i.name for i in g.user.roles]:
-         list= User.query
-         return list,200
+           if 'admin' not in [i.name for i in g.user.roles]:
+               print([i.name for i in g.user.roles])
+               list = User.query
 
+               return list, 200
 
+           elif 'superadmin' not in [i.name for i in g.user.roles]:
 
-     #  @api.doc('增加用户')
-
-      # @api.marshal_with(user_model)
-      # @api.expect(register_parser)
-      # @api.response(200, 'ok')
-       #@user_require
-     #  def post(self):
-      #     args=register_parser.parse_args()
-       #    user=User(**args)
-           #print(user)
-       #    db.session.add(user)
-        #   db.session.commit()
-       #    return user,200
+               list = User.query().filter(User.roles.any(Role.name.in_(['homeuser', '119user', 'insuser'])))
+###############################################################################################################################################################
+               return list, 200
 
 
 
@@ -281,9 +273,6 @@ class UserRolesVsiew(Resource):
     def get(self,userid):
 
         user=User.query.get_or_404(userid)
-        #print(user.roles)
-        #print([i.id for i in user.roles])
-        #list=Role.query.filter_by(id in [i.id for i in user.roles] )
 
         return user.roles,200
 
