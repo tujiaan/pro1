@@ -11,30 +11,36 @@ def objectid():
 t_user_role = db.Table(
     'user_role',
     db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
-    db.Column('role_id', db.String(24), db.ForeignKey('role.id'))
+    db.Column('role_id', db.String(24), db.ForeignKey('role.id')),
+    db.UniqueConstraint('user_id', 'role_id', name='uix_role_user')
 )
 
 t_role_menu = db.Table(
     'role_menu',
     db.Column('role_id', db.String(24), db.ForeignKey('role.id')),
-    db.Column('menu_id', db.String(24), db.ForeignKey('menu.id'))
+    db.Column('menu_id', db.String(24), db.ForeignKey('menu.id')),
+    db.UniqueConstraint('menu_id', 'role_id', name='uix_role_menu')
+
 )
 
 t_facility_knowledge = db.Table(
     'facility_knowledge',
     db.Column('knowledge_id', db.String(24), db.ForeignKey('knowledge.id')),
-    db.Column('facility_id', db.String(24), db.ForeignKey('facility.id'))
+    db.Column('facility_id', db.String(24), db.ForeignKey('facility.id')),
+    db.UniqueConstraint('knowledge_id', 'facility_id', name='uix_facility_knowledge')
 )
 
 t_user_home = db.Table(
     'user_home',
     db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
-    db.Column('home_id', db.String(24), db.ForeignKey('home.id'))
+    db.Column('home_id', db.String(24), db.ForeignKey('home.id')),
+    db.UniqueConstraint('user_id', 'home_id', name='uix_home_user')
 )
 t_user_ins = db.Table(
     'user_ins',
     db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
-    db.Column('ins_id', db.String(24), db.ForeignKey('ins.id'))
+    db.Column('ins_id', db.String(24), db.ForeignKey('ins.id')),
+    db.UniqueConstraint('user_id', 'ins_id', name='uix_ins_user')
 )
 
 
@@ -46,14 +52,25 @@ class Ins(db.Model):
     type = db.Column(db.String(255), comment='机构类型')
     name = db.Column(db.String(50), comment='机构名称')
     ins_picture = db.Column(db.LargeBinary, comment='机构图片')
+    location_id=db.Column(db.String(50),db.ForeignKey('location.id'),comment='位置')
+
     ins_address = db.Column(db.String(255), comment='机构地址')
     note = db.Column(db.Text, comment='备注')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
-    longtitude = db.Column(db.Float(asdecimal=True), comment='经度')
+    longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     # administrator_Id = db.Column(db.String(50),comment='管理员?????也用下面的方式吧')
-   # user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='用户id')
+    admin_user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='管理员id')
+    community=db.relationship('Community')
     user = db.relationship('User', secondary=t_user_ins,
-                          backref=db.backref('f_user', lazy='dynamic'))
+                          backref=db.backref('f_user', lazy='dynamic') , lazy='dynamic' )
+
+    class Location (db.Model):
+        __tablename__='location'
+        id = db.Column(db.String(24), default=objectid, primary_key=True)
+        province = db.Column(db.String(25), comment='省/市')
+        district = db.Column(db.String(50), comment='区')
+        street= db.Column(db.String(50), comment='街道')
+
 
 
 
@@ -62,11 +79,11 @@ class Community(db.Model):
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     name = db.Column(db.String(255), comment='社区名')
-    cmunity_pic = db.Column(db.LargeBinary, comment='社区图片')
-    detail_adress = db.Column(db.String(255), comment='详细地址')
+    community_picture = db.Column(db.LargeBinary, comment='社区图片')
+    detail_address = db.Column(db.String(255), comment='详细地址')
     save_distance = db.Column(db.Integer, comment='求救距离')
     eva_distance = db.Column(db.Integer, comment='疏散距离')
-    longtitude = db.Column(db.Float(asdecimal=True), comment='经度')
+    longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     ins_id = db.Column(db.String(24), db.ForeignKey('ins.id'), comment='机构id')
     ins = db.relationship('Ins')
@@ -83,7 +100,7 @@ class Facility(db.Model):
     count = db.Column(db.Integer, comment='设施数量')
     expire_time = db.Column(db.DateTime, comment='过期时间')
     knowledges = db.relationship('Knowledge', secondary=t_facility_knowledge,
-                            backref=db.backref('f_knowledges', lazy='dynamic'))
+                            backref=db.backref('f_knowledges', lazy='dynamic') , lazy='dynamic')
 
 
 class FacilityData(db.Model):
@@ -94,12 +111,7 @@ class FacilityData(db.Model):
     facility_picture = db.Column(db.LargeBinary, comment='设施图片')
 
 
-class FamilyMember(db.Model):
-    __tablename__ = 'family_member'
-    ##???? 这表是做什么的###
-    id = db.Column(db.String(50), primary_key=True, comment='')
-    member_name = db.Column(db.String(11), comment='')
-    member_tel = db.Column(db.String(50), comment='')
+
 
 
 class Gateway(db.Model):
@@ -107,8 +119,8 @@ class Gateway(db.Model):
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     useable = db.Column(db.Boolean, default=True, comment='是否可用')
-    home_id = db.Column(db.String(24), db.ForeignKey('home.id'), comment='家庭id')
-    home = db.relationship('Home')
+    home_id = db.Column(db.String(24),  comment='家庭id')
+    #home = db.relationship('Home')
     sensors = db.relationship('Sensor', lazy='dynamic')
 
 
@@ -119,18 +131,19 @@ class Home(db.Model):
     name = db.Column(db.String(255), comment='家庭名称')
     community_id = db.Column(db.String(24), db.ForeignKey('community.id'), comment='社区id')
     community = db.relationship('Community')
-    #user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='用户id')
-   # user = db.relationship('User')
-    user = db.relationship('User', secondary=t_user_home,
-                          backref=db.backref('f1_user', lazy='dynamic'))
 
+    user = db.relationship('User', secondary=t_user_home,
+                          backref=db.backref('f1_user', lazy='dynamic') , lazy='dynamic')
+    admin_user_id=db.Column(db.String(24), db.ForeignKey('user.id'), comment='创建者id')
     detail_address = db.Column(db.String(255), comment='家庭地址')
     link_name = db.Column(db.String(50), comment='主人姓名')
     telephone = db.Column(db.String(50), comment='电话号码')
     longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     alternate_phone = db.Column(db.String(50), comment='备用电话')
-    gateways = db.relationship('Gateway', lazy='dynamic')
+    #gateways = db.relationship('Gateway', lazy='dynamic')
+    gateway_id=db.Column(db.String(50),db.ForeignKey('gateway.id'),comment='网关id')
+    sensor=db.relationship('Sensor',lazy='dynamic')
 
 
 class Knowledge(db.Model):
@@ -140,6 +153,8 @@ class Knowledge(db.Model):
     type = db.Column(db.String(50), comment='知识类型   (0.自救 1.逃生 2.灭火 3.新闻 4.其他)')
     content = db.Column(db.Text, comment='知识正文')
     title = db.Column(db.String(50), comment='知识标题')
+    facility=db.relationship('Facility',secondary=t_facility_knowledge,
+                       backref=db.backref('f_facility',lazy='dynamic') , lazy='dynamic')
 
 
 class Menu(db.Model):
@@ -155,7 +170,7 @@ class Menu(db.Model):
     style = db.Column(db.String(50), comment='样式')
     disabled = db.Column(db.Boolean, default=False, comment='是否可用')
     roles = db.relationship('Role', secondary=t_role_menu,
-                            backref=db.backref('menu_roles', lazy='dynamic'))
+                            backref=db.backref('menu_roles', lazy='dynamic') , lazy='dynamic')
     path = db.Column(db.String(200), comment='和url什么区别???')
     order = db.Column(db.SmallInteger, comment='?????')
     url = db.Column(db.String(200), comment='和path什么区别???')
@@ -168,10 +183,10 @@ class Role(db.Model):
     name = db.Column(db.String(30), nullable=False)
     disabled = db.Column(db.Boolean, default=True, comment='是否可用')
     description = db.Column(db.String(60), comment='权限描述')
-    users = db.relationship('User', secondary=t_user_role,
-                            backref=db.backref('role_users', lazy='dynamic'))
+    #users = db.relationship('User', secondary=t_user_role,
+                           # backref=db.backref('user_roles', lazy='dynamic') , lazy='dynamic')
     menus = db.relationship('Menu', secondary=t_role_menu,
-                            backref=db.backref('role_menus', lazy='dynamic'))
+                            backref=db.backref('role_menus', lazy='dynamic') , lazy='dynamic')
 
 
 class Sensor(db.Model):
@@ -182,7 +197,11 @@ class Sensor(db.Model):
     gateway = db.relationship('Gateway')
     sensor_place = db.Column(db.String(255), comment='位置')
     sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾 1.温度 2.燃气 3.电流)')
-    alarms = db.relationship('SensorAlarm', lazy='dynamic')
+    start_time=db.Column(db.DateTime,comment='开始时间')
+    end_time=db.Column(db.DateTime,comment='结束时间')
+    max_value=db.Column(db.Float,comment='阈值')
+    alarms_history = db.relationship('SensorAlarm', lazy='dynamic')
+    home_id=db.Column(db.String(24),db.ForeignKey('home.id'),comment='家庭id')
 
 
 class SensorAlarm(db.Model):
@@ -210,20 +229,20 @@ class User(db.Model):
     username = db.Column(db.String(20), index=True, comment='用户名)')
     password = db.Column(db.String(32), comment='密码')
     email = db.Column(db.String(60), comment='email')
-    salt = db.Column(db.String(50), comment='不知道有没有必要')
+    salt = db.Column(db.String(50), comment='加密盐')
     createTime = db.Column(db.DateTime, default=datetime.datetime.now, comment='创建时间')
     lastTime = db.Column(db.DateTime, comment='最后登陆时间')
-    registion_id = db.Column(db.String(50), comment='?????')
+
     real_name = db.Column(db.String(50), comment='姓名')
     roles = db.relationship('Role', secondary=t_user_role,
-                            backref=db.backref('user_roles', lazy='dynamic'))
-    #home = db.relationship('Home', lazy='dynamic')
+                            backref=db.backref('user_roles',
+                                               lazy='dynamic'), lazy='dynamic')
+
     home = db.relationship('Home', secondary=t_user_home,
-                         backref=db.backref('f_home', lazy='dynamic'))
+                           backref=db.backref('f_home', lazy='dynamic'), lazy='dynamic')
 
-
-    ins = db.relationship('Ins',  secondary=t_user_ins,
-                        backref=db.backref('f_ins', lazy='dynamic'))
+    ins = db.relationship('Ins', secondary=t_user_ins,
+                          backref=db.backref('f_ins', lazy='dynamic'), lazy='dynamic')
 
 
 

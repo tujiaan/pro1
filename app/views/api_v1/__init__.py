@@ -12,6 +12,7 @@ from.knowledges import api as knowledge_ns
 from .sensoralarms import api as sensoralarm_ns
 from .roles import api as role_ns
 from .useralarms import api as useralarmrecord_ns
+from .communities import api as community_ns
 
 api = flask_restplus.Api(api_bp,
                          title="消防API",
@@ -31,6 +32,7 @@ api.add_namespace(knowledge_ns,path='/knowledges')
 api.add_namespace(sensoralarm_ns,path='/sensoralarms')
 api.add_namespace(role_ns,path='/roles')
 api.add_namespace(useralarmrecord_ns,path='/useralarmrecords')
+api.add_namespace(community_ns,path='/community')
 
 
 

@@ -20,3 +20,7 @@ email_parser = RequestParser()
 email_parser.add_argument('old_email', type=str, help='原邮箱', required=True, location='form')
 email_parser.add_argument('email', type=str, help='新邮箱', required=True, location='form')
 
+username_parser=RequestParser()
+username_parser.add_argument('old_username',type=str,help='原用户名',location='form')
+username_parser.add_argument('username',type=str,help='新用户名',location='form')
+

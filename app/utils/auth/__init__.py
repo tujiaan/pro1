@@ -15,10 +15,12 @@ def user_require(method):
             try:
                 identity = decode_jwt(jwt_str)
                 g.user = User.query.get(identity['user_id']) if identity['user_id'] else None
+
             except Exception as e:
                 print(e)
+        else:return {'message':'请登录'},401
         if g.user is None:
-            return {'message': '权限不足'}, 401
+            return {'message': '请注册'}, 401
         return method(*args, **kwargs)
 
     return warpper
