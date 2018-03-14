@@ -2,14 +2,17 @@ from flask import request, g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Home, Ins, User
+from app.models import Home, Ins, User, HomeUser, Sensor
 from app.utils.auth import decode_jwt
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
+from app.views.api_v1 import homeuser
 from app.views.api_v1.gateways import gateway_model
 from app.views.api_v1.homes.parser import home_parser, home_parser1
+from app.views.api_v1.homeuser import HomeUserView1
 from app.views.api_v1.institutes import institute_model
 from app.views.api_v1.sensors import sensor_model
+from app.views.api_v1.tools.database import Utills
 from app.views.api_v1.users import user_model
 import math
 
@@ -21,9 +24,9 @@ from.model import *
 @api.route('/')
 class HomesView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin','homeuser' 'superadmin'])
+    @role_require(['admin','homeuser', 'superadmin'])
+    @page_format(code=0,msg='ok')
     @api.doc('查询家庭列表')
-    @api.marshal_with(home_model)
     @api.marshal_with(home_model,as_list=True)
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
@@ -32,21 +35,32 @@ class HomesView(Resource):
         list=Home.query
         if 'admin'or 'superadmin'in [i.name for i in g.user.roles]:
             return list,200
-        else:return list.filter(g.user in [Home.user] )###########################
+        else:
+            return list.filter(g.user in [Home.user] )
 
     @api.doc('新增家庭')
     @api.expect(home_parser)
-    @api.response(200,'ok')
-    @api.marshal_with(home_model)
+    @api.response(200, 'ok')
+    # @api.marshal_with(home_model)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser'])
     def post(self):
+        args = home_parser.parse_args()
+        home = Home(**args)
+        if g.user.contract_tel != args.get('telephone'):
 
-        args=home_parser.parse_args()
-        home=Home(**args)
-        db.session.add(home)
-        db.session.commit()
-        return home,200
+            return '号码不一致', 200
+
+        elif home.gateway_id in [i.gateway_id for i in Home.query.all()]:
+            return '网关被占用', 201
+        else:
+            db.session.add(home)
+            userid=g.user.id
+            homeid=home.id
+            #homeuser.HomeUserView1.post(homeid )
+            Utills.post1(homeid )##########################待测试创建家庭后就是自动在homeuser中添加一行记录
+            db.session.commit()
+            return '创建成功', 201
 
 @api.route('/<homeid>')
 class HomeView(Resource):
@@ -121,7 +135,7 @@ class HomeView(Resource):
 
 @api.route('/<homeid> ,<gatewayid>')######待测
 class HomeGatewayView(Resource):
-    @api.doc('给家庭绑定网关')
+    @api.doc('更改家庭绑定网关')
     @api.response(200,'ok')
     @api.marshal_with(gateway_model)
     @api.header('jwt', 'JSON Web Token')
@@ -251,19 +265,30 @@ class HomeInsView(Resource):
 
 @api.route('/<homeid>/sensors')
 class HomeSensorView(Resource):
+    @page_format(code=0, msg='ok')
     @api.doc('查询家中的传感器')
     @api.marshal_with(sensor_model, as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
 
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser','119user','insuser' 'admin', 'superadmin'])
-    @page_format(code=0,msg='ok')
+
     @page_range()
     def get(self,homeid):
+        homeuser=HomeUser.query.filter(HomeUser.home_id==homeid)
+        #print(homeuser)
         home=Home.query.get_or_404(homeid)
-        if home not in g.user.home:
-            return'权限不足',200
-        else:return home.sensor,200
+       # print(home)
+        if 'homeuser' not in[i.name for i in g.user.roles] :
+
+            list = Sensor.query.filter(Sensor.home_id==homeid)
+            #print(list.all())
+            return list ,200
+
+        else:
+            list=Sensor.query.filter(Sensor.home_id in  [i.home_id for i in [HomeUser.query.filter(HomeUser.user_id==g.user.id)]] )
+            return list ,200
+
 
 
 

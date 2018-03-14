@@ -1,8 +1,9 @@
 from flask import g, flash
 from flask_restplus import Namespace, Resource
+from sqlalchemy import select
 
 from app.ext import db
-from app.models import User, Role, Ins
+from app.models import User, Role, Ins, Home
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.auth.jwt import encode_jwt
@@ -51,7 +52,7 @@ class LoginView(Resource):
         args = login_parser.parse_args()
         print(args)
         u = User.query.filter_by(username=args.get('username'), password=args.get('password')).first()
-        print(user)
+        #print(user)
         if u is not None:
             jwt = encode_jwt(user_id=u.id)
             return {'jwt': jwt}, 200
@@ -81,7 +82,9 @@ class UserHomeView1(Resource):
 
     @page_range()
     def get(self):
-        return g.user.home,200
+        home=Home.query.filter( Home.user.contains(g.user))
+
+        return home,200
 
 @api.route('/ins/')
 class UserHomeView1(Resource):
@@ -93,7 +96,8 @@ class UserHomeView1(Resource):
 
     @page_range()
     def get(self):
-        return g.user.ins,200
+        ins=Ins.query.filter(g.user.id in [i.id for i in Ins.user])
+        return ins,200
 
 
 
@@ -181,29 +185,16 @@ class ProfileView(Resource):
 @api.route('/')
 class UsersFindView(Resource):
        @api.header('jwt', 'JSON Web Token')
-       @role_require(['admin', 'superadmin'])
-       #@role_require(['superadmin'])
-       @page_format(code='0',msg='success')
+       @role_require(['admin', 'superadmin','homeuser'])
+
+      # @page_format(code='0',msg='success')
        @api.doc(params={'page':'页数','limit':'数量'})
-       @api.marshal_with(user_model, as_list=True)
+       @api.marshal_with(role_user_model, as_list=True)
        @api.doc('查询所有用户信息')
-       @api.marshal_with(user_model)
        @api.response(200, 'ok')
-       @page_range()
+       #@page_range()
        def get(self):
-           if 'admin' not in [i.name for i in g.user.roles]:
-               print([i.name for i in g.user.roles])
-               list = User.query
-
-               return list, 200
-
-           elif 'superadmin' not in [i.name for i in g.user.roles]:
-
-               list = User.query().filter(User.roles.any(Role.name.in_(['homeuser', '119user', 'insuser'])))
-###############################################################################################################################################################
-               return list, 200
-
-
+        pass
 
 @api.route('/<userid>')
 class user(Resource):

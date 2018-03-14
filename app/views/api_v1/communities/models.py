@@ -33,7 +33,10 @@ home_model = api.model('HomeModel', {
     'latitude':fields.Float,
     'alternate_phone':fields.String
 })
-community1_model=api.model('CommunityModel',{
+
+
+
+_community_model=api.model('CommunityModel',{
     'id':fields.String,
-    'name':fields.String,
+    'name':fields.String
 })

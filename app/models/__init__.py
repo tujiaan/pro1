@@ -30,18 +30,28 @@ t_facility_knowledge = db.Table(
     db.UniqueConstraint('knowledge_id', 'facility_id', name='uix_facility_knowledge')
 )
 
-t_user_home = db.Table(
-    'user_home',
-    db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
-    db.Column('home_id', db.String(24), db.ForeignKey('home.id')),
-    db.UniqueConstraint('user_id', 'home_id', name='uix_home_user')
-)
+# t_user_home = db.Table(
+#     'user_home',
+#     db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
+#     db.Column('home_id', db.String(24), db.ForeignKey('home.id')),
+#     db.UniqueConstraint('user_id', 'home_id', name='uix_home_user')
+#)
 t_user_ins = db.Table(
     'user_ins',
     db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
     db.Column('ins_id', db.String(24), db.ForeignKey('ins.id')),
     db.UniqueConstraint('user_id', 'ins_id', name='uix_ins_user')
 )
+
+class HomeUser(db.Model):
+    __tablename__='homeuser'
+    id = db.Column(db.String(24), default=objectid, primary_key=True)
+    user_id=db.Column('user_id', db.String(24), db.ForeignKey('user.id'))
+    home_id=db.Column('home_id', db.String(24), db.ForeignKey('home.id'))
+    db.UniqueConstraint('user_id', 'home_id', name='uix_home_user')
+    apply_time=db.Column('apply_time',db.DateTime,default=datetime.datetime.now, comment='申请时间')
+    if_confirm=db.Column('if_confirm',db.Boolean,default=False,comment='是否批准')
+    confirm_time=db.Column('confirm_time',db.DateTime, comment='批准时间')
 
 
 
@@ -64,7 +74,7 @@ class Ins(db.Model):
     user = db.relationship('User', secondary=t_user_ins,
                           backref=db.backref('f_user', lazy='dynamic') , lazy='dynamic' )
 
-    class Location (db.Model):
+class Location (db.Model):
         __tablename__='location'
         id = db.Column(db.String(24), default=objectid, primary_key=True)
         province = db.Column(db.String(25), comment='省/市')
@@ -132,8 +142,8 @@ class Home(db.Model):
     community_id = db.Column(db.String(24), db.ForeignKey('community.id'), comment='社区id')
     community = db.relationship('Community')
 
-    user = db.relationship('User', secondary=t_user_home,
-                          backref=db.backref('f1_user', lazy='dynamic') , lazy='dynamic')
+   # user = db.relationship('User', #secondary=homeuser,
+                          #backref=db.backref('f1_user', lazy='dynamic') , lazy='dynamic')
     admin_user_id=db.Column(db.String(24), db.ForeignKey('user.id'), comment='创建者id')
     detail_address = db.Column(db.String(255), comment='家庭地址')
     link_name = db.Column(db.String(50), comment='主人姓名')
@@ -238,8 +248,8 @@ class User(db.Model):
                             backref=db.backref('user_roles',
                                                lazy='dynamic'), lazy='dynamic')
 
-    home = db.relationship('Home', secondary=t_user_home,
-                           backref=db.backref('f_home', lazy='dynamic'), lazy='dynamic')
+   # home = db.relationship('Home', #secondary=t_user_home,
+                          # backref=db.backref('f_home', lazy='dynamic'), lazy='dynamic')
 
     ins = db.relationship('Ins', secondary=t_user_ins,
                           backref=db.backref('f_ins', lazy='dynamic'), lazy='dynamic')

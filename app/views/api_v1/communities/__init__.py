@@ -6,11 +6,12 @@ from app.models import Community, Ins
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
+
 from app.views.api_v1.communities.parser import community_parser, community_parser1
 
 
 api=Namespace('Community',description='社区相关操作')
-from .models import *
+from app.views.api_v1.communities.models import community_model, _community_model, home_model
 @api.route('/')
 class CommunitiesView(Resource):
     @api.header('jwt', 'JSON Web Token')
@@ -26,12 +27,12 @@ class CommunitiesView(Resource):
         return community,200
 
     @api.route('/showlist')
-    class CommunitiesView(Resource):
+    class CommunitiesView1(Resource):
         @api.header('jwt', 'JSON Web Token')
         @user_require
-        @api.doc('查询所有的社区列表')  #
+        @api.doc('查询所有的社区名称')  #
         @page_format(code=0, msg='ok')
-        @api.marshal_with(community1_model, as_list=True)
+        @api.marshal_with(_community_model, as_list=True)
         @api.response(200, 'ok')
         @api.doc(params={'page': '页数', 'limit': '数量'})
         @page_range()
@@ -74,7 +75,7 @@ class CommunitiesView(Resource):
         db.session.add(community)
         db.session.commit()
         return None,200
-@api.route('/<communityid>')
+@api.route('/<communityid>/')
 class CommunityView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin','119user','insuser' ,'superadmin'])
@@ -83,12 +84,13 @@ class CommunityView(Resource):
     @api.response(200,'ok')
     def get(self,communityid):
         community=Community.query.get_or_404(communityid)
-
-        if 'insuser'not in [i.name for i in g.user.role]:
-            return community,200
+        if 'insuser'not in [i.name for i in g.user.roles]:
+            return community, 200
+        elif g.user.id==community.ins.admin_user_id:
+            return community, 200
         else:
-            ins=Ins.query.filter(Ins.admin_user_id==g.user.id).first()
-            return ins.community,200
+
+            return None, 200
 
 
     @api.doc('更新社区的信息')

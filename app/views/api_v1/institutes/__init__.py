@@ -3,6 +3,7 @@ from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import Ins, User
+from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.communities import community_model
@@ -13,52 +14,63 @@ api = Namespace('Institutes', description='组织相关接口')
 
 from .model import *
 
+
 @api.route('/')
 class InstitutesViews(Resource):
-    @page_format(code=0,msg='ok')
+    @page_format(code=0, msg='ok')
     @api.doc('查询所有机构列表')
     @api.header('jwt', 'JSON Web Token')
-    @role_require([ 'admin', 'superadmin','119user'])
-    @api.marshal_with(institute_model, as_list=True )
-    @api.response(200,'ok')
+    @role_require(['admin', 'superadmin', '119user'])
+    @api.marshal_with(institute_model, as_list=True)
+    @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
         list = Ins.query
-        if ('admin'or'superadmin')in [i.name for i in g.user.roles]:
+        if ('admin' or 'superadmin') in [i.name for i in g.user.roles]:
 
             return list, 200
         else:
-            return list.filter(Ins.admin_user_id==g.user.id)
+            return list.filter(Ins.admin_user_id == g.user.id)
 
-    @api.doc('新增机构')#
-    @api.expect(institutes_parser,validate=True)
+    @api.doc('新增机构')  #
+    @api.expect(institutes_parser, validate=True)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
-    @api.response(200,'ok')
+    @api.response(200, 'ok')
+    @user_require
     def post(self):
-        args=institutes_parser.parse_args()
-        institute=Ins()
-        user=User.query.get_or_404(args['admin_user_id'])
-        institute.name=args['name']
-        if'insuser'in[i.name for i in user.roles]:
-            institute.admin_user_id=args['admin_user_id']
-        else:return '非机构用户无法绑定到机构',301
-        institute.type=args['type']
-        institute.ins_address=args['ins_address']
-        institute.note=args['note']
-        institute.latitude=args['latitude']
-        institute.longitude=args['longitude']
-        institute.ins_address=args['ins_address']
-        institute.location_id=args['location_id']
-        if args['ins_picture']:
-            institute.ins_picture=args['ins_picture'].read()
-        else:pass
+        args = institutes_parser.parse_args()
+        institute = Ins()
+        user = User.query.get_or_404(args['admin_user_id'])
+        if ~Ins.query.filter(Ins.latitude==args['latitude']and Ins.longitude==args['longitude']):
+            institute.name = args['name']
+            if 'insuser' in [i.name for i in user.roles]:
 
-        institute.admin_user_id=args['admin_user_id']
-        db.session.add(institute)
-        db.session.commit()
-        return None,200
+                institute.admin_user_id = args['admin_user_id']
+            else:
+
+                institute.admin_user_id = g.user.id
+
+            institute.type = args['type']
+            institute.ins_address = args['ins_address']
+            institute.note = args['note']
+            institute.latitude = args['latitude']
+            institute.longitude = args['longitude']
+            institute.ins_address = args['ins_address']
+            institute.location_id = args['location_id']
+            if args['ins_picture']:
+                institute.ins_picture = args['ins_picture'].read()
+            else:
+                pass
+
+            institute.location_id = args['location_id']
+            db.session.add(institute)
+            institute.user.append(user)
+
+            db.session.commit()
+            return 'success', 200
+        else:return '机构位置已被占用',201
 
 @api.route('/<insid>')#####???????
 class InstituteView(Resource):

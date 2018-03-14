@@ -25,10 +25,12 @@ class UserAlarmRecordsView(Resource):
         if('admin'or'superadmin') in [i.name for i in g. user. role]:
             return list,200
         elif'homeuser'in [i.name for i in g. user. role]:
-
-#####################################################################################################################################
             return list.filter(UserAlarmRecord.user in [i.user for i in g.user.home])
+
+
     @api.doc('新增用户报警记录(用户提交传感器报警信息)')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser'])
     @api.expect(useralarmrecord_parser,validate=True)
     @api.response(200,'ok')
     def post(self):
@@ -62,6 +64,8 @@ class UserAlarmRecordView(Resource):
         return None,200
 
     @api.doc('删除用户报警记录')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require([ ])
     @api.response(200, 'ok')
     def delete(self,useralarmrecordid):
         useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)

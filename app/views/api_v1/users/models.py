@@ -27,4 +27,17 @@ home_model = api.model('HomeModel', {
     'latitude':fields.Float,
     'alternate_phone':fields.String
 })
+role_model=api.model('RoleModel',{
+    'id':fields.String,
+    'name':fields.String,
+    'disabled':fields.Boolean,
+    'description':fields.String
 
+})
+role_user_model=api.model('RoleUserModel',{
+   'user':fields.Nested(user_model),
+   'role':fields.Nested(role_model)
+
+
+
+})
