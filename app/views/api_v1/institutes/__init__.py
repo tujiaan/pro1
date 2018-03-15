@@ -43,7 +43,7 @@ class InstitutesViews(Resource):
         args = institutes_parser.parse_args()
         institute = Ins()
         user = User.query.get_or_404(args['admin_user_id'])
-        if ~Ins.query.filter(Ins.latitude==args['latitude']and Ins.longitude==args['longitude']):
+        if Ins.query.filter(Ins.latitude!=args['latitude']or Ins.longitude!=args['longitude']):
             institute.name = args['name']
             if 'insuser' in [i.name for i in user.roles]:
 
