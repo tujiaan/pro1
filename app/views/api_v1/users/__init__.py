@@ -1,9 +1,10 @@
 from flask import g, flash
 from flask_restplus import Namespace, Resource
-from sqlalchemy import select
+from sqlalchemy import select, text
+from sqlalchemy.orm import Query
 
 from app.ext import db
-from app.models import User, Role, Ins, Home
+from app.models import User, Role, Ins, Home, HomeUser
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.auth.jwt import encode_jwt
@@ -72,31 +73,30 @@ class RolesView(Resource):
         u = g.user
         return u.roles,200
 
+
 @api.route('/homes/')
 class UserHomeView1(Resource):
+    @page_format(code='0', msg='success')
     @api.doc('查询自己关联的家庭')
     @api.header('jwt', 'JSON Web Token')
     @user_require
-    @page_format(code='0', msg='success')
-    @api.marshal_with(home_model,as_list=True)
-
+    @api.marshal_with(home_model, as_list=True)
     @page_range()
     def get(self):
-        home=Home.query.filter( Home.user.contains(g.user))
-
-        return home,200
+        homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id)
+        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
+        return home, 200
 
 @api.route('/ins/')
 class UserHomeView1(Resource):
-    @api.header('jwt', 'JSON Web Token')
     @user_require
     @page_format(code='0', msg='success')
+    @api.header('jwt', 'JSON Web Token')
     @api.doc('查询自己关联的机构')
     @api.marshal_with(institute_model,as_list=True)
-
     @page_range()
     def get(self):
-        ins=Ins.query.filter(g.user.id in [i.id for i in Ins.user])
+        ins=Ins.query.filter(Ins.user.contains(g.user))
         return ins,200
 
 
@@ -187,14 +187,21 @@ class UsersFindView(Resource):
        @api.header('jwt', 'JSON Web Token')
        @role_require(['admin', 'superadmin','homeuser'])
 
-      # @page_format(code='0',msg='success')
+       @page_format(code='0',msg='success')
        @api.doc(params={'page':'页数','limit':'数量'})
        @api.marshal_with(role_user_model, as_list=True)
        @api.doc('查询所有用户信息')
        @api.response(200, 'ok')
-       #@page_range()
+       @page_range()
        def get(self):
-        pass
+           pass
+        #if 'homeuser'not in [i.name for i in g.user.roles]:
+           # list=User.query .from_statement(text('select User.id AS user_id,User.contract_tel AS contract_tel,User.username AS user_name,User.email AS user_email, Role.id AS role_id,Role.name AS role_name,Role.disabled AS role_disable FROM User INNER JOIN User.roles ON USER .id = User.roles.user_id INNER JOIN Role ON Role.id = User.roles.role_id ORDER BY user_id'))
+           # sql=db.session.query_property('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user inner  join  user_role on user.id=user_role.user_id inner join role  on role.id=user_role.role_id  ORDER BY user_id')
+           #list=User.query.join(User.roles,Role).filter(User.id==User.roles.user_id,Role.id==User.roles.role_id)
+           #print(list)
+         #  return list,200
+
 
 @api.route('/<userid>')
 class user(Resource):
@@ -237,20 +244,24 @@ class UserHomeView(Resource):
 
     def get(self,userid):
         user=User.query.get_or_404(userid)
+
         return user.ins,200
 
 @api.route('/<userid>/home')
 class UserHomeView(Resource):
-    @api.header('jwt', 'JSON Web Token')
+
     @role_require(['admin', 'superadmin'])
     @page_format(code=0, msg='ok')
+    @api.header('jwt', 'JSON Web Token')
     @api.doc('查询用户关联的家庭')
     @api.marshal_with(home_model,as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self,userid):
-        user=User.query.get_or_404(userid)
-        return user.home,200
+        homeuser=HomeUser.query.get_or_404(userid)
+        home=Home.query.filter(str(Home.id) in(homeuser.home_id))
+
+        return home,200
 
 @api.route('/<userid>/roles')
 class UserRolesVsiew(Resource):
@@ -264,7 +275,7 @@ class UserRolesVsiew(Resource):
     def get(self,userid):
 
         user=User.query.get_or_404(userid)
-
+        print(type(user.roles))
         return user.roles,200
 
 

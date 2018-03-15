@@ -19,7 +19,7 @@ home_model = api.model('HomeModel', {
     'id': fields.String,
     'name': fields.String,
     'community_id': fields.String,
-
+    'admin_user_id':fields.String,
     'detail_address': fields.String,
     'link_name': fields.String,
     'telephone': fields.String,
@@ -35,8 +35,13 @@ role_model=api.model('RoleModel',{
 
 })
 role_user_model=api.model('RoleUserModel',{
-   'user':fields.Nested(user_model),
-   'role':fields.Nested(role_model)
+    'user_id':fields.String,
+    'user_name':fields.String,
+    'user_email':fields.String,
+    'user_contract_tel':fields.String,
+    'role_id':fields.String,
+    'role_name':fields.String,
+    'role_disable':fields.Boolean
 
 
 

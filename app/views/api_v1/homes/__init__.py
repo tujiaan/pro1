@@ -55,11 +55,11 @@ class HomesView(Resource):
             return '网关被占用', 201
         else:
             db.session.add(home)
-            userid=g.user.id
-            homeid=home.id
-            #homeuser.HomeUserView1.post(homeid )
-            Utills.post1(homeid )##########################待测试创建家庭后就是自动在homeuser中添加一行记录
             db.session.commit()
+            homeid=home.id
+            homeuser.HomeUserView1.post(homeid )
+
+
             return '创建成功', 201
 
 @api.route('/<homeid>')

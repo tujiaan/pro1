@@ -16,5 +16,5 @@ class InitDatabase(Resource):
         db.create_all()
         return 'a'
 class Utills(Resource):
-    def post1(homeid):
+    def post1(self,homeid):
         return HomeUserView1.post(homeid)
