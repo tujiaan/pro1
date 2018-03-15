@@ -24,6 +24,7 @@ class CommunitiesView(Resource):
     @page_range()
     def get(self):
         community=Community.query
+        print(type(community))
         return community,200
 
     @api.route('/showlist')

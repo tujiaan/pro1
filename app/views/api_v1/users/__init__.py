@@ -1,7 +1,7 @@
 from flask import g, flash
 from flask_restplus import Namespace, Resource
 from sqlalchemy import select, text
-from sqlalchemy.orm import Query
+
 
 from app.ext import db
 from app.models import User, Role, Ins, Home, HomeUser
@@ -184,10 +184,11 @@ class ProfileView(Resource):
             return None, 204
 @api.route('/')
 class UsersFindView(Resource):
+
        @api.header('jwt', 'JSON Web Token')
+       @page_format(code='0', msg='success')
        @role_require(['admin', 'superadmin','homeuser'])
 
-       @page_format(code='0',msg='success')
        @api.doc(params={'page':'页数','limit':'数量'})
        @api.marshal_with(role_user_model, as_list=True)
        @api.doc('查询所有用户信息')
@@ -195,12 +196,7 @@ class UsersFindView(Resource):
        @page_range()
        def get(self):
            pass
-        #if 'homeuser'not in [i.name for i in g.user.roles]:
-           # list=User.query .from_statement(text('select User.id AS user_id,User.contract_tel AS contract_tel,User.username AS user_name,User.email AS user_email, Role.id AS role_id,Role.name AS role_name,Role.disabled AS role_disable FROM User INNER JOIN User.roles ON USER .id = User.roles.user_id INNER JOIN Role ON Role.id = User.roles.role_id ORDER BY user_id'))
-           # sql=db.session.query_property('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user inner  join  user_role on user.id=user_role.user_id inner join role  on role.id=user_role.role_id  ORDER BY user_id')
-           #list=User.query.join(User.roles,Role).filter(User.id==User.roles.user_id,Role.id==User.roles.role_id)
-           #print(list)
-         #  return list,200
+
 
 
 @api.route('/<userid>')

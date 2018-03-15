@@ -185,24 +185,24 @@ class HomeUsersView(Resource):
             return User.query.filter(User.id==g.user.id), 401
 
 
-@api.route('/<homeid>/users/<userid>')
-class HomeUserView(Resource):
-    @api.doc('增加家庭成员/用户绑定家庭')
-    @api.response(200,'ok')
-    @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser' ])
-    def post(self,homeid,userid):
-
-            home=Home.query.get_or_404(homeid)
-            user=User.query.get_or_404(userid)
-            if user not in home.user:
-                if home.admin_user_id == g.user.id or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
-                    home.user.append(user)
-                    db.session.commit()
-                    return '添加成员成功',200
-                else:
-                    return '权限不足',200
-            else:return '成员已经存在',301
+# @api.route('/<homeid>/users/<userid>')
+# class HomeUserView(Resource):
+#     @api.doc('增加家庭成员/用户绑定家庭')
+#     @api.response(200,'ok')
+#     @api.header('jwt', 'JSON Web Token')
+#     @role_require(['homeuser' ])
+#     def post(self,homeid,userid):
+#
+#             home=Home.query.get_or_404(homeid)
+#             user=User.query.get_or_404(userid)
+#             if user not in home.user:
+#                 if home.admin_user_id == g.user.id or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+#                     home.user.append(user)
+#                     db.session.commit()
+#                     return '添加成员成功',200
+#                 else:
+#                     return '权限不足',200
+#             else:return '成员已经存在',301
 
     @api.doc('删除家庭成员/解除用户绑定家庭')
     @api.response(200, 'ok')

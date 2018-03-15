@@ -40,21 +40,25 @@ class HomeUserView1(Resource):
     @api.doc('申请加入家庭/')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser'])
-    #@api.expect(homeuser_parser)
+    # @api.expect(homeuser_parser)
     @user_require
     @api.response(200, 'ok')
-    def post( self,homeid):
-        homeuser = HomeUser()
+    def post(self, homeid):
+        try:
+            homeuser = HomeUser.query.filter(HomeUser.home_id == homeid)
+            if Home.query.filter(Home.id == homeid):
+                if g.user.id not in [i.user_id for i in homeuser]:
+                    homeuser = HomeUser()
 
-        if Home.query.filter(Home.id == homeid):
-            homeuser.home_id = homeid
-            homeuser.user_id = g.user.id
-            db.session.add(homeuser)
-            db.session.commit()
-            return '申请成功', 200
-        else:
-            return '家庭不存在', 201
+                    homeuser.home_id = homeid
+                    homeuser.user_id = g.user.id
+                    db.session.add(homeuser)
+                    db.session.commit()
+                    return '申请成功', 200
+                else:
+                    return '您已经是该家庭成员', 201
 
+        except:return '该家庭未创建', 401
 
 
 @api.route('/<home_id>,<user_id>')
