@@ -60,6 +60,21 @@ class HomeUserView1(Resource):
 
         except:return '该家庭未创建', 401
 
+    @api.doc('显示家庭申请')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser'])
+    @api.marshal_with(homeuser_model)
+    # @api.expect(homeuser_parser)
+    @user_require
+    @api.response(200, 'ok')
+    def get(self,homeid):
+       home=Home.query.get_or_404(homeid)
+       if g.user.id==home.admin_user_id:
+           homeuser = HomeUser.query.filter(HomeUser.if_confirm==False and HomeUser.home_id==homeid )
+           return homeuser,200
+       else:pass
+
+
 
 @api.route('/<home_id>,<user_id>')
 class HomeUserView2(Resource):

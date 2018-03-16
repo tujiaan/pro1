@@ -2,10 +2,11 @@ from flask import g
 from flask_restplus import Namespace
 from flask_restplus import  Resource
 from app.ext import db
-from app.models import Facility, Sensor, Home, SensorAlarm
+from app.models import Facility, Sensor, Home, SensorAlarm, SensorHistory, HomeUser
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms import sensoralarms_model
+from app.views.api_v1.sensorhistory import sensorhistory_model
 from app.views.api_v1.sensors.parsers import sensor_parser, sensor_parser1
 
 api = Namespace('Sensors', description='传感器相关接口')
@@ -125,5 +126,26 @@ class SensorAlarmsView(Resource):
            else: return '权限不足',301
 
         else: return SensorAlarm.query,200
+
+@api.route('/<sensorid>/sensorhistory')
+class SensorHistoryView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser', 'insuser', '119user''admin', 'superadmin'])
+    @api.doc('查询最近的一条传感器历史')
+    @api.marshal_with(sensorhistory_model)
+    @api.response(200,'ok')
+    def get(self,sensorid):
+        sensor=Sensor.query.get_or_404(sensorid)
+        home=sensor.home
+        sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensorid).order_by(SensorHistory.time.desc())
+        if 'homeuser'in [i.name for i in g.user.roles] and len(g.user.roles.all())<=1:
+            if g.user.id in [i.user_id for i in (HomeUser.query.filter(HomeUser.home_id==home.id))]:
+                sensorhistory.first(), 200
+            else:return '权限不足',201
+
+        else: return sensorhistory.first(), 200
+
+
+
 
 

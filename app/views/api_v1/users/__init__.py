@@ -197,6 +197,13 @@ class UsersFindView(Resource):
        def get(self):
            pass
 
+        # if 'homeuser'not in [i.name for i in g.user.roles]:
+        #     list=db.session.query(User,Role).from_statement(text('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user inner  join  user_role on user.id=user_role.user_id inner join role  on role.id=user_role.role_id  order by user_id '))
+        #     #list=db.session.execute('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user inner  join  user_role on user.id=user_role.user_id inner join role  on role.id=user_role.role_id  ORDER BY user_id')
+        #     print(type(list))
+        #     print(list.all())
+        #
+        #     return list,200
 
 
 @api.route('/<userid>')

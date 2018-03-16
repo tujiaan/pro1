@@ -27,7 +27,7 @@ class InstitutesViews(Resource):
     @page_range()
     def get(self):
         list = Ins.query
-        if ('admin' or 'superadmin') in [i.name for i in g.user.roles]:
+        if 'admin'  in [i.name for i in g.user.roles] or 'superadmin'in [i.name for i in g.user.roles]  :
 
             return list, 200
         else:

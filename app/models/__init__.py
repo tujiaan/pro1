@@ -212,6 +212,17 @@ class Sensor(db.Model):
     max_value=db.Column(db.Float,comment='阈值')
     alarms_history = db.relationship('SensorAlarm', lazy='dynamic')
     home_id=db.Column(db.String(24),db.ForeignKey('home.id'),comment='家庭id')
+    home=db.relationship('Home',)
+
+
+class SensorHistory(db.Model):
+    __tablename__='sensorhistory'
+    id = db.Column(db.String(24), default=objectid, primary_key=True)
+    sensor=db.relationship('Sensor')
+    sensor_id=db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='传感器id')
+    sensor_state=db.Column(db.Integer,comment='传感器状态')
+    time=db.Column(db.DateTime,comment='时间')
+
 
 
 class SensorAlarm(db.Model):
