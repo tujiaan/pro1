@@ -84,7 +84,7 @@ class UserHomeView1(Resource):
     @page_range()
     def get(self):
         homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id)
-        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
+        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser) and HomeUser.if_confirm==True)
         return home, 200
 
 @api.route('/ins/')
@@ -190,20 +190,24 @@ class UsersFindView(Resource):
        @role_require(['admin', 'superadmin','homeuser'])
 
        @api.doc(params={'page':'页数','limit':'数量'})
-       @api.marshal_with(role_user_model, as_list=True)
+      # @api.marshal_with(role_user_model, as_list=True)
        @api.doc('查询所有用户信息')
        @api.response(200, 'ok')
        @page_range()
        def get(self):
-           pass
+           if 'superadmin' in [i.name for i in g.user.roles]:
+             #list=db.session.query(User,User.roles,Role).from_statement(text('Select  user.id as user_id,user.contract_tel as contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user inner  join  user_role on  user.id=user_role.user_id inner join role  on role.id=user_role.role_id  order by user.id '))
+             list=User.query.from_statement(text('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user inner  join  user_role on user.id=user_role.user_id inner join role  on role.id=user_role.role_id  order by user_id '))
 
-        # if 'homeuser'not in [i.name for i in g.user.roles]:
-        #     list=db.session.query(User,Role).from_statement(text('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user inner  join  user_role on user.id=user_role.user_id inner join role  on role.id=user_role.role_id  order by user_id '))
-        #     #list=db.session.execute('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user inner  join  user_role on user.id=user_role.user_id inner join role  on role.id=user_role.role_id  ORDER BY user_id')
-        #     print(type(list))
-        #     print(list.all())
-        #
-        #     return list,200
+            #list=db.session.execute('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user inner  join  user_role on user.id=user_role.user_id inner join role  on role.id=user_role.role_id  ORDER BY user_id')
+            #list=db.session.execute('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user,role inner  join  user_role where user.id=user_role.user_id  and  role.id=user_role.role_id  ORDER BY user_id')
+            #list=db.session.query(User).from_statement(text('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user,role inner  join  user_role where user.id=user_role.user_id  and  role.id=user_role.role_id  ORDER BY user_id'))
+
+             print(type(list))
+             print(list.all())
+             return list,200
+           else:
+                pass
 
 
 @api.route('/<userid>')
@@ -262,7 +266,7 @@ class UserHomeView(Resource):
     @page_range()
     def get(self,userid):
         homeuser=HomeUser.query.get_or_404(userid)
-        home=Home.query.filter(str(Home.id) in(homeuser.home_id))
+        home=Home.query.filter(str(Home.id) in(homeuser.home_id) )
 
         return home,200
 

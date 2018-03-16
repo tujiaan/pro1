@@ -1,3 +1,5 @@
+import datetime
+
 from flask import request, g
 from flask_restplus import Namespace, Resource
 
@@ -56,8 +58,14 @@ class HomesView(Resource):
         else:
             db.session.add(home)
             db.session.commit()
-            homeid=home.id
-            homeuser.HomeUserView1.post(homeid )
+            homeuser=HomeUser()
+            homeuser.if_confirm=True
+            homeuser.home_id=home.id
+            homeuser.user_id=g.user.id
+            homeuser.confirm_time=datetime.datetime.now()
+            db.session.add(homeuser)
+            db.session.commit()
+
 
 
             return '创建成功', 201
@@ -265,38 +273,24 @@ class HomeInsView(Resource):
 
 @api.route('/<homeid>/sensors')
 class HomeSensorView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser', '119user', 'insuser' 'admin', 'superadmin'])
     @page_format(code=0, msg='ok')
     @api.doc('查询家中的传感器')
     @api.marshal_with(sensor_model, as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
-
-    @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser','119user','insuser' 'admin', 'superadmin'])
-
     @page_range()
-    def get(self,homeid):
-        homeuser=HomeUser.query.filter(HomeUser.home_id==homeid)
-        #print(homeuser)
-        home=Home.query.get_or_404(homeid)
-       # print(home)
-        if 'homeuser' not in[i.name for i in g.user.roles] :
+    def get(self, homeid):
+        homeuser = HomeUser.query.filter(HomeUser.home_id == homeid)
 
-            list = Sensor.query.filter(Sensor.home_id==homeid)
-            #print(list.all())
-            return list ,200
+        home = Home.query.get_or_404(homeid)
+        if 'homeuser'  in [i.name for i in g.user.roles] and len(g.user.roles.all())<=1:
 
+                list = Sensor.query.filter(Sensor.home_id in [i.home_id for i in (HomeUser.query.filter(HomeUser.user_id == g.user.id).all())])
+
+                return list, 200
         else:
-            list=Sensor.query.filter(Sensor.home_id in  [i.home_id for i in [HomeUser.query.filter(HomeUser.user_id==g.user.id)]] )
-            return list ,200
 
+              list = Sensor.query.filter(Sensor.home_id == homeid)
 
-
-
-
-
-
-
-
-
-
-
+              return list, 200

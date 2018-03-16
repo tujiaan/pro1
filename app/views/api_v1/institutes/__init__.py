@@ -17,10 +17,11 @@ from .model import *
 
 @api.route('/')
 class InstitutesViews(Resource):
-    @page_format(code=0, msg='ok')
-    @api.doc('查询所有机构列表')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin', '119user'])
+    @page_format(code=0, msg='ok')
+    @api.doc('查询所有机构列表')
+
     @api.marshal_with(institute_model, as_list=True)
     @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
@@ -131,7 +132,7 @@ class InstituteView(Resource):
     @api.doc('根据id删除机构')#
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
-    @api.marshal_with(institute_model, as_list=True)
+    #@api.marshal_with(institute_model, as_list=True)
     @api.response(200,'ok')
     def delete(self,insid):
         institute = Ins.query.get_or_404(insid)
