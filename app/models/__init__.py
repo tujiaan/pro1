@@ -281,12 +281,4 @@ class UserAlarmRecord(db.Model):
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='发布人id')
     user = db.relationship('User')
 
-#########
-engine = create_engine('mysql+mysqlconnector://root:root@127.0.0.1:3306/firefighting'
-                       )
-metadata = MetaData()
-db.session = scoped_session(sessionmaker(autocommit=False,
-                                         autoflush=False,
-                                         bind=engine))
-Base = declarative_base()
-Base.query = db.session.query_property()
+
