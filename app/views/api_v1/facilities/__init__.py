@@ -78,11 +78,9 @@ class FacilityDataView(Resource):
     def delete(self,facilityid):
         facility_data = FacilityData.query.get_or_404(facilityid)
         db.session.delete(u for u in Facility.query.get_or_404(facility_data.id))
-        knowledges=facility_data.knowledges
-        facility_data.knowledges.remove(knowledge for knowledge in knowledges )
+        # knowledges=facility_data.knowledges
+        # facility_data.knowledges.remove(knowledge for knowledge in knowledges )
         db.session.commit()
-
-
         return None,200
 
 
@@ -190,7 +188,7 @@ class FacilityKnowledgeView(Resource):
             facility = Facility.query.get_or_404(facilityid)
             knowledge = Knowledge.query.get_or_404(knowledgeid)
 
-            facility.knowledges.remove(knowledge)
+           # facility.knowledges.remove(knowledge)
             db.session.commit()
             return None,200
         except:

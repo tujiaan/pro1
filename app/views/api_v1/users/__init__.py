@@ -228,12 +228,22 @@ class user(Resource):
      @api.doc('根据id删除用户')
      @api.response(200, 'ok')
      @role_require(['admin','superadmin' ])
-
      def delete(self,userid ):
-        user=User.query.get_or_404(userid)
-        user.disabled=True
-        db.session.commit()
-        return None,200
+         user = User.query.get_or_404(userid)
+         user.disabled = True
+         role1=g.user.roles.all()
+         role2=user.roles.all()
+         if 'superadmin'in [i.name for i in role1]:
+             db.session.commit()
+             return None,200
+         elif 'admin'in[i.name for i in role1] :
+             if 'admin'not in [i.name for i in role2]and 'superadmin'not in [i.name for i in role2] :
+                 db.session.commit()
+                 return None, 200
+             else:
+                 return '权限不足', 201
+         else:  return '权限不足',201
+
 
 
 

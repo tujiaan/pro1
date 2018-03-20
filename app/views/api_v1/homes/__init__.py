@@ -2,6 +2,7 @@ import datetime
 
 from flask import request, g
 from flask_restplus import Namespace, Resource
+from sqlalchemy import and_
 
 from app.ext import db
 from app.models import Home, Ins, User, HomeUser, Sensor
@@ -85,11 +86,20 @@ class HomeView(Resource):
     @api.response(200,'ok')
     def delete(self,homeid):
         home = Home.query.get_or_404(homeid)
+        homeuser=HomeUser.query.filter(HomeUser.home_id==homeid).all()
 
-        if home.admin_user_id==g.user.id or 'admin' in [i.name for i in g.user.roles]or 'superadmin'in[i.name for i in g.user.roles]  :
+        if  'admin' in [i.name for i in g.user.roles]or 'superadmin'in[i.name for i in g.user.roles]  :
+            for u in homeuser:
+                db.session.delete(u)
             db.session.delete(home)
             db.session.commit()
             return None,200
+        elif home.admin_user_id==g.user.id:
+           for u in homeuser :
+               db.session.delete(u )
+           db.session.delete(home)
+           db.session.commit()
+           return None, 200
         else: return '权限不足',200
 
 
@@ -141,7 +151,7 @@ class HomeView(Resource):
             return home,200
         else: return '权限不足',200
 
-@api.route('/<homeid> ,<gatewayid>')######待测
+@api.route('/<homeid> ,<gatewayid>')
 class HomeGatewayView(Resource):
     @api.doc('更改家庭绑定网关')
     @api.response(200,'ok')
@@ -193,24 +203,6 @@ class HomeUsersView(Resource):
             return User.query.filter(User.id==g.user.id), 401
 
 
-# @api.route('/<homeid>/users/<userid>')
-# class HomeUserView(Resource):
-#     @api.doc('增加家庭成员/用户绑定家庭')
-#     @api.response(200,'ok')
-#     @api.header('jwt', 'JSON Web Token')
-#     @role_require(['homeuser' ])
-#     def post(self,homeid,userid):
-#
-#             home=Home.query.get_or_404(homeid)
-#             user=User.query.get_or_404(userid)
-#             if user not in home.user:
-#                 if home.admin_user_id == g.user.id or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
-#                     home.user.append(user)
-#                     db.session.commit()
-#                     return '添加成员成功',200
-#                 else:
-#                     return '权限不足',200
-#             else:return '成员已经存在',301
 
     @api.doc('删除家庭成员/解除用户绑定家庭')
     @api.response(200, 'ok')
@@ -298,13 +290,35 @@ class HomeSensorView(Resource):
 class HomeApplyView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @api.doc('显示家庭申请')
-    @api.marshal_with(home_apply_view,as_list=True)
+   # @api.marshal_with(home_apply_view,as_list=True)
     @api.response(200,'ok')
     @user_require
-    def get(self):##########################################
-        home=Home.query.filter(Home.admin_user_id==g.user.id)
-       # homeuser=HomeUser.query.filter(HomeUser.home_id.in_(i.id for i in home))
-        #result=db.session.execute('SELECT USER .id AS user_id,USER .username AS user_name,USER .contract_tel AS contract_tel,home.id AS home_id,home. NAME AS home_name FROM USER,home JOIN homeuser ON homeuser.user_id = user_id AND homeuser.home_id = home_id AND homeuser.if_confirm = FALSE GROUP BY  user.id')
-       # return result.fetchall(),200
-        list=db.session.query(User).join(HomeUser).filter(HomeUser.user_id ==User.id).join(Home).filter( HomeUser.home_id ==Home.id).filter(HomeUser.if_confirm==True)
-        print( list.all())
+    def get(self):
+        page = request.args.get('page', 1)
+        limit = request.args.get('limit', 10)
+        query = db.session.query(User,Home).join(HomeUser,User.id==HomeUser.user_id).filter(HomeUser.if_confirm == False).join(Home,HomeUser.home_id==Home.id ).order_by(Home.id)
+
+        total = query.count()
+        print(total)
+        print(query.all())
+
+        query = query.offset((int(page) - 1) * limit).limit(limit)
+        # [{''} for i in query.all()]
+        _ = []
+        for i in query.all():
+            __ = {}
+            __['user_id'] = i[0].id
+            __['contract_tel'] = i[0].contract_tel
+            __['user_name'] = i[0].username
+            __['home_id'] = i[1].id
+            __['home_name'] = i[1].name
+
+            _.append(__)
+        result = {
+            'code': 200,
+            'msg': 'ok',
+            'count': total,
+            'data': _
+        }
+        return result
+

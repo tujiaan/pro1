@@ -42,8 +42,7 @@ role_user_model=api.model('RoleUserModel',{
     'role_id':fields.String,
     'role_name':fields.String,
     'role_disable':fields.Boolean
-    # 'user':fields.Nested(user_model),
-    # 'role':fields.Nested(role_model)
+
 
 
 

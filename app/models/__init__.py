@@ -106,8 +106,8 @@ class Community(db.Model):
 class Facility(db.Model):
     __tablename__ = 'facility'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    facility_id = db.Column(db.String(24), db.ForeignKey('facility_data.id'), comment='设施id')
-    facility = db.relationship('FacilityData')
+    facility_data_id = db.Column(db.String(24), db.ForeignKey('facility_data.id'), comment='设施id')
+    facility_data = db.relationship('FacilityData')
     ins_id = db.Column(db.String(24), db.ForeignKey('ins.id'), comment='机构id')
     ins = db.relationship('Ins')
     count = db.Column(db.Integer, comment='设施数量')
@@ -122,8 +122,6 @@ class FacilityData(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     facility_name = db.Column(db.String(50), comment='设施名')
     facility_picture = db.Column(db.LargeBinary, comment='设施图片')
-    knowledges = db.relationship('Knowledge', secondary=t_facility_knowledge,
-                                 backref=db.backref('f_knowledges', lazy='dynamic'), lazy='dynamic')
 
 
 
@@ -146,9 +144,6 @@ class Home(db.Model):
     name = db.Column(db.String(255), comment='家庭名称')
     community_id = db.Column(db.String(24), db.ForeignKey('community.id'), comment='社区id')
     community = db.relationship('Community')
-
-   # user = db.relationship('User', #secondary=homeuser,
-                          #backref=db.backref('f1_user', lazy='dynamic') , lazy='dynamic')
     admin_user_id=db.Column(db.String(24), db.ForeignKey('user.id'), comment='创建者id')
     detail_address = db.Column(db.String(255), comment='家庭地址')
     link_name = db.Column(db.String(50), comment='主人姓名')

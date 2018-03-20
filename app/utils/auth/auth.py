@@ -32,9 +32,8 @@ def role_function(r):
             for role in roles:
                 _ = Role.query.filter_by(name=role).first()
                 _ and r_list.append(_)
-           # print(r_list)
-            #print(g.user.roles)
-            user_roles = tuple(g.user.roles)#.query.all()#g.user.roles.all()
+
+            user_roles = tuple(g.user.roles)
             for i in r_list:
                 if i in user_roles:
                     return method(*args, **kwargs)
