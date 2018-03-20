@@ -10,23 +10,23 @@ from .models import *
 @api.route('/')
 class SensorHistoriesView(Resource):
     @api.doc('查询所有传感器的历史')
-   # @page_format(code=0, msg='ok')
+    @page_format(code=0, msg='ok')
 
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser','insuser','admin', 'superadmin', '119user'])
     @api.marshal_with(sensorhistory_model, as_list=True)
     @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
-   # @page_range()
+    @page_range()
     def get(self):
-        if 'homeuser'not in [i.name for i in g. user.roles]:
-            return SensorHistory.query,200
-        # elif len(g.user.roles.all())<2 :
-        #     home= Home.query.filter(Home.admin_user_id==g.user.id).all()
-        #     sensor=home.sensor.all()
-        #     return SensorHistory.query.filter(SensorHistory.sensor_id.in_(i.id for i in sensor  )),200
+        if 'homeuser' in [i.name for i in g. user.roles] and len(g.user.roles.all())<2 :
+            homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
+            home=Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
+            sensor=Sensor.query.filter(Sensor.home_id.in_(i.id for i in home))
+            return SensorHistory.query.filter(SensorHistory.sensor_id.in_([i.id for i in sensor]))
+        else: return SensorHistory.query,200
 
-@api.route('/<sensorid>')
+@api.route('/<sensorid>')##############################一侧ok
 class SensorHistoryView(Resource):
     @api.doc('查询特定传感器的历史')
     @page_format(code=0, msg='ok')
@@ -38,10 +38,13 @@ class SensorHistoryView(Resource):
     @page_range()
     def get(self,sensorid):
         sensor=Sensor.query.get_or_404(sensorid)
-        home=Home.query.get_or_404(sensor.sensorid)
+        home=Home.query.filter(Home.sensor.contains(sensor)).first()
         sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensorid)
-        if 'homeuser'not in [i.name for i in g.user]:
+        homeuser=HomeUser.query.filter(HomeUser.home_id==home.id)
+        if 'homeuser'in [i.name for i in g.user.roles] and len(g.user.roles.all())<2:
+            if g.user.id in [i.user_id for i in homeuser]:
+                return sensorhistory, 200
+            else: pass
+        else:
             return sensorhistory,200
-        elif g.user.id in [i.user_id for i in (HomeUser.query.filter(HomeUser.home_id==home.id))]:
-            return sensorhistory,200
-        else:pass
+

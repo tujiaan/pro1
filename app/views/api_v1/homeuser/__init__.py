@@ -41,8 +41,6 @@ class HomeUserView1(Resource):
     @api.doc('申请加入家庭/')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser'])
-    # @api.expect(homeuser_parser)
-    @user_require
     @api.response(200, 'ok')
     def post(self, homeid):
         try:
@@ -79,37 +77,35 @@ class HomeUserView1(Resource):
 
 
 
-@api.route('/<home_id>,<user_id>')
+@api.route('/<homeid>/<userid>/')##########################一侧 ok
 class HomeUserView2(Resource):
-    @api.doc('批准加入家庭')
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser'])
-    @api.expect(homeuser_parser1)
-    @user_require
+    @api.doc('批准加入家庭')
     @api.response(200, 'ok')
-    def post(self, homeid, userid):
+    @user_require
+    def put( self,homeid,userid):
         home = Home.query.get_or_404(homeid)
+        homeuser = HomeUser.query.filter(HomeUser.home_id == homeid and HomeUser.user_id == userid).first()
+        homeuser.if_confirm = True
+        homeuser.confirm_time = datetime.datetime.now()
         if g.user.id == home.admin_user_id:
-            homeuser = HomeUser.query.filter(HomeUser.home_id == homeid and HomeUser.user_id == userid)
-            homeuser.if_confirm = True
-            homeuser.confirm_time=datetime.datetime.now(),
             db.session.commit()
             return '绑定成功', 200
         else:
             return '权限不足', 201
 
+
     @api.doc('删除家庭成员')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser'])
-    @user_require
     @api.response(200, 'ok')
-    def post(self, homeid, userid):
+    def delete(self, homeid, userid):
         home = Home.query.get_or_404(homeid)
         if g.user.id == home.admin_user_id:
-            homeuser = HomeUser.query.filter(HomeUser.home_id == homeid and HomeUser.user_id == userid)
+            homeuser = HomeUser.query.filter(HomeUser.home_id == homeid and HomeUser.user_id == userid).first()
             db.session.delete(homeuser)
             db.session.commit()
-            return '绑定成功', 200
+            return '解除绑定成功', 200
         else:
             return '权限不足', 201
 
