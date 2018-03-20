@@ -132,13 +132,15 @@ class InstituteView(Resource):
     @api.doc('根据id删除机构')#
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
-    #@api.marshal_with(institute_model, as_list=True)
     @api.response(200,'ok')
     def delete(self,insid):
         institute = Ins.query.get_or_404(insid)
-        db.session.delete(institute)
-        db.session.commit()
-        return None,200
+        if len(institute.user.all())<1:
+            db.session.delete(institute)
+            db.session.commit()
+            return None,200
+        else:
+         return '机构未解散，无法删除',201
 @api.route('/<insid>/users')
 class InsUsesrView(Resource):
     #@api.header('jwt', 'JSON Web Token')

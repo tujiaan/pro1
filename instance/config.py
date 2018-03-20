@@ -1,6 +1,12 @@
 import os
 import platform
 
+from sqlalchemy import create_engine, MetaData
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, scoped_session
+
+from app.ext import db
+
 DEBUG = False
 
 # System
@@ -21,8 +27,9 @@ WTF_CSRF_ENABLED = False
 
 ##Sqlalchemy
 #SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:huitong-tech.com@184.170.220.88:3306/firefighting'
-SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:yangjiawei@127.0.0.1:3306/firefighting'
-# SQLALCHEMY_DATABASE_URI='sqlite:////tmp/test.db'
+SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:root@127.0.0.1:3306/firefighting'
+#SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:yangjiawei@47.91.222.196:3306/firefighting'
+#SQLALCHEMY_DATABASE_URI='sqlite:////tmp/test.db'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 ##Cache

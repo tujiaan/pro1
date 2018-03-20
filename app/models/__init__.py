@@ -122,6 +122,8 @@ class FacilityData(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     facility_name = db.Column(db.String(50), comment='设施名')
     facility_picture = db.Column(db.LargeBinary, comment='设施图片')
+    knowledges = db.relationship('Knowledge', secondary=t_facility_knowledge,
+                                 backref=db.backref('f_knowledges', lazy='dynamic'), lazy='dynamic')
 
 
 
@@ -196,8 +198,6 @@ class Role(db.Model):
     name = db.Column(db.String(30), nullable=False)
     disabled = db.Column(db.Boolean, default=True, comment='是否可用')
     description = db.Column(db.String(60), comment='权限描述')
-    #users = db.relationship('User', secondary=t_user_role,
-                           # backref=db.backref('user_roles', lazy='dynamic') , lazy='dynamic')
     menus = db.relationship('Menu', secondary=t_role_menu,
                             backref=db.backref('role_menus', lazy='dynamic') , lazy='dynamic')
 
@@ -221,7 +221,8 @@ class Sensor(db.Model):
 class SensorHistory(db.Model):
     __tablename__='sensorhistory'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    sensor=db.relationship('Sensor')
+    sensor=db.relationship('Sensor')#,backref=db.backref('f_sensor', lazy='select'),lazy='joined')
+
     sensor_id=db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='传感器id')
     sensor_state=db.Column(db.Integer,comment='传感器状态')
     time=db.Column(db.DateTime,comment='时间')
@@ -261,10 +262,6 @@ class User(db.Model):
     roles = db.relationship('Role', secondary=t_user_role,
                             backref=db.backref('user_roles',
                                                lazy='dynamic'), lazy='dynamic')
-
-   # home = db.relationship('Home', #secondary=t_user_home,
-                          # backref=db.backref('f_home', lazy='dynamic'), lazy='dynamic')
-
     ins = db.relationship('Ins', secondary=t_user_ins,
                           backref=db.backref('f_ins', lazy='dynamic'), lazy='dynamic')
 

@@ -27,12 +27,13 @@ class HomeUsersView(Resource):
     @page_range()
     def get(self):
         list = HomeUser.query
-        if 'admin' or 'superadmin' in [i.name for i in g.user.roles]:
+        home=Home.query.filter(Home.admin_user_id==g.user.id)
+        if 'admin'  in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
 
             return list, 200
         else:
             return list.filter(
-                g.user in [(Home.query.get_or_404(HomeUser.home_id)).user] and HomeUser.if_confirm == True), 200
+              HomeUser.home_id.in_(i.id for i in home)).filter(HomeUser.if_confirm == True), 200
 
 
 @api.route('/<homeid>')
@@ -60,17 +61,21 @@ class HomeUserView1(Resource):
 
         except:return '该家庭未创建', 401
 
+
+
+    @page_format(code=0,msg='ok')
     @api.doc('显示家庭申请')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser'])
     @api.marshal_with(homeuser_model,as_list=True)
     @api.response(200, 'ok')
+    @page_range()
     def get(self,homeid):
        home=Home.query.get_or_404(homeid)
        if g.user.id==home.admin_user_id:
            homeuser = HomeUser.query.filter(HomeUser.if_confirm==False and HomeUser.home_id==homeid )
-           return homeuser.all(),200
-       else: return '权限不足',201
+           return homeuser,200
+       else: pass
 
 
 
@@ -96,7 +101,6 @@ class HomeUserView2(Resource):
     @api.doc('删除家庭成员')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser'])
-    #@api.expect(homeuser_parser1)
     @user_require
     @api.response(200, 'ok')
     def post(self, homeid, userid):

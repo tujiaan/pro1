@@ -15,3 +15,10 @@ home_model = api.model('HomeModel', {
     'alternate_phone':fields.String,
     'admin_user_id':fields.String
 })
+home_apply_view=api.model('HomeApplyModel',{
+    'user_id':fields.String,
+    'user_name':fields.String,
+    'contract_tel':fields.String,
+    'home_name':fields.String,
+    'home_id':fields.String
+})

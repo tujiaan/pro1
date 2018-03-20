@@ -10,19 +10,22 @@ from .models import *
 @api.route('/')
 class SensorHistoriesView(Resource):
     @api.doc('查询所有传感器的历史')
-    @page_format(code=0, msg='ok')
+   # @page_format(code=0, msg='ok')
 
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser','insuser','admin', 'superadmin', '119user'])
     @api.marshal_with(sensorhistory_model, as_list=True)
     @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @page_range()
+   # @page_range()
     def get(self):
         if 'homeuser'not in [i.name for i in g. user.roles]:
             return SensorHistory.query,200
-        else :
-            return SensorHistory.query.filter((Sensor.query.get_or_404(SensorHistory.sensor_id)).home.admin_user_id==g.user.id),200
+        # elif len(g.user.roles.all())<2 :
+        #     home= Home.query.filter(Home.admin_user_id==g.user.id).all()
+        #     sensor=home.sensor.all()
+        #     return SensorHistory.query.filter(SensorHistory.sensor_id.in_(i.id for i in sensor  )),200
+
 @api.route('/<sensorid>')
 class SensorHistoryView(Resource):
     @api.doc('查询特定传感器的历史')

@@ -38,10 +38,14 @@ role_user_model=api.model('RoleUserModel',{
     'user_id':fields.String,
     'user_name':fields.String,
     'user_email':fields.String,
-    'user_contract_tel':fields.String,
+    'contract_tel':fields.String,
     'role_id':fields.String,
     'role_name':fields.String,
     'role_disable':fields.Boolean
+    # 'user':fields.Nested(user_model),
+    # 'role':fields.Nested(role_model)
+
+
 
 
 

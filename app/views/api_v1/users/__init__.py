@@ -1,7 +1,6 @@
-from flask import g, flash
+from flask import g, flash, request
 from flask_restplus import Namespace, Resource
-from sqlalchemy import select, text
-
+from sqlalchemy import select, text, and_
 
 from app.ext import db
 from app.models import User, Role, Ins, Home, HomeUser
@@ -10,7 +9,7 @@ from app.utils.auth.auth import role_require
 from app.utils.auth.jwt import encode_jwt
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.institutes import institute_model
-from app.views.api_v1.roles import role_model
+
 
 from .parsers import *
 
@@ -43,21 +42,18 @@ class RegisterView(Resource):
 
 @api.route('/login/')
 class LoginView(Resource):
-    #@api.header('jwt', 'JSON Web Token')
     @api.doc('登陆')
     @api.expect(login_parser, validate=True)
     @api.response(201, '登录成功')
     @api.response(409, '用户不存在')
-    #@role_require(['homeuser','119user','propertyuser',])
     def post(self):
         args = login_parser.parse_args()
         print(args)
-        u = User.query.filter_by(username=args.get('username'), password=args.get('password')).first()
-        #print(user)
+        u = User.query.filter(and_(User.username==args.get('username'), User.password==args.get('password'),User.disabled==False)).first()
         if u is not None:
             jwt = encode_jwt(user_id=u.id)
             return {'jwt': jwt}, 200
-        return None, 401
+        return None, 409
 
 
 @api.route('/roles/')
@@ -76,16 +72,17 @@ class RolesView(Resource):
 
 @api.route('/homes/')
 class UserHomeView1(Resource):
+
+    @user_require
     @page_format(code='0', msg='success')
     @api.doc('查询自己关联的家庭')
     @api.header('jwt', 'JSON Web Token')
-    @user_require
     @api.marshal_with(home_model, as_list=True)
     @page_range()
     def get(self):
-        homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id)
-        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser) and HomeUser.if_confirm==True)
-        return home, 200
+        homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).filter( HomeUser.if_confirm == True)
+        list = Home.query.filter(Home.id .in_(i.home_id for i in homeuser) )
+        return list, 200
 
 @api.route('/ins/')
 class UserHomeView1(Resource):
@@ -103,14 +100,6 @@ class UserHomeView1(Resource):
 
 @api.route('/password/')
 class PasswordView(Resource):
-   # @api.doc('找回密码')
-   # @api.response(200, 'ok')
-    #@api.header('jwt', 'JSON Web Token')
-   # @user_require
-  #  def get(self):
-       # u = g.user
-       # return u.password
-
     @api.doc('修改密码')
     @api.header('jwt', 'JSON Web Token')
     @api.expect(password_parser)
@@ -170,6 +159,7 @@ class ProfileView(Resource):
 
 @api.route('/username/')
 class ProfileView(Resource):
+
         @api.doc('修改用户名')
         @api.header('jwt', 'JSON Web Token')
         @user_require
@@ -183,31 +173,39 @@ class ProfileView(Resource):
                 db.session.commit()
             return None, 204
 @api.route('/')
-class UsersFindView(Resource):
+class UserFindView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @api.response(200,'ok')
+    @role_require([ 'admin', 'superadmin'])
+    @api.doc(params={'page': '页数', 'limit': '数量'})
+    def get(self):
+        page = request.args.get('page',1)
+        limit = request.args.get('limit',10)
 
-       @api.header('jwt', 'JSON Web Token')
-       @page_format(code='0', msg='success')
-       @role_require(['admin', 'superadmin','homeuser'])
+        query=db.session.query(User, Role).join(Role,User.roles).order_by(User.id)
+        total = query.count()
 
-       @api.doc(params={'page':'页数','limit':'数量'})
-      # @api.marshal_with(role_user_model, as_list=True)
-       @api.doc('查询所有用户信息')
-       @api.response(200, 'ok')
-       @page_range()
-       def get(self):
-           if 'superadmin' in [i.name for i in g.user.roles]:
-             #list=db.session.query(User,User.roles,Role).from_statement(text('Select  user.id as user_id,user.contract_tel as contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user inner  join  user_role on  user.id=user_role.user_id inner join role  on role.id=user_role.role_id  order by user.id '))
-             list=User.query.from_statement(text('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user inner  join  user_role on user.id=user_role.user_id inner join role  on role.id=user_role.role_id  order by user_id '))
+        query = query.offset((int(page) - 1) * limit).limit(limit)
+        # [{''} for i in query.all()]
+        _=[]
+        for i in query.all():
+            __={}
+            __['user_id']=i[0].id
+            __['contract_tel']=i[0].contract_tel
+            __['user_name']=i[0].username
+            __['user_email'] = i[0].email
+            __['role_id'] = i[1].id
+            __['role_name'] = i[1].name
+            __['role_disable'] = i[1].disabled
+            _.append(__)
+        result = {
+            'code': 200,
+            'msg': '',
+            'count': total,
+            'data': _
+        }
+        return result
 
-            #list=db.session.execute('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user inner  join  user_role on user.id=user_role.user_id inner join role  on role.id=user_role.role_id  ORDER BY user_id')
-            #list=db.session.execute('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user,role inner  join  user_role where user.id=user_role.user_id  and  role.id=user_role.role_id  ORDER BY user_id')
-            #list=db.session.query(User).from_statement(text('Select user.id as user_id,user.contract_tel as user_contract_tel,user.username as user_name,user.email as user_email,role.id as role_id,role.name as role_name ,role.disabled as role_disable from user,role inner  join  user_role where user.id=user_role.user_id  and  role.id=user_role.role_id  ORDER BY user_id'))
-
-             print(type(list))
-             print(list.all())
-             return list,200
-           else:
-                pass
 
 
 @api.route('/<userid>')
@@ -227,14 +225,20 @@ class user(Resource):
 
 
      @api.header('jwt', 'JSON Web Token')
-     @api.doc('根据id删除用户')######事实上根本是用不到删除这个根表
+     @api.doc('根据id删除用户')
      @api.response(200, 'ok')
-     @role_require([ ])
+     @role_require(['admin','superadmin' ])
+
      def delete(self,userid ):
-         user = User.query.get_or_404(userid)
-         db.session.delete(user)
-         db.session.commit()
-         return None,200
+        user=User.query.get_or_404(userid)
+        user.disabled=True
+        db.session.commit()
+        return None,200
+
+
+
+
+
 
 
 

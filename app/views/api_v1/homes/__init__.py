@@ -5,7 +5,7 @@ from flask_restplus import Namespace, Resource
 
 from app.ext import db
 from app.models import Home, Ins, User, HomeUser, Sensor
-from app.utils.auth import decode_jwt
+from app.utils.auth import decode_jwt, user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1 import homeuser
@@ -294,3 +294,17 @@ class HomeSensorView(Resource):
               list = Sensor.query.filter(Sensor.home_id == homeid)
 
               return list, 200
+@api.route('/applies/')
+class HomeApplyView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @api.doc('显示家庭申请')
+    @api.marshal_with(home_apply_view,as_list=True)
+    @api.response(200,'ok')
+    @user_require
+    def get(self):##########################################
+        home=Home.query.filter(Home.admin_user_id==g.user.id)
+       # homeuser=HomeUser.query.filter(HomeUser.home_id.in_(i.id for i in home))
+        #result=db.session.execute('SELECT USER .id AS user_id,USER .username AS user_name,USER .contract_tel AS contract_tel,home.id AS home_id,home. NAME AS home_name FROM USER,home JOIN homeuser ON homeuser.user_id = user_id AND homeuser.home_id = home_id AND homeuser.if_confirm = FALSE GROUP BY  user.id')
+       # return result.fetchall(),200
+        list=db.session.query(User).join(HomeUser).filter(HomeUser.user_id ==User.id).join(Home).filter( HomeUser.home_id ==Home.id).filter(HomeUser.if_confirm==True)
+        print( list.all())

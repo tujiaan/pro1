@@ -58,7 +58,9 @@ class FacilityDataView(Resource):
     def put(self,facilityid):
       facility=Facility.query.get_or_404(facilityid)
       args=facility_parser1.parse_args()
-      if 'insuser'not in [i.anme for i in g.user.role]:
+      facility.count=args['count']
+
+      if 'insuser'not in [i.name for i in g.user.role]:
         db.session.commit()
         return None,200
       elif facility.ins.admin_user_id==g.user.id and facility.ins.type!='property':
@@ -75,8 +77,12 @@ class FacilityDataView(Resource):
     @role_require(['admin', 'superadmin'])
     def delete(self,facilityid):
         facility_data = FacilityData.query.get_or_404(facilityid)
-        db.session.delete(facility_data)
+        db.session.delete(u for u in Facility.query.get_or_404(facility_data.id))
+        knowledges=facility_data.knowledges
+        facility_data.knowledges.remove(knowledge for knowledge in knowledges )
         db.session.commit()
+
+
         return None,200
 
 
@@ -109,7 +115,7 @@ class FacilitesInsView(Resource):
 
 @api.route('/facility-ins/<facilityid>/')
 class FacilitesView(Resource):
-        @api.doc('删除机构设施关联')##ok
+        @api.doc('删除机构设施关联')
         @api.response(200, 'ok')
         def delete(self,facilityid):
             facility=Facility.query.filter_by(facility_id=facilityid).first()

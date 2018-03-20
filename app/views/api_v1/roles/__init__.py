@@ -20,6 +20,7 @@ class RolesView(Resource ):
     @page_range()
     def get(self):
         list=Role.query
+        print(type(list))
         return list,200
     @api.doc('新建角色')########用不上
     @api.expect(roles_parser)
