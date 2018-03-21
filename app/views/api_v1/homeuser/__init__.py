@@ -102,7 +102,7 @@ class HomeUserView2(Resource):
     def delete(self, homeid, userid):
         home = Home.query.get_or_404(homeid)
         if g.user.id == home.admin_user_id:
-            homeuser = HomeUser.query.filter(HomeUser.home_id == homeid and HomeUser.user_id == userid).first()
+            homeuser = HomeUser.query.filter(HomeUser.home_id == homeid ).filter( HomeUser.user_id == userid).first()
             db.session.delete(homeuser)
             db.session.commit()
             return '删除成功', 200
