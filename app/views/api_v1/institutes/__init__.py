@@ -2,7 +2,7 @@ from flask import g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Ins, User, Facility, Community
+from app.models import Ins, User, Facility, Community, FacilityIns
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -135,9 +135,9 @@ class InstituteView(Resource):
     @api.response(200,'ok')
     def delete(self,insid):
         institute = Ins.query.get_or_404(insid)
-        facility=Facility.query.filter(Facility.ins_id==insid)
+        facilityins=FacilityIns.query.filter(FacilityIns.ins_id==insid)
         community=Community.query.filter(Community.ins_id==insid)
-        db.session.delete(facility)
+        db.session.delete(facilityins)
         db.session.delete(community)
         db.session.delete(institute)
         db.session.commit()

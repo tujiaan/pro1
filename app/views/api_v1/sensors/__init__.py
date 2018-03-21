@@ -57,15 +57,6 @@ class SensorsView(Resource):
 
         return sensor,200
 
-    # @api.doc('删除传感器')
-    # @api.response(200, 'ok')
-    # @api.header('jwt', 'JSON Web Token')
-    # @role_require([])
-    # def delete(self, sensorid):
-    #      sensor=Sensor.query.get_or_404(sensorid)
-    #      db.session.delete(sensor)
-    #      db.session.commit()
-    #      return None ,200
 
     @api.doc('更新传感器信息')
     @api.header('jwt', 'JSON Web Token')
@@ -117,14 +108,16 @@ class SensorAlarmsView(Resource):
     @page_range()
     def get(self,sensorid):
         sensor=Sensor.query.get_or_404(sensorid)
+        homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
+        home=Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
         if 'homeuser'in [i.name for i in g.user.role]:
-            if sensor not in [i.sensor for i in g.user.home]:
-                return '权限不足',301
+            if sensor not in [i.sensor for i in home]:
+               pass
         elif ('insuser'or '119user')in [i.name for i in g.user.role]:
            ins=(Home.query.get_or_404(sensor.home_id)).ins
            if g.user.id==ins.admin_user_id :
-               return SensorAlarm.query.filter(SensorAlarm.is_confirm==False and SensorAlarm.is_timeout==True)
-           else: return '权限不足',301
+               return SensorAlarm.query.filter(SensorAlarm.is_confirm==False).filter ( SensorAlarm.is_timeout==True)
+           else: pass
 
         else: return SensorAlarm.query,200
 
@@ -139,7 +132,7 @@ class SensorHistoryView(Resource):
         sensor=Sensor.query.get_or_404(sensorid)
         home=sensor.home
         sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensorid).order_by(SensorHistory.time.desc()).first()
-        if 'homeuser'in [i.name for i in g.user.roles] and len(g.user.roles.all())<=1:
+        if 'homeuser'in [i.name for i in g.user.roles] and len(g.user.roles.all())<2:
             if g.user.id in [i.user_id for i in (HomeUser.query.filter(HomeUser.home_id==home.id))]:
                return  sensorhistory, 200
             else:return '权限不足',201

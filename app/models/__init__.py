@@ -33,12 +33,6 @@ t_facility_knowledge = db.Table(
     db.UniqueConstraint('knowledge_id', 'facility_id', name='uix_facility_knowledge')
 )
 
-# t_user_home = db.Table(
-#     'user_home',
-#     db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
-#     db.Column('home_id', db.String(24), db.ForeignKey('home.id')),
-#     db.UniqueConstraint('user_id', 'home_id', name='uix_home_user')
-#)
 t_user_ins = db.Table(
     'user_ins',
     db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
@@ -71,7 +65,6 @@ class Ins(db.Model):
     note = db.Column(db.Text, comment='备注')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     longitude = db.Column(db.Float(asdecimal=True), comment='经度')
-    # administrator_Id = db.Column(db.String(50),comment='管理员?????也用下面的方式吧')
     admin_user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='管理员id')
     community=db.relationship('Community')
     user = db.relationship('User', secondary=t_user_ins,
@@ -103,25 +96,26 @@ class Community(db.Model):
     homes = db.relationship('Home', lazy='dynamic')
 
 
-class Facility(db.Model):
-    __tablename__ = 'facility'
+class FacilityIns(db.Model):
+    __tablename__ = 'facility_ins'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    facility_data_id = db.Column(db.String(24), db.ForeignKey('facility_data.id'), comment='设施id')
-    facility_data = db.relationship('FacilityData')
+    facility_id = db.Column(db.String(24), db.ForeignKey('facility.id'), comment='设施id')
+    facility = db.relationship('Facility')
     ins_id = db.Column(db.String(24), db.ForeignKey('ins.id'), comment='机构id')
     ins = db.relationship('Ins')
     count = db.Column(db.Integer, comment='设施数量')
     expire_time = db.Column(db.DateTime, comment='过期时间')
-    knowledges = db.relationship('Knowledge', secondary=t_facility_knowledge,
-                            backref=db.backref('f_knowledges', lazy='dynamic') , lazy='dynamic')
 
 
-class FacilityData(db.Model):
-    __tablename__ = 'facility_data'
+
+class Facility(db.Model):
+    __tablename__ = 'facility'
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     facility_name = db.Column(db.String(50), comment='设施名')
     facility_picture = db.Column(db.LargeBinary, comment='设施图片')
+    knowledges = db.relationship('Knowledge', secondary=t_facility_knowledge,
+                                 backref=db.backref('f_knowledges', lazy='dynamic'), lazy='dynamic')
 
 
 
@@ -133,7 +127,6 @@ class Gateway(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     useable = db.Column(db.Boolean, default=True, comment='是否可用')
     home_id = db.Column(db.String(24),  comment='家庭id')
-    #home = db.relationship('Home')
     sensors = db.relationship('Sensor', lazy='dynamic')
 
 
@@ -151,7 +144,6 @@ class Home(db.Model):
     longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     alternate_phone = db.Column(db.String(50), comment='备用电话')
-    #gateways = db.relationship('Gateway', lazy='dynamic')
     gateway_id=db.Column(db.String(50),db.ForeignKey('gateway.id'),comment='网关id')
     sensor=db.relationship('Sensor',lazy='dynamic')
 
@@ -163,8 +155,7 @@ class Knowledge(db.Model):
     type = db.Column(db.String(50), comment='知识类型   (0.自救 1.逃生 2.灭火 3.新闻 4.其他)')
     content = db.Column(db.Text, comment='知识正文')
     title = db.Column(db.String(50), comment='知识标题')
-    facility=db.relationship('Facility',secondary=t_facility_knowledge,
-                       backref=db.backref('f_facility',lazy='dynamic') , lazy='dynamic')
+
 
 
 class Menu(db.Model):
@@ -230,6 +221,7 @@ class SensorAlarm(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True, comment='')
     sensor_id = db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='网关id')
     sensor = db.relationship('Sensor')
+    note=db.Column(db.String(255),comment='备注')
     alarm_object = db.Column(db.String(50), comment='报警项目')
     alarm_value = db.Column(db.Float, comment='报警数值')
     alarm_time = db.Column(db.DateTime, comment='报警时间')
@@ -269,9 +261,11 @@ class UserAlarmRecord(db.Model):
     type = db.Column(db.Integer, default=0, comment='信息类型,0:消防,1,吧啦吧啦,2吧啦吧啦')
     content = db.Column(db.String(50), comment='')
     if_confirm=db.Column(db.Boolean,default=False,comment='是否确认')
-    community_id = db.Column(db.String(24), db.ForeignKey('community.id'))
-    community = db.relationship('Community')
+    home_id = db.Column(db.String(24), db.ForeignKey('home.id'))
+    home = db.relationship('Home')
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='发布人id')
     user = db.relationship('User')
+    note=db.Column(db.String(256),comment='备注')
+    time=db.Column(db.DateTime,default=datetime.datetime.now,comment='报警时间')
 
 

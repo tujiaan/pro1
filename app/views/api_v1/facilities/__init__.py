@@ -2,7 +2,7 @@ from flask import g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Facility, FacilityData,Knowledge
+from app.models import Facility, FacilityIns,Knowledge
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.facilities.parser import facility_parser, facility_parser1, f_parser, f1_parser
@@ -13,17 +13,16 @@ from .models import *
 
 
 @api.route('/')
-class FacilitiesDataView(Resource):
+class FacilitiesInsView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     @page_format(code=0,msg='ok')
     @api.doc('查询设施列表')
     @api.marshal_with(facility_data_model, as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
-
     @page_range()
     def get(self):
-        list = FacilityData.query
+        list = Facility.query
         return list, 200
 
 
@@ -33,7 +32,7 @@ class FacilitiesDataView(Resource):
     @api.expect(f_parser)
     def post(self):
         args=f_parser.parse_args()
-        facility_data=FacilityData()
+        facility_data=Facility()
         facility_data.facility_name=args['facility_name']
         p=args['facility_picture']
         facility_data.facility_picture=p.read()
@@ -47,7 +46,7 @@ class FacilityDataView(Resource):
     @api.marshal_with(facility_data_model)
     @api.response(200,'ok')
     def get(self,facilityid):
-        facility_data=FacilityData.query.get_or_404(facilityid)
+        facility_data=Facility.query.get_or_404(facilityid)
         return facility_data,200
 
     @api.doc('更新设施详情')
@@ -76,10 +75,8 @@ class FacilityDataView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     def delete(self,facilityid):
-        facility_data = FacilityData.query.get_or_404(facilityid)
-        db.session.delete(u for u in Facility.query.get_or_404(facility_data.id))
-        # knowledges=facility_data.knowledges
-        # facility_data.knowledges.remove(knowledge for knowledge in knowledges )
+        facility_data = Facility.query.get_or_404(facilityid)
+
         db.session.commit()
         return None,200
 
@@ -118,7 +115,7 @@ class FacilitesView(Resource):
     @api.doc('删除机构设施关联')
     @api.response(200, 'ok')
     def delete(self,facilityid):
-        facility=Facility.query.filter_by(facility_id=facilityid).first()
+        facility=FacilityIns.query.filte(FacilityIns.facility_id==facilityid).first()
         db.session.delete(facility)
         if 'insuser'not in [i.name for i in g.user.roles.all()]:
             db.session.commit()
@@ -141,20 +138,20 @@ class FacilitesView(Resource):
     @role_require(['admin', 'superadmin','insuser'])
     def put(self,facilityid):
         args=facility_parser1.parse_args()
-        facility=Facility.query.filter_by(facility_id=facilityid).first()
+        facilityins=FacilityIns.query.filter(FacilityIns.facility_id==facilityid).first()
         if args.get('ins_id'):
-            facility.ins_id=args.get('ins_id')
+            facilityins.ins_id=args.get('ins_id')
         else:pass
         if args.get('count'):
-            facility.count= args.get('count')
+            facilityins.count= args.get('count')
         else:pass
         if args.get('expire_time'):
-            facility.expire_time=args.get('expire_time')
+            facilityins.expire_time=args.get('expire_time')
         else:pass
         if 'insuser'not in [i.namme for i in g.user.role]:
             db.session.commit()
             return None,200
-        elif facility.ins.admin_user_id==g.user.id:
+        elif facilityins.ins.admin_user_id==g.user.id:
             db.session.commit()
             return None, 200
         else:return '权限不足',301
@@ -202,7 +199,7 @@ class FacilityKnowledgeView(Resource):
             facility = Facility.query.get_or_404(facilityid)
             knowledge = Knowledge.query.get_or_404(knowledgeid)
 
-           # facility.knowledges.remove(knowledge)
+            facility.knowledges.remove(knowledge)
             db.session.commit()
             return None,200
         except:

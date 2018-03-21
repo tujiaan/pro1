@@ -71,7 +71,7 @@ class HomeUserView1(Resource):
     def get(self,homeid):
        home=Home.query.get_or_404(homeid)
        if g.user.id==home.admin_user_id:
-           homeuser = HomeUser.query.filter(HomeUser.if_confirm==False and HomeUser.home_id==homeid )
+           homeuser = HomeUser.query.filter(HomeUser.if_confirm==False).filter( HomeUser.home_id==homeid )
            return homeuser,200
        else: pass
 

@@ -151,7 +151,7 @@ class HomeView(Resource):
             return home,200
         else: return '权限不足',200
 
-@api.route('/<homeid> ,<gatewayid>')
+@api.route('/<homeid>/<gatewayid>')
 class HomeGatewayView(Resource):
     @api.doc('更改家庭绑定网关')
     @api.response(200,'ok')
@@ -196,9 +196,10 @@ class HomeUsersView(Resource):
     @page_range()
     def get(self, homeid):
         home = Home.query.get_or_404(homeid)
-        if g.user.id in [i.id for i in home.user] or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [
+        homeuser=HomeUser.query.filter(HomeUser.home_id==homeid).all()
+        if g.user.id in [i.user_id for i in homeuser ] or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [
             i.name for i in g.user.roles]:
-            return home.user, 200
+            return User.query.filter(User.id.in_(i.user_id for i in homeuser)), 200
         else:
             return User.query.filter(User.id==g.user.id), 401
 
@@ -221,7 +222,7 @@ class HomeUsersView(Resource):
 
 
 
-@api.route('/<homeid>,<distance>/ins')
+@api.route('/<homeid>/<distance>/ins')
 class HomeInsView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser', 'admin', 'superadmin'])
@@ -274,7 +275,6 @@ class HomeSensorView(Resource):
     @page_range()
     def get(self, homeid):
         homeuser = HomeUser.query.filter(HomeUser.home_id == homeid)
-
         home = Home.query.get_or_404(homeid)
         if 'homeuser'  in [i.name for i in g.user.roles] and len(g.user.roles.all())<=1:
 
@@ -290,7 +290,6 @@ class HomeSensorView(Resource):
 class HomeApplyView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @api.doc('显示家庭申请')
-   # @api.marshal_with(home_apply_view,as_list=True)
     @api.response(200,'ok')
     @user_require
     def get(self):
