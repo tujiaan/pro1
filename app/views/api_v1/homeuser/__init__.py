@@ -77,7 +77,7 @@ class HomeUserView1(Resource):
 
 
 
-@api.route('/<homeid>/<userid>/')##########################一侧 ok
+@api.route('/<homeid>/<userid>/')
 class HomeUserView2(Resource):
     @api.header('jwt', 'JSON Web Token')
     @api.doc('批准加入家庭')
@@ -85,7 +85,7 @@ class HomeUserView2(Resource):
     @user_require
     def put( self,homeid,userid):
         home = Home.query.get_or_404(homeid)
-        homeuser = HomeUser.query.filter(HomeUser.home_id == homeid and HomeUser.user_id == userid).first()
+        homeuser = HomeUser.query.filter(HomeUser.home_id == homeid ).filter( HomeUser.user_id == userid).first()
         homeuser.if_confirm = True
         homeuser.confirm_time = datetime.datetime.now()
         if g.user.id == home.admin_user_id:
@@ -95,7 +95,7 @@ class HomeUserView2(Resource):
             return '权限不足', 201
 
 
-    @api.doc('删除家庭成员')
+    @api.doc('删除家庭成员记录')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser'])
     @api.response(200, 'ok')
@@ -105,7 +105,7 @@ class HomeUserView2(Resource):
             homeuser = HomeUser.query.filter(HomeUser.home_id == homeid and HomeUser.user_id == userid).first()
             db.session.delete(homeuser)
             db.session.commit()
-            return '解除绑定成功', 200
+            return '删除成功', 200
         else:
             return '权限不足', 201
 

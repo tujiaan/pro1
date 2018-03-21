@@ -54,9 +54,9 @@ class GatewayView2(Resource):
     @api.doc('删除网关')
     @api.response(200,'ok')
     @api.response(404, '记录不存在')
-    def delete(self,gatewayid):
+    def put(self,gatewayid):
         gateway=Gateway.query.get_or_404(gatewayid)
-        db.session.delete(gateway)
+        gateway.useable=False
         db.session.commit()
         return None,200
 

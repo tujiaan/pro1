@@ -22,9 +22,9 @@ class UserAlarmRecordsView(Resource):
     @page_range()
     def get(self):
         list=UserAlarmRecord.query
-        if('admin'or'superadmin') in [i.name for i in g. user. role]:
+        if'admin' in [i.name for i in g. user. role] or'superadmin'in [i.name for i in g. user. role]:
             return list,200
-        elif'homeuser'in [i.name for i in g. user. role]:
+        elif'homeuser'in [i.name for i in g. user. role] and len(g.user.roles.all())<2:
             return list.filter(UserAlarmRecord.user in [i.user for i in g.user.home])
 
 
@@ -41,8 +41,9 @@ class UserAlarmRecordsView(Resource):
         return None,200
 @api.route('/<useralarmrecordid>')
 class UserAlarmRecordView(Resource):
-    # 查询用户报警记录的详情？？？应该是对应传感器的报警详情
+
     @api.doc('更新用户报警信息（报警确认如果是的要加if_confirm字段）')
+
     @api.expect(useralarmrecord1_parser)
     @api.response(200,'ok')
     def put(self,useralarmrecordid):

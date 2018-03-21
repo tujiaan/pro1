@@ -2,13 +2,13 @@ from flask import g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Community, Ins
+from app.models import Community, Ins, Home
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 
 from app.views.api_v1.communities.parser import community_parser, community_parser1
-
+from app.views.api_v1.homes import HomeView
 
 api=Namespace('Community',description='社区相关操作')
 from app.views.api_v1.communities.models import community_model, _community_model, home_model
@@ -144,6 +144,9 @@ class CommunityView(Resource):
     @api.response(200,'ok')
     def delete(self,communityid):
         community=Community.query.get_or_404(communityid)
+        home=Home.query.filter(Home.id.in_( i.id for i in community.homes))
+        for i in home:
+          HomeView.delete(self,i.id)
         db.session.delete(community)
         db.session.commit()
         return None,200

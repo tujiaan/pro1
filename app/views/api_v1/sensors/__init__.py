@@ -138,13 +138,13 @@ class SensorHistoryView(Resource):
     def get(self,sensorid):
         sensor=Sensor.query.get_or_404(sensorid)
         home=sensor.home
-        sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensorid).order_by(SensorHistory.time.desc())
+        sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensorid).order_by(SensorHistory.time.desc()).first()
         if 'homeuser'in [i.name for i in g.user.roles] and len(g.user.roles.all())<=1:
             if g.user.id in [i.user_id for i in (HomeUser.query.filter(HomeUser.home_id==home.id))]:
-                sensorhistory.first(), 200
+               return  sensorhistory, 200
             else:return '权限不足',201
 
-        else: return sensorhistory.first(), 200
+        else: return sensorhistory, 200
 
 
 

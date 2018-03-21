@@ -34,7 +34,7 @@ class SensorAlarmsView(Resource):
      db.session.add(sensoralarm)
      db.session.commit()
      return None,200
-@api.route('/<sensoralarmid>')####根据传感器id查询传感器报警历史记录????
+@api.route('/<sensoralarmid>')
 class SensorAlarmView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser', 'admin', 'superadmin'])
@@ -47,7 +47,7 @@ class SensorAlarmView(Resource):
         if sensoralarm.sensor not in[i.sensor for i in g.user.home]:
             return '权限不足',301
         else: return sensoralarm,200
-    ######@api.doc('根据报警id发送疏散信息')
+
     @api.doc('删除报警记录')
     @api.header('jwt', 'JSON Web Token')
     @role_require([ ])
@@ -60,19 +60,19 @@ class SensorAlarmView(Resource):
     @api.doc('更新传感器的报警记录/报警确认')
     @api.expect(sensoralarms_parser1,validate=True)
     @api.header('jwt', 'JSON Web Token')
-    #@role_require([])
+    @role_require(['homeuser','119user','admin','superadmin'])
     @api.response(200, 'ok')
     def put(self,sensoralarmid):
         sensoralarm=SensorAlarm.query.get_or_404(sensoralarmid)
-        if 'homeuser'in [i.name for i in g .user.role]:
+        if 'homeuser'in [i.name for i in g .user.role] and len(g.user.roles.all())<2:
             home=Home.query.get_or_404( sensoralarm.sensor.home_id)
             if home.admin_user_id==g.user.id:
-                sensoralarm.is_confirm==True
+                sensoralarm.is_confirm=True
                 db.session.commit()
                 return None,200
             else: return '权限不足',301
         else:
-            sensoralarm.is_confirm==True
+            sensoralarm.is_confirm=True
             db.session.commit()
             return None, 200
 

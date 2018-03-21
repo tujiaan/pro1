@@ -2,7 +2,7 @@ from flask import g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Ins, User
+from app.models import Ins, User, Facility, Community
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -129,18 +129,20 @@ class InstituteView(Resource):
             return institute,200
         else:return'权限不足',301
 
-    @api.doc('根据id删除机构')#
+    @api.doc('根据id删除机构')##########待测试
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     @api.response(200,'ok')
     def delete(self,insid):
         institute = Ins.query.get_or_404(insid)
-        if len(institute.user.all())<1:
-            db.session.delete(institute)
-            db.session.commit()
-            return None,200
-        else:
-         return '机构未解散，无法删除',201
+        facility=Facility.query.filter(Facility.ins_id==insid)
+        community=Community.query.filter(Community.ins_id==insid)
+        db.session.delete(facility)
+        db.session.delete(community)
+        db.session.delete(institute)
+        db.session.commit()
+        return '删除成功',200
+
 @api.route('/<insid>/users')
 class InsUsesrView(Resource):
     #@api.header('jwt', 'JSON Web Token')

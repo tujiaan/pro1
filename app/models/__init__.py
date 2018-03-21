@@ -268,6 +268,7 @@ class UserAlarmRecord(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     type = db.Column(db.Integer, default=0, comment='信息类型,0:消防,1,吧啦吧啦,2吧啦吧啦')
     content = db.Column(db.String(50), comment='')
+    if_confirm=db.Column(db.Boolean,default=False,comment='是否确认')
     community_id = db.Column(db.String(24), db.ForeignKey('community.id'))
     community = db.relationship('Community')
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='发布人id')
