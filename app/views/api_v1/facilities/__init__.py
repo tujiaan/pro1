@@ -75,8 +75,13 @@ class FacilityDataView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     def delete(self,facilityid):
-        facility_data = Facility.query.get_or_404(facilityid)
-
+        facility = Facility.query.get_or_404(facilityid)
+        facilityins=FacilityIns.query.filter(FacilityIns.facility_id==facilityid).first()
+        knowledge=facility.knowledge
+        db.session.delete(facilityins)
+        for i in knowledge:
+            FacilityKnowledgeView.delete(self,facilityid,i.id)
+        db.session.delete(facility)
         db.session.commit()
         return None,200
 
@@ -115,7 +120,7 @@ class FacilitesView(Resource):
     @api.doc('删除机构设施关联')
     @api.response(200, 'ok')
     def delete(self,facilityid):
-        facility=FacilityIns.query.filte(FacilityIns.facility_id==facilityid).first()
+        facility=FacilityIns.query.filter(FacilityIns.facility_id==facilityid).first()
         db.session.delete(facility)
         if 'insuser'not in [i.name for i in g.user.roles.all()]:
             db.session.commit()
@@ -199,7 +204,7 @@ class FacilityKnowledgeView(Resource):
             facility = Facility.query.get_or_404(facilityid)
             knowledge = Knowledge.query.get_or_404(knowledgeid)
 
-            facility.knowledges.remove(knowledge)
+            facility.knowledge.remove(knowledge)
             db.session.commit()
             return None,200
         except:

@@ -15,7 +15,7 @@ t_user_role = db.Table(
     'user_role',
     db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
     db.Column('role_id', db.String(24), db.ForeignKey('role.id')),
-    db.UniqueConstraint('user_id', 'role_id', name='uix_role_user')
+   db.UniqueConstraint('user_id', 'role_id', name='uix_role_user')
 )
 
 t_role_menu = db.Table(
@@ -110,12 +110,12 @@ class FacilityIns(db.Model):
 
 class Facility(db.Model):
     __tablename__ = 'facility'
-
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     facility_name = db.Column(db.String(50), comment='设施名')
     facility_picture = db.Column(db.LargeBinary, comment='设施图片')
-    knowledges = db.relationship('Knowledge', secondary=t_facility_knowledge,
-                                 backref=db.backref('f_knowledges', lazy='dynamic'), lazy='dynamic')
+    knowledge = db.relationship('Knowledge', secondary=t_facility_knowledge,
+                                 backref=db.backref('f_knowledge', lazy='dynamic'),
+                                lazy='dynamic')
 
 
 
@@ -155,6 +155,8 @@ class Knowledge(db.Model):
     type = db.Column(db.String(50), comment='知识类型   (0.自救 1.逃生 2.灭火 3.新闻 4.其他)')
     content = db.Column(db.Text, comment='知识正文')
     title = db.Column(db.String(50), comment='知识标题')
+    facility= db.relationship('Facility', secondary=t_facility_knowledge,
+                                 backref=db.backref('f_facility', lazy='dynamic'), lazy='dynamic')
 
 
 

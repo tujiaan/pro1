@@ -1,9 +1,10 @@
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Knowledge
+from app.models import Knowledge, Facility
+from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
-from app.views.api_v1.facilities import facility_model
+from app.views.api_v1.facilities import facility_model, FacilitesView
 from app.views.api_v1.knowledges.parser import knowledge_parser, knowledge_parser1
 
 api = Namespace('Knowledges', description='知识相关接口')
@@ -58,8 +59,14 @@ class KnowledgeView(Resource):
         return None,200
     @api.doc('根据id删除知识')
     @api.response(200,'ok')
+    @api.response(404, 'Not Found')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
     def delete(self,knowledgeid):
         knowledge = Knowledge.query.get_or_404(knowledgeid)
+        facility=knowledge.facility.all()
+        for i in facility:
+            KnowledgeFacilityView1.delete(self,knowledgeid,i.id)
         db.session.delete(knowledge)
         db.session.commit()
         return None,200
@@ -74,3 +81,36 @@ class KnowledgeFacilityView(Resource):
     def get(self,knowledgeid) :
         knowledge=Knowledge.query.get_or_404(knowledgeid)
         return knowledge.facility,200
+@api.route('/<knowledgeid>/facility/<facilityid>')
+class KnowledgeFacilityView1(Resource):
+    @api.doc('解除设施绑定知识')
+    @api.response(200, 'ok')
+    @api.response(404, 'Not Found')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
+    def post(self,knowledgeid,facilityid):
+            try:
+                facility = Facility.query.get_or_404(facilityid)
+
+                knowledge = Knowledge.query.get_or_404(knowledgeid)
+
+                knowledge.facility.append(facility)
+
+                db.session.commit()
+                return '绑定成功', 200
+            except: return '已经绑定'
+
+    @api.doc('解除知识绑定')
+    @api.response(200, 'ok')
+    @api.response(404, 'Not Found')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
+    def delete(self,knowledgeid,facilityid):
+        try:
+            facility = Facility.query.get_or_404(facilityid)
+            knowledge = Knowledge.query.get_or_404(knowledgeid)
+            facility.knowledge.remove(knowledge)
+            db.session.commit()
+            return None,200
+        except:
+          return'已经解除'

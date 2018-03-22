@@ -135,9 +135,13 @@ class InstituteView(Resource):
     @api.response(200,'ok')
     def delete(self,insid):
         institute = Ins.query.get_or_404(insid)
-        facilityins=FacilityIns.query.filter(FacilityIns.ins_id==insid)
-        community=Community.query.filter(Community.ins_id==insid)
-        db.session.delete(facilityins)
+        facilityins=FacilityIns.query.filter(FacilityIns.ins_id==insid).all()
+        community=Community.query.filter(Community.ins_id==insid).first()
+        for i in facilityins:
+         db.session.delete(i)
+        user=institute.user
+        for i in user:
+            InsUserView.delete(self,insid,i.id)
         db.session.delete(community)
         db.session.delete(institute)
         db.session.commit()
