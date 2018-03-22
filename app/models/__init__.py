@@ -266,6 +266,10 @@ class UserAlarmRecord(db.Model):
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='发布人id')
     user = db.relationship('User')
     note=db.Column(db.String(256),comment='备注')
-    time=db.Column(db.DateTime,default=datetime.datetime.now,comment='报警时间')
+
+
+
+
+
 
 
