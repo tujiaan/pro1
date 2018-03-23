@@ -203,7 +203,7 @@ class Sensor(db.Model):
     max_value=db.Column(db.Float,comment='阈值')
     alarms_history = db.relationship('SensorAlarm', lazy='dynamic')
     home_id=db.Column(db.String(24),db.ForeignKey('home.id'),comment='家庭id')
-    home=db.relationship('Home',)
+    home=db.relationship('Home')
 
 
 class SensorHistory(db.Model):
@@ -226,7 +226,7 @@ class SensorAlarm(db.Model):
     note=db.Column(db.String(255),comment='备注')
     alarm_object = db.Column(db.String(50), comment='报警项目')
     alarm_value = db.Column(db.Float, comment='报警数值')
-    alarm_time = db.Column(db.DateTime, comment='报警时间')
+    alarm_time = db.Column(db.DateTime,default=datetime.datetime.now, comment='报警时间')
     confirm_time = db.Column(db.DateTime, comment='确认时间')
     is_timeout = db.Column(db.Boolean, default=False, comment='是否超时')
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='确认人id')
@@ -268,6 +268,7 @@ class UserAlarmRecord(db.Model):
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='发布人id')
     user = db.relationship('User')
     note=db.Column(db.String(256),comment='备注')
+    time=db.Column(db.DateTime,default=datetime.datetime.now,comment='时间')
 
 
 

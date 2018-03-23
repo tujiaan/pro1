@@ -207,20 +207,20 @@ class HomeUsersView(Resource):
 
 
 
-    @api.doc('删除家庭成员/解除用户绑定家庭')
+    @api.doc('用户退出家庭')
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser' ])
-    def delete(self, homeid, userid):
+    def delete(self, homeid):
         home = Home.query.get_or_404(homeid)
-        user = User.query.get_or_404(userid)
-        if user in home.user:
-          if home.admin_user_id == g.user.id or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
-            home.user.remove(user)
+        user=g.user
+        homeuser=HomeUser.query.filter(and_(HomeUser.home_id==home.id,HomeUser.user_id==user.id)).first()
+        if homeuser:
+            db.session.delete(homeuser)
             db.session.commit()
-            return '删除成员成功', 200
-          else:return '权限不足',200
-        else:return '成员不存在',301
+            return '退出家庭成功', 200
+
+        else:return '不是该家庭成员',301
 
 
 

@@ -200,7 +200,7 @@ class UserFindView(Resource):
             _.append(__)
         result = {
             'code': 200,
-            'msg': '',
+            'msg': 'ok',
             'count': total,
             'data': _
         }

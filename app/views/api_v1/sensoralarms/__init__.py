@@ -1,8 +1,10 @@
-from flask import g
+import datetime
+
+from flask import g, request
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import SensorAlarm, Home
+from app.models import SensorAlarm, Home, Community
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms.parser import sensoralarms_parser, sensoralarms_parser1
@@ -13,15 +15,40 @@ from .models import *
 class SensorAlarmsView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin','superadmin'])
-    @page_format(code=0,msg='ok')
     @api.doc('查询传感器报警记录列表')
-    @api.marshal_with(sensoralarms_model,as_list=True)
     @api.response(200,'ok')
-    @api.doc(params={'page': '页数', 'limit': '数量'})
-    @page_range()
+    @api.doc(params={'page': '页数', 'limit': '数量','start':'开始时间见','end':'结束时间','type':'报警项目'})
     def get(self):
-        list=SensorAlarm.query
-        return list,200
+        page=request.args.get('page',1)
+        limit=request.args.get('limit',10)
+        start=request.args.get('star',2018-1-1)
+        end=request.args.get('end',datetime.datetime.now().isoformat())
+        type=request.args.get('type',0)
+        query=db.session.query(SensorAlarm)
+        total=query.count()
+        query = query.filter(SensorAlarm.alarm_time.between(start,end)).filter(SensorAlarm.alarm_object==type).\
+            order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+        print(query.all())
+        _=[]
+        for i in query.all():
+         __={}
+         __['sensoralarms_id']=i.id
+         __['sensoralarms_sensor_id']=i.sensor_id
+         __['sensoralarms_alarm_object']=i.alarm_object
+         __['sensoralarms_alarm_value']=i.alarm_value
+         __['sensoralarms_note'] = i.note
+         __['sensoralarms_alarm_time']=str(i.alarm_time)
+         __['detail_address']=i.sensor.home.detail_address
+         __['community_name']=i.sensor.home.community.name
+         _.append(__)
+        result={
+            'code':0,
+            'msg':'ok',
+            'count':total,
+            'data':_
+        }
+        return result
+
 
     @api.doc('新增传感器报警记录')
     @api.header('jwt', 'JSON Web Token')

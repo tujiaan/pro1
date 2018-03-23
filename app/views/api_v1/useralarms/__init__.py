@@ -22,8 +22,8 @@ class UserAlarmRecordsView(Resource):
     def get(self):
         page = request.args.get('page', 1)
         limit = request.args.get('limit', 10)
-        start = request.args.get('start', 2018-1-1)
-        end = request.args.get('end', datetime.datetime.now())
+        start = request.args.get('start', 2018-1-1 )
+        end = request.args.get('end', datetime.datetime.now().isoformat())
         type = request.args.get('type', 0)
         query = db.session.query(UserAlarmRecord,Home,User).join(Home, UserAlarmRecord.home_id==Home.id)\
             .join(User,UserAlarmRecord.user_id==User.id).filter( UserAlarmRecord.time.between(start,end)).\
@@ -38,7 +38,7 @@ class UserAlarmRecordsView(Resource):
             __['useralarmrecord_id']=i[0].id
             __['useralarmrecord_type']=i[0].type
             __['useralarmrecord_content'] = i[0].content
-            __['useralarmrecord_time'] = i[0].time
+            __['useralarmrecord_time'] = str(i[0].time)
             __['useralarmrecord_note'] = i[0].note
             __['home_id']=i[1].id
             __['home_name']=i[1].name
