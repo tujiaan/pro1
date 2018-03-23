@@ -117,11 +117,12 @@ class HomeView(Resource):
             if home1.admin_user_id:
                 home.admin_user_id=home1.admin_user_id
             else:pass
+            if home1.detail_address:
+                home.detail_address=home1.detail_address
             if home1.alternate_phone:
                 home.alternate_phone=home1.alternate_phone
             else:pass
             if home1.gateway_id:
-               if 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
                 home.gateway_id=home1.gateway_id
             else:pass
             if home1.community:
@@ -146,7 +147,8 @@ class HomeView(Resource):
              home.name=home1.name
             else:pass
             if home1.admin_user_id:
-                home.admin_user_id=home1.admin_user_id
+                if 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+                 home.admin_user_id=home1.admin_user_id
             db.session.commit()
             return home,200
         else: return '权限不足',200
