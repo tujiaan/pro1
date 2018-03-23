@@ -1,4 +1,4 @@
-from flask import g
+from flask import g, request
 from flask_restplus import Namespace
 from flask_restplus import  Resource
 from app.ext import db
@@ -11,21 +11,38 @@ from app.views.api_v1.sensors.parsers import sensor_parser, sensor_parser1
 
 api = Namespace('Sensors', description='传感器相关接口')
 from .model import *
-@api.doc('')
 @api.route('/')
 class SensorsView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require([ 'admin', 'superadmin'])
-    @page_format(code=0,msg='ok')
-    @api.marshal_with(sensor_model, as_list=True)
     @api.doc('查询传感器列表')
-    @api.marshal_with(sensor_model)
-    @api.doc(params={'page': '页数', 'limit': '数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量','sensor_type':'类型'})
     @api.response(200, 'ok')
-    @page_range()
     def get(self):
-        list = Sensor.query
-        return list
+        page=request.args.get('page',1)
+        limit=request.args.get('limit',10)
+        sensor_type=request.args.get('sensor_type',0)
+        query = db.session.query(Sensor,Home).join(Home,Home.id==Sensor.home_id).\
+            filter(Sensor.sensor_type==sensor_type).order_by(Sensor.id).offset((int(page) - 1) * limit).limit(limit)
+        total=query.count()
+        _=[]
+        for i in query.all():
+            __={}
+            __['sensor_id']=i[0].id
+            __['sensor_type']=i[0].sensor_type
+            __['sensor_place']=i[0].sensor_place
+            __['gateway_id']=i[0].gateway_id
+            __['home_id']=i[1].id
+            __['home_name']=i[1].name
+            _.append(__)
+        result={
+             'code':0,
+             'msg':'200',
+             'count':total,
+             'data':_
+         }
+        return result
+
 
     @api.doc('新增传感器')
     @api.header('jwt', 'JSON Web Token')

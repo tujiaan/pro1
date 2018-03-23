@@ -5,7 +5,7 @@ from flask_restplus import Namespace, Resource
 from sqlalchemy import and_
 
 from app.ext import db
-from app.models import Home, Ins, User, HomeUser, Sensor
+from app.models import Home, Ins, User, HomeUser, Sensor, SensorHistory
 from app.utils.auth import decode_jwt, user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -210,6 +210,7 @@ class HomeUsersView(Resource):
     @api.doc('用户退出家庭')
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
+
     @role_require(['homeuser' ])
     def delete(self, homeid):
         home = Home.query.get_or_404(homeid)
@@ -270,24 +271,30 @@ class HomeInsView(Resource):
 class HomeSensorView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser', '119user', 'insuser' 'admin', 'superadmin'])
-    @page_format(code=0, msg='ok')
     @api.doc('查询家中的传感器')
-    @api.marshal_with(sensor_model, as_list=True)
-    @api.doc(params={'page': '页数', 'limit': '数量'})
-    @page_range()
     def get(self, homeid):
-        homeuser = HomeUser.query.filter(HomeUser.home_id == homeid)
-        home = Home.query.get_or_404(homeid)
-        if 'homeuser'  in [i.name for i in g.user.roles] and len(g.user.roles.all())<=1:
+        home=Home.query.get_or_404(homeid)
+        homeuser=HomeUser.query.filter(HomeUser.home_id==homeid).all()
+        if  'homeuser' in [i.name for i in g.user.roles.all()] and len(g.user.roles.all())<2:
+            if g.user.id in [i.user_id for i in homeuser]:
+                query=Sensor.query.all()
+            else:pass
+        else:query=Sensor.query.all()
+        _=[]
+        for i in query:
+            __={}
+            __['sensor_id']=i.id
+            __['sensor_place']=i.sensor_place
+            __['sensor_type']=i.sensor_type
+            sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==i.id).order_by(SensorHistory.time.desc()).first()
+            if sensor_model:
+             __['state']=sensorhistory.sensor_state
+            _.append(__)
+        result={
+            'data':_
+         }
+        return result
 
-                list = Sensor.query.filter(Sensor.home_id in [i.home_id for i in (HomeUser.query.filter(HomeUser.user_id == g.user.id).all())])
-
-                return list, 200
-        else:
-
-              list = Sensor.query.filter(Sensor.home_id == homeid)
-
-              return list, 200
 @api.route('/applies/')
 class HomeApplyView(Resource):
     @api.header('jwt', 'JSON Web Token')

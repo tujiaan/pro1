@@ -26,7 +26,7 @@ class SensorHistoriesView(Resource):
             return SensorHistory.query.filter(SensorHistory.sensor_id.in_([i.id for i in sensor]))
         else: return SensorHistory.query,200
 
-@api.route('/<sensorid>')##############################一侧ok
+@api.route('/<sensorid>')
 class SensorHistoryView(Resource):
     @api.doc('查询特定传感器的历史')
     @page_format(code=0, msg='ok')

@@ -10,6 +10,9 @@ sensor_parser.add_argument('end_time', type=str, help='结束时间', required=T
 sensor_parser.add_argument('max_value', type=float, help='最大值', required=True, location='form')
 
 
+
+
+
 sensor_parser1 = RequestParser()
 sensor_parser1.add_argument('gateway_id', type=str, help='网关id', required=False, location='form')
 sensor_parser1.add_argument('sensor_type', type=str, help='传感器类型', required=False, location='form')
@@ -18,3 +21,4 @@ sensor_parser1.add_argument('home_id', type=str, help='家庭id', required=False
 sensor_parser1.add_argument('start_time', type=str, help='开始时间', required=False, location='form')
 sensor_parser1.add_argument('end_time', type=str, help='结束时间', required=False, location='form')
 sensor_parser1.add_argument('max_value', type=float, help='最大值', required=False, location='form')
+
