@@ -63,8 +63,8 @@ class Ins(db.Model):
 
     ins_address = db.Column(db.String(255), comment='机构地址')
     note = db.Column(db.Text, comment='备注')
-    latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
-    longitude = db.Column(db.Float(asdecimal=True), comment='经度')
+    latitude = db.Column(db.DECIMAL(10,7), comment='纬度')
+    longitude = db.Column(db.DECIMAL(10,7), comment='经度')
     admin_user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='管理员id')
     community=db.relationship('Community')
     user = db.relationship('User', secondary=t_user_ins,
@@ -89,8 +89,8 @@ class Community(db.Model):
     detail_address = db.Column(db.String(255), comment='详细地址')
     save_distance = db.Column(db.Integer, comment='求救距离')
     eva_distance = db.Column(db.Integer, comment='疏散距离')
-    longitude = db.Column(db.Float(asdecimal=True), comment='经度')
-    latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
+    longitude = db.Column(db.DECIMAL(10,7), comment='经度')
+    latitude = db.Column(db.DECIMAL(10,7), comment='纬度')
     ins_id = db.Column(db.String(24), db.ForeignKey('ins.id'), comment='机构id')
     ins = db.relationship('Ins')
     homes = db.relationship('Home', lazy='dynamic')
@@ -141,8 +141,8 @@ class Home(db.Model):
     detail_address = db.Column(db.String(255), comment='家庭地址')
     link_name = db.Column(db.String(50), comment='主人姓名')
     telephone = db.Column(db.String(50), comment='电话号码')
-    longitude = db.Column(db.Float(asdecimal=True), comment='经度')
-    latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
+    longitude = db.Column(db.DECIMAL(10,7), comment='经度')
+    latitude = db.Column(db.DECIMAL(10,7), comment='纬度')
     alternate_phone = db.Column(db.String(50), comment='备用电话')
     gateway_id=db.Column(db.String(50),db.ForeignKey('gateway.id'),comment='网关id')
     sensor=db.relationship('Sensor',lazy='dynamic')
@@ -209,8 +209,7 @@ class Sensor(db.Model):
 class SensorHistory(db.Model):
     __tablename__='sensorhistory'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    sensor=db.relationship('Sensor')#,backref=db.backref('f_sensor', lazy='select'),lazy='joined')
-
+    sensor=db.relationship('Sensor')
     sensor_id=db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='传感器id')
     sensor_state=db.Column(db.Integer,comment='传感器状态')
     time=db.Column(db.DateTime,comment='时间')
