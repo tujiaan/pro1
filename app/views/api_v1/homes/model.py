@@ -9,8 +9,8 @@ home_model = api.model('HomeModel', {
     'detail_address': fields.String,
     'link_name': fields.String,
     'telephone': fields.String,
-    'longitude': fields.Float,
-    'latitude':fields.Float,
+    'longitude': fields.Decimal,
+    'latitude':fields.Decimal,
     'gateway_id':fields.String,
     'alternate_phone':fields.String,
     'admin_user_id':fields.String

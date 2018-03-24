@@ -7,8 +7,7 @@ sensor_model = api.model('SensorModel', {
     'sensor_type': fields.Integer,
     'sensor_place': fields.String,
     'home_id':fields.String,
-    'home_name':fields.String,
-    # 'start_time':fields.DateTime,
-    # 'end_time':fields.DateTime,
-    # 'max_value':fields.Float
+    'start_time':fields.DateTime,
+    'end_time':fields.DateTime,
+    'max_value':fields.Float
 })

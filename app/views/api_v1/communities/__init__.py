@@ -74,6 +74,9 @@ class CommunitiesView(Resource):
         if args['community_picture']:
             community.community_picture= args['community_picture'].read()
         else:pass
+        if args['location_id']:
+            community.location_id=args['location_id']
+        else:pass
         db.session.add(community)
         db.session.commit()
         return None,200
@@ -136,6 +139,9 @@ class CommunityView(Resource):
             community.community_picture = args['community_picture'].read()
         else:
             pass
+        if args['location_id']:
+            community.location_id=args['location_id']
+        else:pass
         db.session.commit()
         return None,200
 

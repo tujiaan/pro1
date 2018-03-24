@@ -68,7 +68,7 @@ class SensorsView(Resource):
         home=Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
         sensor=Sensor.query.get_or_404(sensorid)
         if 'homeuser'in [i.name for i in g.user.roles.all()] and len(g.user.roles.all())<2:
-            if sensor not in[i.sensor for i in home]:
+            if sensor.home_id not in [i.id for i in home.all()]:
                 return '权限不足',201
             else:return sensor,200
 

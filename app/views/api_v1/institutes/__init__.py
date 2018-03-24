@@ -207,8 +207,11 @@ class InsCommunityView(Resource):
     @api.doc(params={'from': '开始', 'count': '数量'})
     @page_range()
     def get(self,insid):
-        ins=Ins.query.get_or_404(insid)
-        return ins.community,200
+        community=Community.query.filter(Community.ins_id==insid)
+        return community,200
+
+
+
 
 
 
