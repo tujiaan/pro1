@@ -4,7 +4,6 @@ from . import api
 
 
 institute_picture_model=api.model('InstitutePictureModel', {
-    'id':fields.String,
     'ins_picture':fields.String(attribute=lambda x: base64.b64encode(x).decode() if x else None)
 })
 institute_model = api.model('InstituteModel', {

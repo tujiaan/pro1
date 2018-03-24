@@ -88,6 +88,7 @@ class InstituteView(Resource):
     @api.doc('根据id更新机构信息')#
     @api.expect(institutes_parser1)
     @api.response(200,'ok')
+    @api.marshal_with(institute_model,as_list=True)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['insuser', 'admin', 'superadmin'])
     def put(self,insid):
@@ -115,8 +116,8 @@ class InstituteView(Resource):
             if 'longitude'in args and args['longitude']:
                 institute.longitude=args['longitude']
             else:pass
-            if args['location']:
-                institute.location_id=args['location']
+            if args['location_id']:
+                institute.location_id=args['location_id']
             else:pass
             if 'latitude'in args and args['latitude']:
                 institute.latitude=args['latitude']
