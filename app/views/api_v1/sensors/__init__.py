@@ -41,7 +41,7 @@ class SensorsView(Resource):
              'count':total,
              'data':_
          }
-        return result
+        return result,200
 
 
     @api.doc('新增传感器')

@@ -140,9 +140,9 @@ class InstituteView(Resource):
         community=Community.query.filter(Community.ins_id==insid).first()
         for i in facilityins:
          db.session.delete(i)
-        user=institute.user
-        for i in user:
-            InsUserView.delete(self,insid,i.id)
+        list=institute.user.all()
+        for i in list:
+            institute.user.remove(i)
         db.session.delete(community)
         db.session.delete(institute)
         db.session.commit()

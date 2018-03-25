@@ -229,17 +229,18 @@ class HomeUsersView(Resource):
 class HomeInsView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser', 'admin', 'superadmin'])
-    @page_format(code=0,msg='ok')
+   # @page_format(code=0,msg='ok')
     @api.doc('查询家庭附近的机构')
-    @api.doc(params={'page': '页数', 'limit': '数量'})
-    @page_range()
-    @api.marshal_with(institute_model,as_list=True)
-    @api.response(200,'ok')
+    @api.doc(params={'distance': '距离'})
+   # @api.marshal_with(institute_model, as_list=True)
+    @api.response(200, 'ok')
+   # @page_range()
     def get(self,homeid,distance):
+        page = request.args.get('page', 1)
+        limit = request.args.get('limit', 10)
         home=Home.query.get_or_404(homeid)
-        ins=Ins.query.all()
-        list=[]
-
+        print(home)
+        homeuser=HomeUser.query.filter(HomeUser.user_id).all()
         def getDistance(latA, lonA, latB, lonB):
             ra = 6378140  # radius of equator: meter
             rb = 6356755  # radius of polar: meter
@@ -249,7 +250,6 @@ class HomeInsView(Resource):
             radLonA =math. radians(lonA)
             radLatB = math.radians(latB)
             radLonB = math.radians(lonB)
-
             pA = math.atan(rb / ra * math.tan(radLatA))
             pB = math.atan(rb / ra * math.tan(radLatB))
             x = math.acos(math.sin(pA) * math.sin(pB) +math. cos(pA) * math.cos(pB) * math.cos(radLonA - radLonB))
@@ -258,13 +258,29 @@ class HomeInsView(Resource):
             dr = flatten / 8 * (c1 - c2)
             distance = ra * (x + dr)
             return distance
+        query=Ins.query
+        query=query.offset((int(page) - 1) * limit).limit(limit)
+        total=query.count()
+        _ = []
+        for i in query.all():
+            print(i.longitude,i.latitude,home.latitude,home.longitude)
+            __ = {}
+            __['ins_id'] = i.id
+            __['ins_type'] = i.type
+            __['ins_place'] = i.name
+            __['distance'] = getDistance(i.latitude,i.longitude,home.latitude,home.longitude)
+            if __.get('distance')<float(distance):
+              _.append(__)
+        result = {
+            'code': 0,
+            'msg': '200',
+            'count': total,
+            'data': _
+        }
 
-        if home in g.user.home or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles] :
-            for i in ins:
-                if distance>=getDistance(home.latitude,home.longitude,i.latitude,i.latitude):
-                    list.append((ins,distance))
-            return sorted(list,key=lambda l:l[1])
-        else:return '权限不足',200
+        if homeid in [i.home_id for i in homeuser] or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles] :
+                return result,200
+        else:return '权限不足',201
 
 
 @api.route('/<homeid>/sensors')
@@ -293,7 +309,7 @@ class HomeSensorView(Resource):
         result={
             'data':_
          }
-        return result
+        return result,200
 
 @api.route('/applies/')
 class HomeApplyView(Resource):

@@ -5,7 +5,7 @@ from flask_restplus import Namespace, Resource
 from sqlalchemy import and_
 
 from app.ext import db
-from app.models import UserAlarmRecord, Community, Home, User
+from app.models import UserAlarmRecord, Community, Home, User, Sensor
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.useralarms.parser import useralarmrecord_parser, useralarmrecord1_parser
@@ -40,8 +40,10 @@ class UserAlarmRecordsView(Resource):
             __['useralarmrecord_content'] = i[0].content
             __['useralarmrecord_time'] = str(i[0].time)
             __['useralarmrecord_note'] = i[0].note
+            __['useralarmrecord_is_timeout']=i[0].is_timeout##################################################################################
             __['home_id']=i[1].id
             __['home_name']=i[1].name
+            __['detail_address']=i[1].detail_address
             __['user_id']=i[2].id
             __['user_name']=i[2].username
             __['contract_tel']=i[2].contract_tel
@@ -69,26 +71,19 @@ class UserAlarmRecordsView(Resource):
 @api.route('/<useralarmrecordid>')
 class UserAlarmRecordView(Resource):
 
-    @api.doc('更新用户报警信息（报警确认如果是的要加if_confirm字段）')
-
-    @api.expect(useralarmrecord1_parser)
+    @api.doc('报警确认')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser','119user','admin','superadmin'])
     @api.response(200,'ok')
     def put(self,useralarmrecordid):
         useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
-        args=useralarmrecord1_parser.parse_args()
-        if args['type']:
-            useralarmrecord.type=args['type']
-        else:pass
-        if args['content']:
-            useralarmrecord.content=args['content']
-        else:pass
-        if args['community_id']:
-            useralarmrecord.community_id=args['community_id']
-        else:pass
-        if args['user_id']:
-            useralarmrecord.user_id=args['user_id']
-        else:pass
-        db.session.commit()
+        useralarmrecord.if_confirm=True
+        if 'homeuser'in [i.name for i in g.user.roles]and len(g.user.roles)<2:
+            if g.user.id==useralarmrecord.user_id:
+                db.session.commit()
+                return None,200
+            else:return '权限不足',201
+        else:db.session.commit()
         return None,200
 
     @api.doc('删除用户报警记录')

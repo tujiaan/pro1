@@ -212,7 +212,8 @@ class SensorHistory(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     sensor=db.relationship('Sensor')
     sensor_id=db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='传感器id')
-    sensor_state=db.Column(db.Integer,comment='传感器状态 (0.正常 1.异常 2.关闭 ')
+    sensor_state=db.Column(db.String,comment='传感器状态 ')
+    sensor_code = db.Column(db.Boolean, comment='是否正常 ')
     time=db.Column(db.DateTime,comment='时间')
 
 
@@ -260,8 +261,8 @@ class UserAlarmRecord(db.Model):
     __tablename__ = 'user_alarm_record'
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    type = db.Column(db.Integer, default=0, comment='信息类型,0:消防,1,吧啦吧啦,2吧啦吧啦')
-    content = db.Column(db.String(50), comment='')
+    type = db.Column(db.Integer, default=0, comment='信息类型,(0:119,1：疏散,2：传感器，3：求救)')
+    content = db.Column(db.String(50), comment='内容')
     if_confirm=db.Column(db.Boolean,default=False,comment='是否确认')
     home_id = db.Column(db.String(24), db.ForeignKey('home.id'))
     home = db.relationship('Home')
