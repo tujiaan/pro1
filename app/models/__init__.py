@@ -94,6 +94,7 @@ class Community(db.Model):
     ins_id = db.Column(db.String(24), db.ForeignKey('ins.id'), comment='机构id')
     ins = db.relationship('Ins')
     homes = db.relationship('Home', lazy='dynamic')
+    location_id = db.Column(db.String(50), db.ForeignKey('location.id'), comment='位置')
 
 
 class FacilityIns(db.Model):
@@ -211,7 +212,7 @@ class SensorHistory(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     sensor=db.relationship('Sensor')
     sensor_id=db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='传感器id')
-    sensor_state=db.Column(db.Integer,comment='传感器状态')
+    sensor_state=db.Column(db.Integer,comment='传感器状态 (0.正常 1.异常 2.关闭 ')
     time=db.Column(db.DateTime,comment='时间')
 
 

@@ -15,8 +15,9 @@ institute_model = api.model('InstituteModel', {
     'admin_user_id': fields.String,
     'location_id':fields.String,
     'note': fields.String,
-    'longitude': fields.Float,
-    'latitude': fields.Float,
+    'longitude': fields.Decimal,
+    'latitude': fields.Decimal
+
 
 
 })

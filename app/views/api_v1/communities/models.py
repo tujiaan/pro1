@@ -16,8 +16,9 @@ community_model=api.model('CommunityModel',{
     'save_distance':fields.Integer,
     'eva_distance':fields.Integer,
     'ins_id':fields.String,
-    'longitude':fields.Float,
-    'latitude':fields.Float,
+    'longitude':fields.Decimal,
+    'latitude':fields.Decimal,
+    'location_id': fields.String,
     'community_picture':fields.Nested(community_pic_model)
 
 })
@@ -29,8 +30,8 @@ home_model = api.model('HomeModel', {
     'detail_address': fields.String,
     'link_name': fields.String,
     'telephone': fields.String,
-    'longitude': fields.Float,
-    'latitude':fields.Float,
+    'longitude': fields.Decimal,
+    'latitude':fields.Decimal,
     'alternate_phone':fields.String
 })
 

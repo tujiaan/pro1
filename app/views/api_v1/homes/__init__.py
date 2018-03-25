@@ -277,7 +277,7 @@ class HomeSensorView(Resource):
         homeuser=HomeUser.query.filter(HomeUser.home_id==homeid).all()
         if  'homeuser' in [i.name for i in g.user.roles.all()] and len(g.user.roles.all())<2:
             if g.user.id in [i.user_id for i in homeuser]:
-                query=Sensor.query.all()
+                query=Sensor.query.filter(Sensor.home_id==home.id).all()
             else:pass
         else:query=Sensor.query.all()
         _=[]
@@ -287,7 +287,7 @@ class HomeSensorView(Resource):
             __['sensor_place']=i.sensor_place
             __['sensor_type']=i.sensor_type
             sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==i.id).order_by(SensorHistory.time.desc()).first()
-            if sensor_model:
+            if sensorhistory:
              __['state']=sensorhistory.sensor_state
             _.append(__)
         result={

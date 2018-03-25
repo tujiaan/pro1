@@ -101,6 +101,7 @@ class FacilitesInsView(Resource):
        list=Facility.query
        return list,200
 
+
     @api.doc('新增设施机构关联')
     @api.response(200,'ok')
     @api.expect(facility_parser)
@@ -112,6 +113,18 @@ class FacilitesInsView(Resource):
         db.session.add(facility)
         db.session.commit()
         return  None,200
+@api.route('/facility-ins/<insid>')
+class FacilitesInsView(Resource):
+    @page_format(code=0,msg='ok')
+    @api.doc("查询设施机构关联设施列表")
+    @api.doc(params={'page': '页数', 'limit': '数量'})
+    @api.marshal_with(facility_model,as_list=True)
+    @api.response(200,'ok')
+    @page_range()
+    def get(self,insid):
+        facilityins=FacilityIns.query.filter(FacilityIns.ins_id==insid)
+        list=Facility.query.filter(Facility.id.in_(i.facility_id for i in facilityins))
+        return list,200
 
 @api.route('/facility-ins/<facilityid>/')
 class FacilitesView(Resource):

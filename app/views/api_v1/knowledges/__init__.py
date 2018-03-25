@@ -22,6 +22,8 @@ class Knowledges(Resource):
             list=Knowledge.query
             return list,200
 
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin', 'knowledgeadmin'])
     @api.doc('添加知识')
     @api.expect(knowledge_parser)
     @api.response(200,'ok')
@@ -31,7 +33,14 @@ class Knowledges(Resource):
         db.session.add(knowledge)
         db.session.commit()
         return None,200
-
+@api.route('/<knowledgetype>')
+class KnowledgeView(Resource):
+    @api.doc('根据类型查询知识列表')
+    @api.marshal_with(knowledges_model)
+    @api.response(200,'ok')
+    def get(self,knowledgetype):
+     list=Knowledge.query.filter(Knowledge.type==knowledgetype)
+     return list,200
 @api.route('/<knowledgeid>')
 class KnowledgeView(Resource):
     @api.doc('根据id查询知识详情')
@@ -40,6 +49,9 @@ class KnowledgeView(Resource):
     def get(self,knowledgeid):
         knowledge=Knowledge.query.get_or_404(knowledgeid)
         return knowledge,200
+
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin','knowledgeadmin'])
     @api.doc('根据id更新知识')
     @api.expect(knowledge_parser1)
     @api.response(200,'ok')
@@ -61,7 +73,7 @@ class KnowledgeView(Resource):
     @api.response(200,'ok')
     @api.response(404, 'Not Found')
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin'])
+    @role_require(['admin', 'superadmin', 'knowledgeadmin'])
     def delete(self,knowledgeid):
         knowledge = Knowledge.query.get_or_404(knowledgeid)
         facility=knowledge.facility.all()
