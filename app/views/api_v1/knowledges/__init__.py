@@ -1,11 +1,18 @@
+import datetime
+
+import os
+from urllib.parse import quote
+
+from flask import current_app
 from flask_restplus import Namespace, Resource
+from werkzeug.utils import secure_filename
 
 from app.ext import db
 from app.models import Knowledge, Facility
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.facilities import facility_model, FacilitesView
-from app.views.api_v1.knowledges.parser import knowledge_parser, knowledge_parser1
+from app.views.api_v1.knowledges.parser import knowledge_parser, knowledge_parser1, upload_parser, allowed_file
 
 api = Namespace('Knowledges', description='知识相关接口')
 from .models import *
@@ -126,3 +133,24 @@ class KnowledgeFacilityView1(Resource):
             return None,200
         except:
           return'已经解除'
+@api.route('/picture')
+class Upload(Resource):
+    @api.doc('上传文件')
+    @api.expect(upload_parser, validate=True)
+    @api.response(200, '已创建')
+    @api.response(415, '格式不支持')
+    def post(self):
+        args = upload_parser.parse_args()
+        file = args.get('file')
+        if file.filename == 'blob': file.filename = 'blob.png'
+        if not allowed_file(file.filename):
+            return None, 415
+        now = datetime.datetime.now()
+        date = now.strftime('%Y%m%d')
+        filename = now.strftime('%H%M%S') + secure_filename(quote(file.filename))
+        path = current_app.config.get('UPLOAD_FOLDER', None) + date
+        url = current_app.config.get('UPLOADED_URL', None) + date + '/' + filename
+        if not os.path.exists(path):
+            os.makedirs(path)
+        file.save(path + '/' + filename)
+        return {'url': url}, 200

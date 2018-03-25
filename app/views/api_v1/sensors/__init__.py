@@ -127,7 +127,7 @@ class SensorAlarmsView(Resource):
         sensor=Sensor.query.get_or_404(sensorid)
         homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
         home=Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
-        if 'homeuser'in [i.name for i in g.user.role]:
+        if 'homeuser'in [i.name for i in g.user.roles]:
             if sensor not in [i.sensor for i in home]:
                pass
         elif ('insuser'or '119user')in [i.name for i in g.user.role]:
