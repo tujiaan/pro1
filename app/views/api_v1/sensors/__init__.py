@@ -61,18 +61,35 @@ class SensorsView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser', '119user', 'insuser' 'admin', 'superadmin'])
     @api.doc('获取传感器详情')
-    @api.marshal_with(sensor_model)
     @api.response(200, 'ok')
     def get(self,sensorid):
         homeuser= HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
         home=Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
-        sensor=Sensor.query.get_or_404(sensorid)
+        query=db.session.query(Sensor,SensorHistory,Home).join(SensorHistory,Sensor.id==SensorHistory.sensor_id).\
+            join(Home,Sensor.home_id==Home.id).filter(Sensor.id==sensorid)
+        total=query.count()
+        _=[]
+        for i in [query.first()]:
+            __={}
+            __['sensor_id']=i[0].id
+            __['sensor_place']=i[0].sensor_place
+            print(tuple(SensorHistoryView.get(self,i[1].id)))
+            __['sensor_state']=tuple(SensorHistoryView.get(self,i[1].id))[0].get('sensor_state')
+            __['home_id']=i[2].id
+            __['home_name']=i[2].name
+            _.append(__)
+        result = {
+            'code': 0,
+            'msg': 'ok',
+            'count': total,
+            'data': _
+        }
         if 'homeuser'in [i.name for i in g.user.roles.all()] and len(g.user.roles.all())<2:
-            if sensor.home_id not in [i.id for i in home.all()]:
+            if query.first().home_id not in [i.id for i in home.all()]:
                 return '权限不足',201
-            else:return sensor,200
+            else:return result,200
 
-        return sensor,200
+        return result,200
 
 
     @api.doc('更新传感器信息')
