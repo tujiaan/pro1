@@ -17,18 +17,18 @@ class SensorAlarmsView(Resource):
     @role_require(['admin','superadmin'])
     @api.doc('查询传感器报警记录列表')
     @api.response(200,'ok')
-    @api.doc(params={'page': '页数', 'limit': '数量','start':'开始时间见','end':'结束时间','type':'报警项目'})
+    @api.doc(params={'page': '页数', 'limit': '数量','start':'开始时间见','end':'结束时间','object':'报警项目'})
     def get(self):
         page=request.args.get('page',1)
         limit=request.args.get('limit',10)
         start=request.args.get('star',2018-1-1)
-        end=request.args.get('end',datetime.datetime.now().isoformat())
-        type=request.args.get('type',0)
+        end=request.args.get('end',datetime.datetime.now())
+        type=request.args.get('object',0)
         query=db.session.query(SensorAlarm)
         total=query.count()
+        print(total)
         query = query.filter(SensorAlarm.alarm_time.between(start,end)).filter(SensorAlarm.alarm_object==type).\
             order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
-        print(query.all())
         _=[]
         for i in query.all():
          __={}
@@ -37,6 +37,7 @@ class SensorAlarmsView(Resource):
          __['sensoralarms_alarm_object']=i.alarm_object
          __['sensoralarms_alarm_value']=i.alarm_value
          __['sensoralarms_note'] = i.note
+         __['sensoralarm_is_confirm']=i.is_confirm
          __['sensoralarms_alarm_time']=str(i.alarm_time)
          __['detail_address']=i.sensor.home.detail_address
          __['community_name']=i.sensor.home.community.name

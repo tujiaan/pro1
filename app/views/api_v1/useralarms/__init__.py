@@ -29,9 +29,11 @@ class UserAlarmRecordsView(Resource):
             .join(User,UserAlarmRecord.user_id==User.id).filter( UserAlarmRecord.time.between(start,end)).\
             filter(UserAlarmRecord.type==type).order_by(UserAlarmRecord.id)
         total = query.count()
-
         query = query.offset((int(page) - 1) * limit).limit(limit)
-        # [{''} for i in query.all()]
+        def if_timeout(time):
+            if abs((time-datetime.datetime.now()).seconds)<60:
+                return '未超时'
+            else:return '超时'
         _ = []
         for i in query.all():
             __ = {}
@@ -40,7 +42,7 @@ class UserAlarmRecordsView(Resource):
             __['useralarmrecord_content'] = i[0].content
             __['useralarmrecord_time'] = str(i[0].time)
             __['useralarmrecord_note'] = i[0].note
-            __['useralarmrecord_is_timeout']=i[0].is_timeout##################################################################################
+            __['useralarmrecord_is_timeout']= if_timeout(i[0].time)
             __['home_id']=i[1].id
             __['home_name']=i[1].name
             __['detail_address']=i[1].detail_address
