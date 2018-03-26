@@ -235,7 +235,6 @@ class HomeInsView(Resource):
         page = request.args.get('page', 1)
         limit = request.args.get('limit', 10)
         home=Home.query.get_or_404(homeid)
-        print(home)
         homeuser=HomeUser.query.filter(HomeUser.user_id).all()
         def getDistance(lat0, lng0, lat1, lng1):
             lat0 = math.radians(lat0)
