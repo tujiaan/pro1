@@ -73,8 +73,8 @@ class SensorsView(Resource):
             __={}
             __['sensor_id']=i[0].id
             __['sensor_place']=i[0].sensor_place
-            print(tuple(SensorHistoryView.get(self,i[1].id)))
-            __['sensor_state']=tuple(SensorHistoryView.get(self,i[1].id))[0].get('sensor_state')
+            #print(tuple(SensorHistoryView.get(self,i[0].id)))
+            __['sensor_state']=tuple(SensorHistoryView.get(self,i[0].id))[0].get('sensor_state')
             __['home_id']=i[2].id
             __['home_name']=i[2].name
             _.append(__)

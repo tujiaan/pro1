@@ -6,7 +6,7 @@ sensoralarms_model=api.model('Sensoralarms',{
     'id':fields.String,
     'sensor_id':fields.String,
     'alarm_object':fields.String,
-    'alarm_value':fields.Float,
+    'alarm_value':fields.String,
     'alarm_time':fields.DateTime,
     'confirm_time':fields.DateTime,
     'is_timeout':fields.Boolean,

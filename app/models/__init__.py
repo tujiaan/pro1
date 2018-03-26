@@ -226,7 +226,7 @@ class SensorAlarm(db.Model):
     sensor = db.relationship('Sensor')
     note=db.Column(db.String(255),comment='备注')
     alarm_object = db.Column(db.String(50), comment='报警项目')
-    alarm_value = db.Column(db.Float, comment='报警数值')
+    alarm_value = db.Column(db.String, comment='报警数值')
     alarm_time = db.Column(db.DateTime,default=datetime.datetime.now, comment='报警时间')
     confirm_time = db.Column(db.DateTime, comment='确认时间')
     is_timeout = db.Column(db.Boolean, default=False, comment='是否超时')

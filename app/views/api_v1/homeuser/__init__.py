@@ -2,7 +2,7 @@ import datetime
 
 from flask import g, request
 from flask_restplus import Namespace, Resource
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, and_
 
 from app.ext import db
 from app.models import HomeUser, Home
@@ -84,7 +84,8 @@ class HomeUserView2(Resource):
     @user_require
     def put( self,homeid,userid):
         home = Home.query.get_or_404(homeid)
-        homeuser = HomeUser.query.filter(HomeUser.home_id == homeid ).filter( HomeUser.user_id == userid).first()
+        homeuser = HomeUser.query.filter(and_(HomeUser.home_id == homeid ,HomeUser.user_id == userid)).first()
+        print(homeuser)
         homeuser.if_confirm = True
         homeuser.confirm_time = datetime.datetime.now()
         if g.user.id == home.admin_user_id:
