@@ -71,7 +71,6 @@ class RolesView(Resource):
 
 @api.route('/homes/')
 class UserHomeView1(Resource):
-
     @user_require
     @page_format(code='0', msg='success')
     @api.doc('查询自己关联的家庭')
@@ -209,7 +208,6 @@ class UserFindView(Resource):
 
 @api.route('/<userid>')
 class user(Resource):
-
      @api.doc('根据id查询用户信息')
      @api.marshal_with(user_model)
      @api.response(200, 'ok')
@@ -220,8 +218,6 @@ class user(Resource):
          if 'superadmin'in g.user.roles or 'admin'not in [i.name for i in user.roles]:
              return user,200
          else:return '权限不足',200
-
-
 
      @api.header('jwt', 'JSON Web Token')
      @api.doc('根据id删除用户')
@@ -243,15 +239,6 @@ class user(Resource):
                  return '权限不足', 201
          else:  return '权限不足',201
 
-
-
-
-
-
-
-
-
-
 @api.route('/<userid>/ins')
 class UserHomeView(Resource):
     @api.header('jwt', 'JSON Web Token')
@@ -261,7 +248,6 @@ class UserHomeView(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @api.marshal_with(institute_model,as_list=True)
     @page_range()
-
     def get(self,userid):
         user=User.query.get_or_404(userid)
 
@@ -325,7 +311,6 @@ class UserRoleView(Resource):
                 except:return '该条记录已存在',400
             else:return '权限不足',301
         else: pass
-
 
     @api.doc('给用户解除角色/删除xx用户')
     @api.response(200, 'ok')

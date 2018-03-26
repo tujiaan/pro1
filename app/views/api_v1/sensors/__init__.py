@@ -47,7 +47,6 @@ class SensorsView(Resource):
     @api.doc('新增传感器')
     @api.header('jwt', 'JSON Web Token')
     @role_require([])
-    #@api.marshal_with(sensor_model)
     @api.response(200, 'ok')
     @api.expect(sensor_parser,validate=True)
     def post(self):
@@ -72,8 +71,8 @@ class SensorsView(Resource):
         for i in [query.first()]:
             __={}
             __['sensor_id']=i[0].id
+            __['sensor_type']=i[0].sensor_type
             __['sensor_place']=i[0].sensor_place
-            #print(tuple(SensorHistoryView.get(self,i[0].id)))
             __['sensor_state']=tuple(SensorHistoryView.get(self,i[0].id))[0].get('sensor_state')
             __['home_id']=i[2].id
             __['home_name']=i[2].name
@@ -84,13 +83,12 @@ class SensorsView(Resource):
             'count': total,
             'data': _
         }
+        print(query.first())
         if 'homeuser'in [i.name for i in g.user.roles.all()] and len(g.user.roles.all())<2:
-            if query.first().home_id not in [i.id for i in home.all()]:
+            if query.first()[2].id not in [i.id for i in home.all()]:
                 return '权限不足',201
             else:return result,200
-
         return result,200
-
 
     @api.doc('更新传感器信息')
     @api.header('jwt', 'JSON Web Token')
@@ -150,10 +148,12 @@ class SensorAlarmsView(Resource):
         elif ('insuser'or '119user')in [i.name for i in g.user.role]:
            ins=(Home.query.get_or_404(sensor.home_id)).ins
            if g.user.id==ins.admin_user_id :
-               return SensorAlarm.query.filter(SensorAlarm.is_confirm==False).filter ( SensorAlarm.is_timeout==True)
-           else: pass
-
-        else: return SensorAlarm.query,200
+               return SensorAlarm.query.filter(SensorAlarm.is_confirm==False).filter( SensorAlarm.is_timeout==True).\
+                   filter(SensorAlarm.sensor_id==sensorid)
+           else:
+               pass
+        else:
+            return SensorAlarm.query,200
 
 @api.route('/<sensorid>/sensorhistory')
 class SensorHistoryView(Resource):
@@ -168,10 +168,12 @@ class SensorHistoryView(Resource):
         sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensorid).order_by(SensorHistory.time.desc()).first()
         if 'homeuser'in [i.name for i in g.user.roles] and len(g.user.roles.all())<2:
             if g.user.id in [i.user_id for i in (HomeUser.query.filter(HomeUser.home_id==home.id))]:
-               return  sensorhistory, 200
+                return  sensorhistory, 200
             else:return '权限不足',201
 
-        else: return sensorhistory, 200
+        else:
+            print(sensorhistory)
+            return sensorhistory, 200
 
 
 

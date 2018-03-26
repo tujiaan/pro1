@@ -4,7 +4,7 @@ from flask import g, request
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import SensorAlarm, Home, Community
+from app.models import SensorAlarm, Home, Community, HomeUser
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms.parser import sensoralarms_parser, sensoralarms_parser1
@@ -72,7 +72,10 @@ class SensorAlarmView(Resource):
     @api.response(404,'Not Found')
     def get(self,sensoralarmid):
         sensoralarm=SensorAlarm.query.get_or_404(sensoralarmid)
-        if sensoralarm.sensor not in[i.sensor for i in g.user.home]:
+        sensor=sensoralarm.sensor
+        home=sensor.home
+        homeuser=HomeUser.query.filter(HomeUser.home_id==home.id)
+        if g.user.id not in[i.user_id for i in homeuser]:
             return '权限不足',301
         else: return sensoralarm,200
 
