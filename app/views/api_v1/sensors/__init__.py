@@ -99,6 +99,7 @@ class SensorsView(Resource):
     @api.expect(sensor_parser1)
     def put(self,sensorid):
         sensor1=Sensor.query.get_or_404(sensorid)
+        home=Home.query.filter(sensor1.home_id.in_(Home.id)).first()
         args=sensor_parser.parse_args()
 
         if args['gateway_id']:
@@ -123,8 +124,7 @@ class SensorsView(Resource):
         if args['max_value']:
             sensor1.max_value=args.get('max_value')
         else:pass
-        if sensor1.home_id not in[i.id for i in g.user.home]:
-
+        if g.user.id==home.admin_user_id:
             db.session.commit()
             return None,200
         else:return '权限不足',301

@@ -45,10 +45,9 @@ class HomeUserView1(Resource):
     def post(self, homeid):
         try:
             homeuser = HomeUser.query.filter(HomeUser.home_id == homeid)
-            if Home.query.filter(Home.id == homeid):
+            if Home.query.get_or_404(homeid):
                 if g.user.id not in [i.user_id for i in homeuser]:
                     homeuser = HomeUser()
-
                     homeuser.home_id = homeid
                     homeuser.user_id = g.user.id
                     db.session.add(homeuser)
