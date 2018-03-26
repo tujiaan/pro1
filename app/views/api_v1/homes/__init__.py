@@ -263,37 +263,45 @@ class HomeInsView(Resource):
         #     r = 6371
         #     return c * r * 1000
         def getDistance(lat0, lng0, lat1, lng1):
-            def hav(theta):
-                s = math.sin(theta / 2)
-                return s * s
-            EARTH_RADIUS = 6371
-            "用haversine公式计算球面两点间的距离。"
-            # 经纬度转换成弧度
             lat0 = math.radians(lat0)
             lat1 = math.radians(lat1)
             lng0 = math.radians(lng0)
             lng1 = math.radians(lng1)
             dlng = math.fabs(lng0 - lng1)
             dlat = math.fabs(lat0 - lat1)
-            h = hav(dlat) + math.cos(lat0) * math.cos(lat1) * hav(dlng)
-            distance = 2 * EARTH_RADIUS * math.asin(math.sqrt(h))
-            return distance
+            miles = ((69.1 * dlat) ** 2 + (53.0 * dlng) ** 2) ** .5
+            return miles * 1.6092953
+            # def hav(theta):
+            #     s = math.sin(theta / 2)
+            #     return s * s
+            # EARTH_RADIUS = 6371
+            # "用haversine公式计算球面两点间的距离。"
+            # # 经纬度转换成弧度
+            # lat0 = math.radians(lat0)
+            # lat1 = math.radians(lat1)
+            # lng0 = math.radians(lng0)
+            # lng1 = math.radians(lng1)
+            # dlng = math.fabs(lng0 - lng1)
+            # dlat = math.fabs(lat0 - lat1)
+            # h = hav(dlat) + math.cos(lat0) * math.cos(lat1) * hav(dlng)
+            # distance = 2 * EARTH_RADIUS * math.asin(math.sqrt(h))
+           # return distance
         query=Ins.query
         query=query.offset((int(page) - 1) * limit).limit(limit)
         _ = []
-        print(type(query.all()))
-        print('#####')
+        # print(type(query.all()))
+        # print('#####')
         #for j in [1,total]:
         for i in tuple(query.all()):
             # print({i:type(i)})
-            print(i.longitude,i.latitude)
+            # print(i.longitude,i.latitude)
             __ = {}
             __['ins_id'] = i.id
             print(i.id)
             __['ins_type'] = i.type
             __['ins_place'] = i.name
             __['distance'] = getDistance(i.latitude,i.longitude,home.latitude,home.longitude,)
-            print({i:__['distance']})
+            # print({i:__['distance']})
             if  getDistance(i.longitude,i.latitude,home.longitude,home.latitude)<float(distance):
               _.append(__)
             print(_)
