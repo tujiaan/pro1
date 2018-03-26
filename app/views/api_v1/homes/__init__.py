@@ -262,6 +262,7 @@ class HomeInsView(Resource):
         query=query.offset((int(page) - 1) * limit).limit(limit)
         total=query.count()
         _ = []
+        print('#####')
         for i in query.all():
             print(i.longitude,i.latitude,home.latitude,home.longitude)
             __ = {}

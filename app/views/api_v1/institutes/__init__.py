@@ -202,7 +202,7 @@ class InsCommunityView(Resource):
     @api.doc('查询机构覆盖的社区')
     @api.marshal_with(community_model,as_list=True)
     @api.response(200,'ok')
-    @api.doc(params={'from': '开始', 'count': '数量'})
+    @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self,insid):
         community=Community.query.filter(Community.ins_id==insid)
