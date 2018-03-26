@@ -21,20 +21,18 @@ class InstitutesViews(Resource):
     @role_require(['admin', 'superadmin', '119user'])
     @page_format(code=0, msg='ok')
     @api.doc('查询所有机构列表')
-
     @api.marshal_with(institute_model, as_list=True)
     @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
         list = Ins.query
-        if 'admin'  in [i.name for i in g.user.roles] or 'superadmin'in [i.name for i in g.user.roles]  :
-
+        if 'admin'in [i.name for i in g.user.roles] or 'superadmin'in [i.name for i in g.user.roles]:
             return list, 200
         else:
             return list.filter(Ins.admin_user_id == g.user.id)
 
-    @api.doc('新增机构')  #
+    @api.doc('新增机构')
     @api.expect(institutes_parser, validate=True)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
@@ -73,7 +71,7 @@ class InstitutesViews(Resource):
             return 'success', 200
         else:return '机构位置已被占用',201
 
-@api.route('/<insid>')#####???????
+@api.route('/<insid>')
 class InstituteView(Resource):
    # @api.header('jwt', 'JSON Web Token')
     #@role_require(['insuser', 'admin', 'superadmin'])
@@ -130,7 +128,7 @@ class InstituteView(Resource):
             return institute,200
         else:return'权限不足',301
 
-    @api.doc('根据id删除机构')##########待测试
+    @api.doc('根据id删除机构')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     @api.response(200,'ok')

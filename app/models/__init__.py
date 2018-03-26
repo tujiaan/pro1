@@ -60,7 +60,6 @@ class Ins(db.Model):
     name = db.Column(db.String(50), comment='机构名称')
     ins_picture = db.Column(db.LargeBinary, comment='机构图片')
     location_id=db.Column(db.String(50),db.ForeignKey('location.id'),comment='位置')
-
     ins_address = db.Column(db.String(255), comment='机构地址')
     note = db.Column(db.Text, comment='备注')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
@@ -198,7 +197,7 @@ class Sensor(db.Model):
     gateway_id = db.Column(db.String(24), db.ForeignKey('gateway.id'), comment='网关id')
     gateway = db.relationship('Gateway')
     sensor_place = db.Column(db.String(255), comment='位置')
-    sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾 1.温度 2.燃气 3.电流)')
+    sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾 1.温度 2.燃气 3.电流,4)')
     start_time=db.Column(db.DateTime,comment='开始时间')
     end_time=db.Column(db.DateTime,comment='结束时间')
     max_value=db.Column(db.Float,comment='阈值')

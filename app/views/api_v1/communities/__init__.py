@@ -101,7 +101,6 @@ class CommunityView(Resource):
     @api.doc('更新社区的信息')
     @api.expect(community_parser1)
     @api.header('jwt', 'JSON Web Token')
-
     @role_require(['admin','superadmin' ])
     @api.response(200,'ok')
     def put(self,communityid):

@@ -24,5 +24,5 @@ institutes_parser1.add_argument('note',type=str,help='备注',required=False,loc
 institutes_parser1.add_argument('admin_user_id',type=str,help='管理员id',required=False,location='form')
 institutes_parser1.add_argument('longitude',type=float,help='机构经度',required=False,location='form')
 institutes_parser1.add_argument('latitude',type=float,help='机构纬度',required=False,location='form')
-institutes_parser1.add_argument('admin_user_id',type=float,help='机构管理员id',required=False,location='form')
+institutes_parser1.add_argument('admin_user_id',type=str,help='机构管理员id',required=False,location='form')
 institutes_parser1.add_argument('location_id',type=str,help='位置id',required=False,location='form')
