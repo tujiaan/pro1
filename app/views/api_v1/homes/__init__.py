@@ -229,56 +229,81 @@ class HomeUsersView(Resource):
 class HomeInsView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser', 'admin', 'superadmin'])
-   # @page_format(code=0,msg='ok')
     @api.doc('查询家庭附近的机构')
-    @api.doc(params={'distance': '距离'})
-   # @api.marshal_with(institute_model, as_list=True)
     @api.response(200, 'ok')
-   # @page_range()
     def get(self,homeid,distance):
         page = request.args.get('page', 1)
         limit = request.args.get('limit', 10)
         home=Home.query.get_or_404(homeid)
         print(home)
         homeuser=HomeUser.query.filter(HomeUser.user_id).all()
-        def getDistance(latA, lonA, latB, lonB):
-            ra = 6378140  # radius of equator: meter
-            rb = 6356755  # radius of polar: meter
-            flatten = (ra - rb) / ra  # Partial rate of the earth
-            # change angle to radians
-            radLatA = math.radians(latA)
-            radLonA =math. radians(lonA)
-            radLatB = math.radians(latB)
-            radLonB = math.radians(lonB)
-            pA = math.atan(rb / ra * math.tan(radLatA))
-            pB = math.atan(rb / ra * math.tan(radLatB))
-            x = math.acos(math.sin(pA) * math.sin(pB) +math. cos(pA) * math.cos(pB) * math.cos(radLonA - radLonB))
-            c1 = (math.sin(x) - x) * (math.sin(pA) +math. sin(pB)) ** 2 / math.cos(x / 2) ** 2
-            c2 = (math.sin(x) + x) * (math.sin(pA) - math.sin(pB)) ** 2 / math.sin(x / 2) ** 2
-            dr = flatten / 8 * (c1 - c2)
-            distance = ra * (x + dr)
+        # def getDistance(latA, lonA, latB, lonB):
+        #     ra = 63781400  # radius of equator: meter
+        #     rb = 63567550  # radius of polar: meter
+        #     flatten = (ra - rb) / ra  # Partial rate of the earth
+        #     # change angle to radians
+        #     radLatA = math.radians(latA)
+        #     radLonA =math. radians(lonA)
+        #     radLatB = math.radians(latB)
+        #     radLonB = math.radians(lonB)
+        #     pA = math.atan(rb / ra * math.tan(radLatA))
+        #     pB = math.atan(rb / ra * math.tan(radLatB))
+        #     x = math.acos(math.sin(pA) * math.sin(pB) +math. cos(pA) * math.cos(pB) * math.cos(radLonA - radLonB))
+        #     c1 = (math.sin(x) - x) * (math.sin(pA) +math. sin(pB)) ** 2 / math.cos(x / 2) ** 2
+        #     c2 = (math.sin(x) + x) * (math.sin(pA) - math.sin(pB)) ** 2 / math.sin(x / 2) ** 2
+        #     dr = flatten / 8 * (c1 - c2)
+        #     distance = ra * (x + dr)
+        #     return
+        # def getDistance(lon1, lat1, lon2, lat2):  # 经度1，纬度1，经度2，纬度2 （十进制度数）
+        #     lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
+        #     dlon = lon2 - lon1
+        #     dlat = lat2 - lat1
+        #     a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        #     c = 2 * math.asin(math.sqrt(a))
+        #     r = 6371
+        #     return c * r * 1000
+        def getDistance(lat0, lng0, lat1, lng1):
+            def hav(theta):
+                s = math.sin(theta / 2)
+                return s * s
+            EARTH_RADIUS = 6371
+            "用haversine公式计算球面两点间的距离。"
+            # 经纬度转换成弧度
+            lat0 = math.radians(lat0)
+            lat1 = math.radians(lat1)
+            lng0 = math.radians(lng0)
+            lng1 = math.radians(lng1)
+            dlng = math.fabs(lng0 - lng1)
+            dlat = math.fabs(lat0 - lat1)
+            h = hav(dlat) + math.cos(lat0) * math.cos(lat1) * hav(dlng)
+            distance = 2 * EARTH_RADIUS * math.asin(math.sqrt(h))
             return distance
         query=Ins.query
         query=query.offset((int(page) - 1) * limit).limit(limit)
-        total=query.count()
         _ = []
+        print(type(query.all()))
         print('#####')
-        for i in query.all():
-            print(i.longitude,i.latitude,home.latitude,home.longitude)
+        #for j in [1,total]:
+        for i in tuple(query.all()):
+            # print({i:type(i)})
+            print(i.longitude,i.latitude)
             __ = {}
             __['ins_id'] = i.id
+            print(i.id)
             __['ins_type'] = i.type
             __['ins_place'] = i.name
-            __['distance'] = getDistance(i.latitude,i.longitude,home.latitude,home.longitude)
-            if __.get('distance')<float(distance):
+            __['distance'] = getDistance(i.latitude,i.longitude,home.latitude,home.longitude,)
+            print({i:__['distance']})
+            if  getDistance(i.longitude,i.latitude,home.longitude,home.latitude)<float(distance):
               _.append(__)
+            print(_)
+        total=len(_)
         result = {
             'code': 0,
             'msg': '200',
             'count': total,
             'data': _
         }
-
         if homeid in [i.home_id for i in homeuser] or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles] :
                 return result,200
         else:return '权限不足',201

@@ -48,7 +48,7 @@ class KnowledgeView(Resource):
     def get(self,knowledgetype):
      list=Knowledge.query.filter(Knowledge.type==knowledgetype)
      return list,200
-@api.route('/<knowledgeid>')
+@api.route('/<knowledgeid>/')
 class KnowledgeView(Resource):
     @api.doc('根据id查询知识详情')
     @api.marshal_with(knowledges_model)
