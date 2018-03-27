@@ -53,8 +53,8 @@ class LoginView(Resource):
     @api.response(409, '用户不存在')
     def post(self):
         args = login_parser.parse_args()
-        u = User.query.filter(and_(User.username == args.get('username'), User.password == args.get('password'),
-                                   User.disabled == False)).first()
+        u = User.query.filter(and_(User.username == args.get('username'), User.password == args.get('password'),User.disabled == False)).first()
+        print(u)
         user_role = UserRole.query.filter(UserRole.user_id == u.id).filter(UserRole.if_usable == True).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         if u is not None and args.get('roleid', None) in [i.id for i in roles]:
@@ -319,20 +319,21 @@ class UserRoleView(Resource):
     @role_require(['admin', 'superadmin'])
     def post(self, userid, roleid):
         role = Role.query.get_or_404(roleid)
-        user_role = UserRole.query.filter(and_(UserRole.role_id == roleid), UserRole.user_id == userid).first()
+        user_role = UserRole.query.filter( UserRole.user_id == g.user.id).all()
+        user_role1=UserRole.query.filter(and_(UserRole.user_id==userid,UserRole.role_id==roleid)).first()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         if role.name != 'superadmin':
             if role.name not in ['admin', 'superadmin'] or 'superadmin' in [i.name for i in roles]:
                 try:
 
-                    user_role.if_usable = True
+                    user_role1.if_usable = True
                     db.session.commit()
                     return None, 200
                 except:
                     return '该条记录已存在', 400
             elif role.name == 'admin'  and 'superadmin' in [i.name for i in roles]:
                 try:
-                    user_role.if_usable = True
+                    user_role1.if_usable = True
                     db.session.commit()
                     return None, 200
                 except:
@@ -348,18 +349,19 @@ class UserRoleView(Resource):
     @role_require(['admin', 'superadmin'])
     def delete(self, userid, roleid):
         role = Role.query.get_or_404(roleid)
-        user_role = UserRole.query.filter(and_(UserRole.role_id == roleid), UserRole.user_id == userid).first()
+        user_role1 = UserRole.query.filter(and_(UserRole.role_id == roleid), UserRole.user_id == userid).first()
+        user_role = UserRole.query.filter( UserRole.user_id == g.user.id).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         if role.name not in ['admin', 'superadmin'] or 'superadmin' in [i.name for i in roles]:
             try:
-                user_role.if_usable = False
+                user_role1.if_usable = False
                 db.session.commit()
                 return None, 200
             except:
                 return '用户已不具备该角色', 200
         elif role.name == 'admin' and 'superadmin' in [i.name for i in roles]:
             try:
-                user_role.if_usable = False
+                user_role1.if_usable = False
                 db.session.commit()
                 return None, 200
             except:
