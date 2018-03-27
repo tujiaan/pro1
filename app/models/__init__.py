@@ -226,7 +226,7 @@ class SensorAlarm(db.Model):
     note=db.Column(db.String(255),comment='备注')
     sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾 1.温度 2.燃气 3.电流,4)')
     var_type=db.Column(db.String(24),comment='变量类型')
-    unit = db.Column(db.String(24), comment='单位')
+    unit = db.Column(db.String(24), comment='变量单位')
     alarm_value = db.Column(db.String, comment='报警数值')
     alarm_time = db.Column(db.DateTime,default=datetime.datetime.now, comment='报警时间')
     confirm_time = db.Column(db.DateTime, comment='确认时间')

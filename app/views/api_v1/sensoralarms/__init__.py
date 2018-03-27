@@ -24,11 +24,10 @@ class SensorAlarmsView(Resource):
         start=request.args.get('star',2018-1-1)
         end=request.args.get('end',datetime.datetime.now())
         type=request.args.get('type',0)
-        query=db.session.query(SensorAlarm)
-        total=query.count()
-        print(total)
-        query = query.filter(SensorAlarm.alarm_time.between(start,end)).filter(SensorAlarm.sensor_type==type).\
+        query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
+            .filter(SensorAlarm.sensor_type==type).\
             order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+        total=query.count()
         _=[]
         for i in query.all():
          __={}
