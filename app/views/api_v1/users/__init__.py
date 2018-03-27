@@ -175,34 +175,37 @@ class UserFindView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @api.response(200,'ok')
     @role_require([ 'admin', 'superadmin'])
+    @api.marshal_with(user_model,as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
     def get(self):
-        page = request.args.get('page',1)
-        limit = request.args.get('limit',10)
-
-        query=db.session.query(User, Role).join(Role,User.roles).order_by(User.id)
-        total = query.count()
-
-        query = query.offset((int(page) - 1) * limit).limit(limit)
-        # [{''} for i in query.all()]
-        _=[]
-        for i in query.all():
-            __={}
-            __['user_id']=i[0].id
-            __['contract_tel']=i[0].contract_tel
-            __['user_name']=i[0].username
-            __['user_email'] = i[0].email
-            __['role_id'] = i[1].id
-            __['role_name'] = i[1].name
-            __['role_disable'] = i[1].disabled
-            _.append(__)
-        result = {
-            'code': 200,
-            'msg': 'ok',
-            'count': total,
-            'data': _
-        }
-        return result
+        list=User.query
+        return list,200
+        # page = request.args.get('page',1)
+        # limit = request.args.get('limit',10)
+        #
+        # query=db.session.query(User, Role).join(Role,User.roles).order_by(User.id)
+        # total = query.count()
+        #
+        # query = query.offset((int(page) - 1) * limit).limit(limit)
+        # # [{''} for i in query.all()]
+        # _=[]
+        # for i in query.all():
+        #     __={}
+        #     __['user_id']=i[0].id
+        #     __['contract_tel']=i[0].contract_tel
+        #     __['user_name']=i[0].username
+        #     __['user_email'] = i[0].email
+        #     __['role_id'] = i[1].id
+        #     __['role_name'] = i[1].name
+        #     __['role_disable'] = i[1].disabled
+        #     _.append(__)
+        # result = {
+        #     'code': 200,
+        #     'msg': 'ok',
+        #     'count': total,
+        #     'data': _
+        # }
+        # return result
 
 
 

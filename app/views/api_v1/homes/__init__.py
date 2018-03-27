@@ -235,7 +235,7 @@ class HomeInsView(Resource):
         page = request.args.get('page', 1)
         limit = request.args.get('limit', 10)
         home=Home.query.get_or_404(homeid)
-        homeuser=HomeUser.query.filter(HomeUser.user_id).all()
+        homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
         def getDistance(lat0, lng0, lat1, lng1):
             lat0 = math.radians(lat0)
             lat1 = math.radians(lat1)
@@ -245,7 +245,6 @@ class HomeInsView(Resource):
             dlat = math.fabs(lat0 - lat1)
             miles = ((69.1 * dlat) ** 2 + (53.0 * dlng) ** 2) ** .5
             return miles * 1.6092953
-
         query=Ins.query
         query=query.offset((int(page) - 1) * limit).limit(limit)
         _ = []
@@ -254,8 +253,8 @@ class HomeInsView(Resource):
             __['ins_id'] = i.id
             __['ins_type'] = i.type
             __['ins_place'] = i.name
-            __['distance'] = getDistance(i.latitude,i.longitude,home.latitude,home.longitude,)
-            if  getDistance(i.longitude,i.latitude,home.longitude,home.latitude)<float(distance):
+            __['distance'] = getDistance(i.latitude,i.longitude,home.latitude,home.longitude)
+            if  getDistance(i.latitude,i.longitude,home.latitude,home.longitude)<float(distance):
               _.append(__)
         total=len(_)
         result = {
