@@ -1,7 +1,6 @@
 from flask import g, flash, request
 from flask_restplus import Namespace, Resource
 from sqlalchemy import select, text, and_
-
 from app.ext import db
 from app.models import User, Role, Ins, Home, HomeUser, UserRole
 from app.utils.auth import user_require
@@ -54,7 +53,6 @@ class LoginView(Resource):
     def post(self):
         args = login_parser.parse_args()
         u = User.query.filter(and_(User.username == args.get('username'), User.password == args.get('password'),User.disabled == False)).first()
-        print(u)
         user_role = UserRole.query.filter(UserRole.user_id == u.id).filter(UserRole.if_usable == True).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         if u is not None and args.get('roleid', None) in [i.id for i in roles]:
@@ -325,7 +323,6 @@ class UserRoleView(Resource):
         if role.name != 'superadmin':
             if role.name not in ['admin', 'superadmin'] or 'superadmin' in [i.name for i in roles]:
                 try:
-
                     user_role1.if_usable = True
                     db.session.commit()
                     return None, 200
