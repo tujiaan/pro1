@@ -320,8 +320,9 @@ class UserRoleView(Resource):
     def post(self, userid, roleid):
         role = Role.query.get_or_404(roleid)
         user_role = UserRole.query.filter(and_(UserRole.role_id == roleid), UserRole.user_id == userid).first()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         if role.name != 'superadmin':
-            if role.name not in ['admin', 'superadmin'] or 'superadmin' in [i.name for i in g.user.roles]:
+            if role.name not in ['admin', 'superadmin'] or 'superadmin' in [i.name for i in roles]:
                 try:
 
                     user_role.if_usable = True
@@ -329,9 +330,8 @@ class UserRoleView(Resource):
                     return None, 200
                 except:
                     return '该条记录已存在', 400
-            elif role.name == 'admin' and 'superadmin' in [i.name for i in g.user.roles]:
+            elif role.name == 'admin'  and 'superadmin' in [i.name for i in roles]:
                 try:
-
                     user_role.if_usable = True
                     db.session.commit()
                     return None, 200
@@ -349,14 +349,15 @@ class UserRoleView(Resource):
     def delete(self, userid, roleid):
         role = Role.query.get_or_404(roleid)
         user_role = UserRole.query.filter(and_(UserRole.role_id == roleid), UserRole.user_id == userid).first()
-        if role.name not in ['admin', 'superadmin'] or 'superadmin' in [i.name for i in g.user.roles]:
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+        if role.name not in ['admin', 'superadmin'] or 'superadmin' in [i.name for i in roles]:
             try:
                 user_role.if_usable = False
                 db.session.commit()
                 return None, 200
             except:
                 return '用户已不具备该角色', 200
-        elif role.name == 'admin' and 'superadmin' in [i.name for i in g.user.roles]:
+        elif role.name == 'admin' and 'superadmin' in [i.name for i in roles]:
             try:
                 user_role.if_usable = False
                 db.session.commit()
