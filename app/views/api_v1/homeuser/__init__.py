@@ -5,7 +5,7 @@ from flask_restplus import Namespace, Resource
 from sqlalchemy import DateTime, and_
 
 from app.ext import db
-from app.models import HomeUser, Home
+from app.models import HomeUser, Home, UserRole, Role
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_format, page_range
@@ -27,8 +27,10 @@ class HomeUsersView(Resource):
     @page_range()
     def get(self):
         list = HomeUser.query
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         home=Home.query.filter(Home.admin_user_id==g.user.id)
-        if 'admin'  in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+        if 'admin'  in [i.name for i in roles] or 'superadmin' in [i.name for i in roles]:
 
             return list, 200
         else:
@@ -85,7 +87,6 @@ class HomeUserView2(Resource):
     def put( self,homeid,userid):
         home = Home.query.get_or_404(homeid)
         homeuser = HomeUser.query.filter(and_(HomeUser.home_id == homeid ,HomeUser.user_id == userid)).first()
-        print(homeuser)
         homeuser.if_confirm = True
         homeuser.confirm_time = datetime.datetime.now()
         if g.user.id == home.admin_user_id:

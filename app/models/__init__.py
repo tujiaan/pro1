@@ -11,12 +11,7 @@ def objectid():
     return str(ObjectId())
 
 
-t_user_role = db.Table(
-    'user_role',
-    db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
-    db.Column('role_id', db.String(24), db.ForeignKey('role.id')),
-   db.UniqueConstraint('user_id', 'role_id', name='uix_role_user')
-)
+
 
 t_role_menu = db.Table(
     'role_menu',
@@ -39,6 +34,13 @@ t_user_ins = db.Table(
     db.Column('ins_id', db.String(24), db.ForeignKey('ins.id')),
     db.UniqueConstraint('user_id', 'ins_id', name='uix_ins_user')
 )
+class UserRole(db.Model):
+    __tablename__='user_role'
+    id = db.Column(db.String(24), default=objectid, primary_key=True)
+    user_id=db.Column('user_id', db.String(24), db.ForeignKey('user.id'),primary_key=True)
+    if_usable=db.Column('if_usable',db.Boolean,comment='是否可用')
+    role_id=db.Column('role_id', db.String(24), db.ForeignKey('role.id'),primary_key=True)
+
 
 class HomeUser(db.Model):
     __tablename__='homeuser'
@@ -186,6 +188,7 @@ class Role(db.Model):
     name = db.Column(db.String(30), nullable=False)
     disabled = db.Column(db.Boolean, default=True, comment='是否可用')
     description = db.Column(db.String(60), comment='权限描述')
+    user_role=db.relationship('UserRole',foreign_keys=[UserRole.role_id],backref=db.backref('F_user_role',lazy='joined'),lazy='dynamic')
     menus = db.relationship('Menu', secondary=t_role_menu,
                             backref=db.backref('role_menus', lazy='dynamic') , lazy='dynamic')
 
@@ -248,11 +251,13 @@ class User(db.Model):
     salt = db.Column(db.String(50), comment='加密盐')
     createTime = db.Column(db.DateTime, default=datetime.datetime.now, comment='创建时间')
     lastTime = db.Column(db.DateTime, comment='最后登陆时间')
-
+    user_role = db.relationship('UserRole',foreign_keys=[UserRole.user_id], backref=db.backref('f_user_role', lazy='joined'), lazy='dynamic')
     real_name = db.Column(db.String(50), comment='姓名')
-    roles = db.relationship('Role', secondary=t_user_role,
-                            backref=db.backref('user_roles',
-                                               lazy='dynamic'), lazy='dynamic')
+    # roles = db.relationship('Role',secondary=UserRole,
+    #                         foreign_keys=[UserRole.role_id],
+    #                         backref=db.backref('f_m_user', lazy='dynamic'),    #,
+    #                        # backref=db.backref('user_roles',lazy='dynamic'),
+    #                       lazy='dynamic')
     ins = db.relationship('Ins', secondary=t_user_ins,
                           backref=db.backref('f_ins', lazy='dynamic'), lazy='dynamic')
 

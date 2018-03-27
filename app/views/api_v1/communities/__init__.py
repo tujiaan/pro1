@@ -2,7 +2,7 @@ from flask import g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Community, Ins, Home
+from app.models import Community, Ins, Home, UserRole, Role
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -31,7 +31,6 @@ class CommunitiesView(Resource):
     @api.route('/showlist')
     class CommunitiesView1(Resource):
         @api.header('jwt', 'JSON Web Token')
-        @user_require
         @api.doc('查询所有的社区名称')  #
         @page_format(code=0, msg='ok')
         @api.marshal_with(_community_model, as_list=True)
@@ -42,7 +41,7 @@ class CommunitiesView(Resource):
             community = Community.query
             return community, 200
 
-    @api.doc('新增社区')#
+    @api.doc('新增社区')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     @api.expect(community_parser,validate=True)
@@ -89,7 +88,10 @@ class CommunityView(Resource):
     @api.response(200,'ok')
     def get(self,communityid):
         community=Community.query.get_or_404(communityid)
-        if 'insuser'not in [i.name for i in g.user.roles]:
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+
+        if 'insuser'not in [i.name for i in roles]:
             return community, 200
         elif g.user.id==community.ins.admin_user_id:
             return community, 200

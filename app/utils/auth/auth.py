@@ -4,7 +4,7 @@ import types
 from flask import request, g
 from flask.views import MethodView
 
-from app.models import User, Role
+from app.models import User, Role, UserRole
 from app.utils.auth import decode_jwt
 
 
@@ -32,7 +32,8 @@ def role_function(r):
             for role in roles:
                 _ = Role.query.filter_by(name=role).first()
                 _ and r_list.append(_)
-
+            user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+            g.user.roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role))
             user_roles = tuple(g.user.roles)
             for i in r_list:
                 if i in user_roles:

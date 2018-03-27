@@ -25,7 +25,6 @@ class Knowledges(Resource):
     @api.response(200,'ok')
     @page_range()
     def get(self):
-
             list=Knowledge.query
             return list,200
 
@@ -110,11 +109,8 @@ class KnowledgeFacilityView1(Resource):
     def post(self,knowledgeid,facilityid):
             try:
                 facility = Facility.query.get_or_404(facilityid)
-
                 knowledge = Knowledge.query.get_or_404(knowledgeid)
-
                 knowledge.facility.append(facility)
-
                 db.session.commit()
                 return '绑定成功', 200
             except: return '已经绑定'

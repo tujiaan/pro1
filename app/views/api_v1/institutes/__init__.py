@@ -2,7 +2,7 @@ from flask import g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Ins, User, Facility, Community, FacilityIns
+from app.models import Ins, User, Facility, Community, FacilityIns, UserRole, Role
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -26,8 +26,10 @@ class InstitutesViews(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         list = Ins.query
-        if 'admin'in [i.name for i in g.user.roles] or 'superadmin'in [i.name for i in g.user.roles]:
+        if 'admin'in [i.name for i in roles] or 'superadmin'in [i.name for i in roles]:
             return list, 200
         else:
             return list.filter(Ins.admin_user_id == g.user.id)
@@ -42,15 +44,14 @@ class InstitutesViews(Resource):
         args = institutes_parser.parse_args()
         institute = Ins()
         user = User.query.get_or_404(args['admin_user_id'])
+        user_role = UserRole.query.filter(UserRole.user_id == user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         if Ins.query.filter(Ins.latitude!=args['latitude']or Ins.longitude!=args['longitude']):
             institute.name = args['name']
-            if 'insuser' in [i.name for i in user.roles]:
-
+            if 'insuser' in [i.name for i in roles]:
                 institute.admin_user_id = args['admin_user_id']
             else:
-
                 institute.admin_user_id = g.user.id
-
             institute.type = args['type']
             institute.ins_address = args['ins_address']
             institute.note = args['note']
@@ -62,11 +63,9 @@ class InstitutesViews(Resource):
                 institute.ins_picture = args['ins_picture'].read()
             else:
                 pass
-
             institute.location_id = args['location_id']
             db.session.add(institute)
             institute.user.append(user)
-
             db.session.commit()
             return 'success', 200
         else:return '机构位置已被占用',201
@@ -83,7 +82,7 @@ class InstituteView(Resource):
         return institute,200
 
 
-    @api.doc('根据id更新机构信息')#
+    @api.doc('根据id更新机构信息')
     @api.expect(institutes_parser1)
     @api.response(200,'ok')
     @api.marshal_with(institute_model,as_list=True)
@@ -92,13 +91,15 @@ class InstituteView(Resource):
     def put(self,insid):
         institute = Ins.query.get_or_404(insid)
         args = institutes_parser1.parse_args()
-        if 'insuser'in [i.name for i in g .user.roles]and institute.admin_user_id==g.user.id or'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+        if 'insuser'in [i.name for i in roles]and institute.admin_user_id==g.user.id or'admin' in [i.name for i in roles] or 'superadmin' in [i.name for i in roles]:
             if 'name'in args and args['name'] :
                 institute.name=args['name']
             else:pass
 
             if 'admin_user_id'in args and args['admin_user_id']:
-                if 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+                if 'admin' in [i.name for i in roles] or 'superadmin' in [i.name for i in roles]:
                     institute.admin_user_id=args['admin_user_id']
                 else: pass
             else:pass
@@ -168,11 +169,12 @@ class InsUserView(Resource):
     @role_require(['insuser', 'admin', 'superadmin'])
     @api.response(200,'ok')
     def post(self,insid,userid):
-
+     user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+     roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
      ins=Ins.query.get_or_404(insid)
      user=User.query.get_or_404(userid)
      if user not in ins.user:
-         if g.user.id == ins.admin_user_id or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles] :
+         if g.user.id == ins.admin_user_id or 'admin' in [i.name for i in roles] or 'superadmin' in [i.name for i in roles] :
                 ins.user.append(user)
                 db.session.commit()
                 return '添加成功',200
@@ -185,10 +187,12 @@ class InsUserView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['insuser', 'admin', 'superadmin'])
     def delete(self, insid, userid):
+      user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+      roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
       ins = Ins.query.get_or_404(insid)
       user = User.query.get_or_404(userid)
       if   user in ins.user:
-          if g.user.id == ins.admin_user_id or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+          if g.user.id == ins.admin_user_id or 'admin' in [i.name for i in roles] or 'superadmin' in [i.name for i in roles]:
                 ins.user.remove(user)
                 db.session.commit()
                 return '删除成功', 200

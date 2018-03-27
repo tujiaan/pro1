@@ -2,7 +2,7 @@ from flask import g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Facility, FacilityIns,Knowledge
+from app.models import Facility, FacilityIns, Knowledge, UserRole, Role, Ins
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.facilities.parser import facility_parser, facility_parser1, f_parser, f1_parser
@@ -50,25 +50,29 @@ class FacilityDataView(Resource):
         return facility_data,200
 
     @api.doc('更新设施详情')
-    @api.expect(facility_parser1)
+    @api.expect(f1_parser)
     @api.response(200,'ok')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin','insuser'])
     def put(self,facilityid):
-      facility=Facility.query.get_or_404(facilityid)
-      args=facility_parser1.parse_args()
-      facility.count=args['count']
-
-      if 'insuser'not in [i.name for i in g.user.role]:
-        db.session.commit()
-        return None,200
-      elif facility.ins.admin_user_id==g.user.id and facility.ins.type!='property':
-          db.session.commit()
-          return None,200
-      else:return '权限不足',301
-   
-        
-        
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+        facility = Facility.query.get_or_404(facilityid)
+        args = facility_parser1.parse_args()
+        if args['facility_name']:
+            facility.facility_name=args['facility_name']
+        else:pass
+        if args['facility_picture']:
+            facility.facility_picture=args['facility_picture']
+        else:pass
+        if 'insuser' not in [i.name for i in roles]:
+            db.session.commit()
+            return None, 200
+        elif facility.ins.admin_user_id == g.user.id and facility.ins.type != 'property':
+            db.session.commit()
+            return None, 200
+        else:
+            return '权限不足', 301
 
     @api.doc('删除设施')
     @api.response(200, 'ok')
@@ -98,7 +102,7 @@ class FacilitesInsView(Resource):
     @api.response(200,'ok')
     @page_range()
     def get(self):
-       list=Facility.query
+       list=FacilityIns.query
        return list,200
 
 
@@ -109,10 +113,14 @@ class FacilitesInsView(Resource):
     @role_require(['admin', 'superadmin'])
     def post(self):
         args=facility_parser.parse_args()
-        facility=Facility(**args)
-        db.session.add(facility)
-        db.session.commit()
-        return  None,200
+        facilityins=FacilityIns(**args)
+        try:
+            ins=Ins.query.get_or_404(facilityins.ins_id)
+            facility=Facility.query.get_or_404(facilityins.facility_id)
+            db.session.add(facilityins)
+            db.session.commit()
+            return  None,200
+        except:return '信息有误',201
 @api.route('/facility-ins/<insid>')
 class FacilitesInsView(Resource):
     @page_format(code=0,msg='ok')
@@ -133,18 +141,21 @@ class FacilitesView(Resource):
     @api.doc('删除机构设施关联')
     @api.response(200, 'ok')
     def delete(self,facilityid):
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         facility=FacilityIns.query.filter(FacilityIns.facility_id==facilityid).first()
         db.session.delete(facility)
         if 'insuser'not in [i.name for i in g.user.roles.all()]:
             db.session.commit()
             return None,200
-        elif'admin'not in [i.name for i in g.user.roles.all()] and 'superadmin'not in [i.name for i in g.user.roles.all()]:
+        elif'admin'not in [i.name for i in roles] and 'superadmin'not in [i.name for i in roles()]:
                 if g.user.id==facility.ins.admin_user_id:
                     db.session.commit()
                     return None, 200
                 else :return '权限不足',201
-        else:  db.session.commit()
-        return None, 200
+        else:
+            db.session.commit()
+            return None, 200
 
 
 
@@ -186,7 +197,7 @@ class FacilityKnowledgesView(Resource):
     @api.response(200,'ok')
     def get(self,facilityid):
         facility=Facility.query.get_or_404(facilityid)
-        return facility.knowledges.all(),200
+        return facility.knowledges,200
 
 @api.route('/<facilityid>/knowledges/<knowledgeid>/')
 class FacilityKnowledgeView(Resource):
@@ -198,11 +209,8 @@ class FacilityKnowledgeView(Resource):
     def post(self,facilityid,knowledgeid):
         try:
             facility = Facility.query.get_or_404(facilityid)
-
             knowledge = Knowledge.query.get_or_404(knowledgeid)
-
             facility.knowledges.append(knowledge)
-
             db.session.commit()
             return '绑定成功', 200
         except: return '已经绑定'
@@ -216,7 +224,6 @@ class FacilityKnowledgeView(Resource):
         try:
             facility = Facility.query.get_or_404(facilityid)
             knowledge = Knowledge.query.get_or_404(knowledgeid)
-
             facility.knowledge.remove(knowledge)
             db.session.commit()
             return None,200

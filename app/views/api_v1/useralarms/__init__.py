@@ -5,7 +5,7 @@ from flask_restplus import Namespace, Resource
 from sqlalchemy import and_
 
 from app.ext import db
-from app.models import UserAlarmRecord, Community, Home, User, Sensor
+from app.models import UserAlarmRecord, Community, Home, User, Sensor, UserRole, Role
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.useralarms.parser import useralarmrecord_parser, useralarmrecord1_parser
@@ -78,9 +78,11 @@ class UserAlarmRecordView(Resource):
     @role_require(['homeuser','119user','admin','superadmin'])
     @api.response(200,'ok')
     def put(self,useralarmrecordid):
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
         useralarmrecord.if_confirm=True
-        if 'homeuser'in [i.name for i in g.user.roles]and len(g.user.roles)<2:
+        if 'homeuser'in [i.name for i in roles]and len(roles)<2:
             if g.user.id==useralarmrecord.user_id:
                 db.session.commit()
                 return None,200

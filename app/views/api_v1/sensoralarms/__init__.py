@@ -4,7 +4,7 @@ from flask import g, request
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import SensorAlarm, Home, Community, HomeUser
+from app.models import SensorAlarm, Home, Community, HomeUser, UserRole, Role
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms.parser import sensoralarms_parser, sensoralarms_parser1
@@ -93,8 +93,10 @@ class SensorAlarmView(Resource):
     @role_require(['homeuser','119user','admin','superadmin'])
     @api.response(200, 'ok')
     def put(self,sensoralarmid):
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         sensoralarm=SensorAlarm.query.get_or_404(sensoralarmid)
-        if 'homeuser'in [i.name for i in g .user.role] and len(g.user.roles.all())<2:
+        if 'homeuser'in [i.name for i in roles] and len(roles)<2:
             home=Home.query.get_or_404( sensoralarm.sensor.home_id)
             if home.admin_user_id==g.user.id:
                 sensoralarm.is_confirm=True

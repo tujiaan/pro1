@@ -2,7 +2,7 @@ from flask import g, request
 from flask_restplus import Namespace
 from flask_restplus import  Resource
 from app.ext import db
-from app.models import Facility, Sensor, Home, SensorAlarm, SensorHistory, HomeUser
+from app.models import Facility, Sensor, Home, SensorAlarm, SensorHistory, HomeUser, UserRole, Role
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms import sensoralarms_model
@@ -62,6 +62,8 @@ class SensorsView(Resource):
     @api.doc('获取传感器详情')
     @api.response(200, 'ok')
     def get(self,sensorid):
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         homeuser= HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
         home=Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
         query=db.session.query(Sensor,SensorHistory,Home).join(SensorHistory,Sensor.id==SensorHistory.sensor_id).\
@@ -84,7 +86,7 @@ class SensorsView(Resource):
             'data': _
         }
         print(query.first())
-        if 'homeuser'in [i.name for i in g.user.roles.all()] and len(g.user.roles.all())<2:
+        if 'homeuser'in [i.name for i in roles] and len(roles)<2:
             if query.first()[2].id not in [i.id for i in home.all()]:
                 return '权限不足',201
             else:return result,200
@@ -139,14 +141,16 @@ class SensorAlarmsView(Resource):
     @api.response(200,'ok')
     @page_range()
     def get(self,sensorid):
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         sensor=Sensor.query.get_or_404(sensorid)
         homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
         home=Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
-        if 'homeuser'in [i.name for i in g.user.roles]:
+        if 'homeuser'in [i.name for i in roles]:
             if sensor not in [i.sensor for i in home]:
                pass
-        elif ('insuser'or '119user')in [i.name for i in g.user.role]:
-           ins=(Home.query.get_or_404(sensor.home_id)).ins
+        elif 'insuser'in [i.name for i in roles] or '119user'in [i.name for i in roles]:
+           ins=(Home.query.get_or_404(sensor.home_id)).community.ins
            if g.user.id==ins.admin_user_id :
                return SensorAlarm.query.filter(SensorAlarm.is_confirm==False).filter( SensorAlarm.is_timeout==True).\
                    filter(SensorAlarm.sensor_id==sensorid)
@@ -163,10 +167,12 @@ class SensorHistoryView(Resource):
     @api.marshal_with(sensorhistory_model)
     @api.response(200,'ok')
     def get(self,sensorid):
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         sensor=Sensor.query.get_or_404(sensorid)
         home=sensor.home
         sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensorid).order_by(SensorHistory.time.desc()).first()
-        if 'homeuser'in [i.name for i in g.user.roles] and len(g.user.roles.all())<2:
+        if 'homeuser'in [i.name for i in roles] and len(roles)<2:
             if g.user.id in [i.user_id for i in (HomeUser.query.filter(HomeUser.home_id==home.id))]:
                 return  sensorhistory, 200
             else:return '权限不足',201
