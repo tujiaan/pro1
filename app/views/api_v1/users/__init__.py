@@ -68,7 +68,7 @@ class LoginView(Resource):
     @api.response(201, '登录成功')
     @api.response(409, '用户不存在')
     def post(self):
-        args = login_parser.parse_args()
+        args = login_parser1.parse_args()
         u = User.query.filter(and_(User.username == args.get('username'), User.password == args.get('password'),User.disabled == False)).first()
         if u is not None:
             jwt = encode_jwt(user_id=u.id)
