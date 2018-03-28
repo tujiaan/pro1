@@ -59,7 +59,6 @@ class HomeUser(db.Model):
     confirm_time=db.Column('confirm_time',db.DateTime, comment='批准时间')
 
 
-
 class Ins(db.Model):
     __tablename__ = 'ins'
 
