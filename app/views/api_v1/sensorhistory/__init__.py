@@ -11,7 +11,6 @@ from .models import *
 class SensorHistoriesView(Resource):
     @api.doc('查询所有传感器的历史')
     @page_format(code=0, msg='ok')
-
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser','insuser','admin', 'superadmin', '119user'])
     @api.marshal_with(sensorhistory_model, as_list=True)

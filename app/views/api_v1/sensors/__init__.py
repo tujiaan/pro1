@@ -151,7 +151,7 @@ class SensorAlarmsView(Resource):
                pass
         elif 'insuser'in [i.name for i in roles] or '119user'in [i.name for i in roles]:
            ins=(Home.query.get_or_404(sensor.home_id)).community.ins
-           if g.user.id==ins.admin_user_id :
+           if g.user.id in [i.admin_user_id for i in ins] :
                return SensorAlarm.query.filter(SensorAlarm.is_confirm==False).filter( SensorAlarm.is_timeout==True).\
                    filter(SensorAlarm.sensor_id==sensorid)
            else:

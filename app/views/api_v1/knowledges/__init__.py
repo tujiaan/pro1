@@ -41,9 +41,11 @@ class Knowledges(Resource):
         return None,200
 @api.route('/<knowledgetype>')
 class KnowledgeView(Resource):
+    @page_format(code=0,msg='ok')
     @api.doc('根据类型查询知识列表')
     @api.marshal_with(knowledges_model)
     @api.response(200,'ok')
+    @page_range()
     def get(self,knowledgetype):
      list=Knowledge.query.filter(Knowledge.type==knowledgetype)
      return list,200

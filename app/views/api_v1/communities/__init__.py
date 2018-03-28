@@ -1,3 +1,5 @@
+import base64
+
 from flask import g
 from flask_restplus import Namespace, Resource
 
@@ -24,9 +26,9 @@ class CommunitiesView(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
-        community=Community.query
-        print(type(community))
-        return community,200
+        list=Community.query
+        return list,200
+
 
     @api.route('/showlist')
     class CommunitiesView1(Resource):
@@ -84,19 +86,37 @@ class CommunityView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin','119user','insuser' ,'superadmin'])
     @api.doc('查询特定的小区信息')
-    @api.marshal_with(community_model)
     @api.response(200,'ok')
     def get(self,communityid):
         community=Community.query.get_or_404(communityid)
         user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+        ins=community.ins
+        _=[ ]
+        for i in ins:
+            __={}
+            __['ins_id']=i.id
+            __['ins_type']=i.type
+            _.append(__)
+        community={
+            'community_id':community.id,
+            'community_name':community.name,
+            'community_longitude':float(community.longitude),
+            'community_latitude':float(community.latitude),
+            'detail_address':community.detail_address,
+            'save_distance':float(community.save_distance),
+            'eva_distance':float(community.eva_distance),
+            'location_id':community.location_id,
+            'community_picture':base64.b64encode(community.community_picture).decode(),
+            'ins_data':_
+
+        }
 
         if 'insuser'not in [i.name for i in roles]:
             return community, 200
         elif g.user.id==community.ins.admin_user_id:
             return community, 200
         else:
-
             return None, 200
 
 
@@ -153,8 +173,11 @@ class CommunityView(Resource):
     def delete(self,communityid):
         community=Community.query.get_or_404(communityid)
         home=Home.query.filter(Home.id.in_( i.id for i in community.homes))
+        list=community.ins
         for i in home:
           homes.HomeView.delete(self,i.id)
+        for i in list:
+            community.ins.remove(i)
         db.session.delete(community)
         db.session.commit()
         return None,200

@@ -136,13 +136,14 @@ class InstituteView(Resource):
     def delete(self,insid):
         institute = Ins.query.get_or_404(insid)
         facilityins=FacilityIns.query.filter(FacilityIns.ins_id==insid).all()
-        community=Community.query.filter(Community.ins_id==insid).first()
+
         for i in facilityins:
          db.session.delete(i)
-        list=institute.user.all()
+        list=institute.user
         for i in list:
             institute.user.remove(i)
-        db.session.delete(community)
+        for i in  institute.community:
+            institute.community.remove(i)
         db.session.delete(institute)
         db.session.commit()
         return '删除成功',200
@@ -191,7 +192,7 @@ class InsUserView(Resource):
       roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
       ins = Ins.query.get_or_404(insid)
       user = User.query.get_or_404(userid)
-      if   user in ins.user:
+      if  user in ins.user:
           if g.user.id == ins.admin_user_id or 'admin' in [i.name for i in roles] or 'superadmin' in [i.name for i in roles]:
                 ins.user.remove(user)
                 db.session.commit()

@@ -48,7 +48,6 @@ class HomesView(Resource):
     @api.doc('新增家庭')
     @api.expect(home_parser)
     @api.response(200, 'ok')
-    # @api.marshal_with(home_model)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser'])
     def post(self):
@@ -73,13 +72,20 @@ class HomesView(Resource):
 @api.route('/<homeid>')
 class HomeView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin'])
+    @role_require(['homeuser','admin', 'superadmin'])
     @api.doc('根据家庭id查找家庭')
     @api.marshal_with(home_model)
     @api.response(200,'ok')
     def get(self,homeid):
-        home=Home.query.get_or_404(homeid)
-        return home,200
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+        home = Home.query.get_or_404(homeid)
+        homeuser=HomeUser.query.filter(HomeUser.home_id==homeid).all()
+        if 'homeuser'in [i.name for i in roles] and len(roles)<2:
+            if g.user.id in [i.user_id for i in homeuser]:
+                return home,200
+            else: return '权限不足',201
+        else: return home,200
 
     @api.doc('根据家庭id删除家庭')
     @api.header('jwt', 'JSON Web Token')

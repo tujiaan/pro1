@@ -34,12 +34,18 @@ t_user_ins = db.Table(
     db.Column('ins_id', db.String(24), db.ForeignKey('ins.id')),
     db.UniqueConstraint('user_id', 'ins_id', name='uix_ins_user')
 )
+t_community_ins = db.Table(
+    'community_ins',
+    db.Column('community_id', db.String(24), db.ForeignKey('community.id')),
+    db.Column('ins_id', db.String(24), db.ForeignKey('ins.id')),
+    db.UniqueConstraint('community_id', 'ins_id', name='uix_ins_community')
+)
 class UserRole(db.Model):
     __tablename__='user_role'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    user_id=db.Column('user_id', db.String(24), db.ForeignKey('user.id'),primary_key=True)
+    user_id=db.Column('user_id', db.String(24), db.ForeignKey('user.id'), primary_key=True)
     if_usable=db.Column('if_usable',db.Boolean,comment='是否可用')
-    role_id=db.Column('role_id', db.String(24), db.ForeignKey('role.id'),primary_key=True)
+    role_id=db.Column('role_id', db.String(24), db.ForeignKey('role.id'), primary_key=True)
 
 
 class HomeUser(db.Model):
@@ -67,7 +73,8 @@ class Ins(db.Model):
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     admin_user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='管理员id')
-    community=db.relationship('Community')
+    community = db.relationship('Community', secondary=t_community_ins, backref=db.backref('f1_community', lazy='dynamic'),
+                          lazy='dynamic')
     user = db.relationship('User', secondary=t_user_ins,
                           backref=db.backref('f_user', lazy='dynamic') , lazy='dynamic' )
 
@@ -92,8 +99,7 @@ class Community(db.Model):
     eva_distance = db.Column(db.Integer, comment='疏散距离')
     longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
-    ins_id = db.Column(db.String(24), db.ForeignKey('ins.id'), comment='机构id')
-    ins = db.relationship('Ins')
+    ins = db.relationship('Ins',secondary=t_community_ins,backref=db.backref('f1_ins',lazy='dynamic'),lazy='dynamic')
     homes = db.relationship('Home', lazy='dynamic')
     location_id = db.Column(db.String(50), db.ForeignKey('location.id'), comment='位置')
 
@@ -253,11 +259,6 @@ class User(db.Model):
     lastTime = db.Column(db.DateTime, comment='最后登陆时间')
     user_role = db.relationship('UserRole',foreign_keys=[UserRole.user_id], backref=db.backref('f_user_role', lazy='joined'), lazy='dynamic')
     real_name = db.Column(db.String(50), comment='姓名')
-    # roles = db.relationship('Role',secondary=UserRole,
-    #                         foreign_keys=[UserRole.role_id],
-    #                         backref=db.backref('f_m_user', lazy='dynamic'),    #,
-    #                        # backref=db.backref('user_roles',lazy='dynamic'),
-    #                       lazy='dynamic')
     ins = db.relationship('Ins', secondary=t_user_ins,
                           backref=db.backref('f_ins', lazy='dynamic'), lazy='dynamic')
 

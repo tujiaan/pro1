@@ -5,6 +5,10 @@ login_parser.add_argument('roleid', type=str, help='角色id', required=True, lo
 login_parser.add_argument('username', type=str, help='用户名', required=True, location='form')
 login_parser.add_argument('password', type=str, help='密码', required=True, location='form')
 
+login_parser1 = RequestParser()
+login_parser1.add_argument('username', type=str, help='用户名', required=True, location='form')
+login_parser1.add_argument('password', type=str, help='密码', required=True, location='form')
+
 register_parser = RequestParser()
 register_parser.add_argument('username', type=str, help='用户名', required=True, location='form')
 register_parser.add_argument('password', type=str, help='密码', required=True, location='form')
