@@ -232,7 +232,7 @@ class SensorAlarm(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True, comment='')
     sensor_id = db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='网关id')
     sensor = db.relationship('Sensor')
-    note=db.Column(db.String(255),comment='备注')
+    note=db.Column(db.String(255),comment='内容')
     sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾 1.温度 2.燃气 3.电流,4)')
     var_type=db.Column(db.String(24),comment='变量类型')
     unit = db.Column(db.String(24), comment='变量单位')
@@ -269,7 +269,7 @@ class UserAlarmRecord(db.Model):
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     type = db.Column(db.Integer, default=0, comment='信息类型,(0:119,1：疏散,2：传感器，3：求救)')
-    content = db.Column(db.String(50), comment='内容')
+    content = db.Column(db.String(50), comment='报警内容')
     if_confirm=db.Column(db.Boolean,default=False,comment='是否确认')
     home_id = db.Column(db.String(24), db.ForeignKey('home.id'))
     home = db.relationship('Home')

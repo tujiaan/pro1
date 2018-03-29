@@ -5,7 +5,7 @@ from flask_restplus import Namespace, Resource
 from sqlalchemy import and_
 
 from app.ext import db
-from app.models import UserAlarmRecord, Community, Home, User, Sensor, UserRole, Role
+from app.models import UserAlarmRecord, Community, Home, User, Sensor, UserRole, Role, HomeUser
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.useralarms.parser import useralarmrecord_parser, useralarmrecord1_parser
@@ -15,7 +15,7 @@ from .models import *
 @api.route('/')
 class UserAlarmRecordsView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin', 'propertyuser', 'stationuser'])
+    @role_require(['admin','homeuser', 'superadmin', 'propertyuser', 'stationuser'])
     @api.doc('查询用户报警记录列表')
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量','start':'开始时间','end':'结束时间','type':'类型'})
@@ -25,9 +25,19 @@ class UserAlarmRecordsView(Resource):
         start = request.args.get('start', 2018-1-1 )
         end = request.args.get('end', datetime.datetime.now().isoformat())
         type = request.args.get('type', 0)
-        query = db.session.query(UserAlarmRecord,Home,User).join(Home, UserAlarmRecord.home_id==Home.id)\
-            .join(User,UserAlarmRecord.user_id==User.id).filter( UserAlarmRecord.time.between(start,end)).\
-            filter(UserAlarmRecord.type==type).order_by(UserAlarmRecord.id)
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+        homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
+        home=Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
+        if 'homeuser' in [i.name for i in roles] and len(roles) < 2:
+            query = db.session.query(UserAlarmRecord,Home,User).join(Home, UserAlarmRecord.home_id==Home.id)\
+                    .join(User,UserAlarmRecord.user_id==User.id).filter( UserAlarmRecord.time.between(start,end)).\
+                    filter(UserAlarmRecord.type==type).filter(UserAlarmRecord.home_id.in_(i.id for i in home)).\
+                order_by(UserAlarmRecord.id)
+        else:
+            query = db.session.query(UserAlarmRecord, Home, User).join(Home, UserAlarmRecord.home_id == Home.id) \
+                .join(User, UserAlarmRecord.user_id == User.id).filter(UserAlarmRecord.time.between(start, end)). \
+                filter(UserAlarmRecord.type == type).order_by(UserAlarmRecord.id)
         total = query.count()
         query = query.offset((int(page) - 1) * limit).limit(limit)
         def if_timeout(time):
@@ -56,7 +66,7 @@ class UserAlarmRecordsView(Resource):
             'count': total,
             'data': _
         }
-        return result
+        return result,200
 
 
     @api.doc('新增用户报警记录(用户提交传感器报警信息)')

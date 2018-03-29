@@ -14,7 +14,7 @@ from .models import *
 @api.route('/')
 class SensorAlarmsView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin','superadmin'])
+    @role_require(['homeuser','admin','superadmin'])
     @api.doc('查询传感器报警记录列表')
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量','start':'开始时间见','end':'结束时间','type':'报警项目'})
@@ -24,9 +24,17 @@ class SensorAlarmsView(Resource):
         start=request.args.get('star',2018-1-1)
         end=request.args.get('end',datetime.datetime.now())
         type=request.args.get('type',0)
-        query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
-            .filter(SensorAlarm.sensor_type==type).\
-            order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+        homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
+        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
+        if 'homeuser' in [i.name for i in roles] and len(roles) < 2:
+            query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
+                .filter(SensorAlarm.sensor_type==type).filter(SensorAlarm.sensor_id.in_(i.first().id for i in ([i.sensor for i in home]))).order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+        else:
+            query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
+                .filter(SensorAlarm.sensor_type==type).order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+
         total=query.count()
         _=[]
         for i in query.all():
@@ -47,7 +55,7 @@ class SensorAlarmsView(Resource):
             'count':total,
             'data':_
         }
-        return result
+        return result,200
 
 
     @api.doc('新增传感器报警记录')
