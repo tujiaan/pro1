@@ -134,6 +134,8 @@ class KnowledgeFacilityView1(Resource):
 @api.route('/picture')
 class Upload(Resource):
     @api.doc('上传文件')
+    # @api.header('jwt', 'JSON Web Token')
+    # @role_require(['knowledgeadmin', 'superadmin'])
     @api.expect(upload_parser, validate=True)
     @api.response(200, '已创建')
     @api.response(415, '格式不支持')
