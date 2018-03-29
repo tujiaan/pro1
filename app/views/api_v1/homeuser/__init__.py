@@ -82,6 +82,7 @@ class HomeUserView1(Resource):
 class HomeUserView2(Resource):
     @api.header('jwt', 'JSON Web Token')
     @api.doc('批准加入家庭')
+    @role_require(['homeuser'])
     @api.response(200, 'ok')
     @user_require
     def put( self,homeid,userid):

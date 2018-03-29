@@ -151,4 +151,9 @@ class Upload(Resource):
         if not os.path.exists(path):
             os.makedirs(path)
         file.save(path + '/' + filename)
-        return {'url': url}, 200
+        result={
+            'code':0,
+            'message':'ok',
+            'data':{'url':url}
+        }
+        return result, 200

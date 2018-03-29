@@ -87,46 +87,50 @@ class InstituteView(Resource):
     @api.response(200,'ok')
     @api.marshal_with(institute_model,as_list=True)
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['insuser', 'admin', 'superadmin'])
+    @role_require(['propertyuser','stationuser', 'admin', 'superadmin'])
     def put(self,insid):
         institute = Ins.query.get_or_404(insid)
         args = institutes_parser1.parse_args()
         user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
-        if 'insuser'in [i.name for i in roles]and institute.admin_user_id==g.user.id or'admin' in [i.name for i in roles] or 'superadmin' in [i.name for i in roles]:
-            if 'name'in args and args['name'] :
-                institute.name=args['name']
-            else:pass
-
-            if 'admin_user_id'in args and args['admin_user_id']:
-                if 'admin' in [i.name for i in roles] or 'superadmin' in [i.name for i in roles]:
-                    institute.admin_user_id=args['admin_user_id']
-                else: pass
-            else:pass
-            if 'type'in args and args['type']:
-                institute.type=args['type']
-            else:pass
-            if 'ins_address'in args and args['ins_address']:
-                institute.ins_address=args['ins_address']
-            else:pass
-            if 'note'in args and args['note']:
-                institute.note=args['note']
-            else:pass
-            if 'longitude'in args and args['longitude']:
-                institute.longitude=args['longitude']
-            else:pass
-            if args['location_id']:
-                institute.location_id=args['location_id']
-            else:pass
-            if 'latitude'in args and args['latitude']:
-                institute.latitude=args['latitude']
-            else:pass
-            try:
+        if 'name'in args and args['name'] :
+            institute.name=args['name']
+        else:pass
+        if 'admin_user_id'in args and args['admin_user_id']:
+            if 'admin' in [i.name for i in roles] or 'superadmin' in [i.name for i in roles]:
+                institute.admin_user_id=args['admin_user_id']
+            else: pass
+        else:pass
+        if 'type'in args and args['type']:
+            institute.type=args['type']
+        else:pass
+        if 'ins_address'in args and args['ins_address']:
+            institute.ins_address=args['ins_address']
+        else:pass
+        if 'note'in args and args['note']:
+            institute.note=args['note']
+        else:pass
+        if 'longitude'in args and args['longitude']:
+            institute.longitude=args['longitude']
+        else:pass
+        if args['location_id']:
+            institute.location_id=args['location_id']
+        else:pass
+        if 'latitude'in args and args['latitude']:
+            institute.latitude=args['latitude']
+        else:pass
+        try:
+            if args['ins_picture']:
                 institute.ins_picture = args['ins_picture'].read()
-            except:
-                pass
+            else:pass
+        except:pass
+        if 'propertyuser' in [i.name for i in roles] or'stationuser' in [i.name for i in roles]:
+            if institute.admin_user_id == g.user.id:
+                db.session.commit()
+                return institute,200
+        elif 'admin' in [i.name for i in roles] or 'superadmin' in [i.name for i in roles]:
             db.session.commit()
-            return institute,200
+            return institute, 200
         else:return'权限不足',301
 
     @api.doc('根据id删除机构')
@@ -167,7 +171,7 @@ class InsUsesrView(Resource):
 class InsUserView(Resource):
     @api.doc('增加机构成员/用户绑定机构')
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['insuser', 'admin', 'superadmin'])
+    @role_require(['propertyuser','stationuser', 'admin', 'superadmin'])
     @api.response(200,'ok')
     def post(self,insid,userid):
      user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
@@ -186,7 +190,7 @@ class InsUserView(Resource):
     @api.doc('删除机构成员/解除用户绑定机构')
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['insuser', 'admin', 'superadmin'])
+    @role_require(['propertyuser','stationuser', 'admin', 'superadmin'])
     def delete(self, insid, userid):
       user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
       roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()

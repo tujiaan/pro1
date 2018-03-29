@@ -58,7 +58,7 @@ class SensorsView(Resource):
 @api.route('/<sensorid>/')
 class SensorsView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser', '119user', 'insuser' 'admin', 'superadmin'])
+    @role_require(['homeuser', 'propertyuser', 'stationuser', '119user', 'admin', 'superadmin'])
     @api.doc('获取传感器详情')
     @api.response(200, 'ok')
     def get(self,sensorid):

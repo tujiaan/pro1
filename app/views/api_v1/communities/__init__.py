@@ -33,7 +33,8 @@ class CommunitiesView(Resource):
     @api.route('/showlist')
     class CommunitiesView1(Resource):
         @api.header('jwt', 'JSON Web Token')
-        @api.doc('查询所有的社区名称')  #
+        @ role_require(['admin', '119user', 'superadmin'])
+        @api.doc('查询所有的社区名称')
         @page_format(code=0, msg='ok')
         @api.marshal_with(_community_model, as_list=True)
         @api.response(200, 'ok')
@@ -84,7 +85,7 @@ class CommunitiesView(Resource):
 @api.route('/<communityid>/')
 class CommunityView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin','119user','insuser' ,'superadmin'])
+    @role_require(['admin','119user','propertyuser','stationuser' ,'superadmin'])
     @api.doc('查询特定的小区信息')
     @api.response(200,'ok')
     def get(self,communityid):

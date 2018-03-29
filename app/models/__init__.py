@@ -59,6 +59,7 @@ class HomeUser(db.Model):
     confirm_time=db.Column('confirm_time',db.DateTime, comment='批准时间')
 
 
+
 class Ins(db.Model):
     __tablename__ = 'ins'
 
@@ -275,6 +276,8 @@ class UserAlarmRecord(db.Model):
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='发布人id')
     user = db.relationship('User')
     note=db.Column(db.String(256),comment='备注')
+    origin=db.Column(db.String(256),comment='创建来源')
+    mark=db.Column(db.String(256),comment='来源备注')
     time=db.Column(db.DateTime,default=datetime.datetime.now,comment='时间')
 
 

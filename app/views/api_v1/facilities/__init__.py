@@ -53,7 +53,7 @@ class FacilityDataView(Resource):
     @api.expect(f1_parser)
     @api.response(200,'ok')
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin','insuser'])
+    @role_require(['admin', 'superadmin','propertyuser','stationuser'])
     def put(self,facilityid):
         user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
@@ -65,7 +65,7 @@ class FacilityDataView(Resource):
         if args['facility_picture']:
             facility.facility_picture=args['facility_picture']
         else:pass
-        if 'insuser' not in [i.name for i in roles]:
+        if 'propertyuser' not in [i.name for i in roles] and 'stationuser'not in [i.name for i in roles] :
             db.session.commit()
             return None, 200
         elif facility.ins.admin_user_id == g.user.id and facility.ins.type != 'property':

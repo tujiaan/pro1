@@ -15,7 +15,7 @@ from .models import *
 @api.route('/')
 class UserAlarmRecordsView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin', 'insuser'])
+    @role_require(['admin', 'superadmin', 'propertyuser', 'stationuser'])
     @api.doc('查询用户报警记录列表')
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量','start':'开始时间','end':'结束时间','type':'类型'})

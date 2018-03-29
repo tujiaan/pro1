@@ -1,6 +1,6 @@
 from flask import g, flash, request
 from flask_restplus import Namespace, Resource
-from sqlalchemy import select, text, and_
+from sqlalchemy import select, text, and_, Boolean
 from app.ext import db
 from app.models import User, Role, Ins, Home, HomeUser, UserRole
 from app.utils.auth import user_require
@@ -38,8 +38,8 @@ class RegisterView(Resource):
             user_role3 = UserRole(user_id=u.id, role_id=3, if_usable=False)
             user_role4 = UserRole(user_id=u.id, role_id=4, if_usable=False)
             user_role5 = UserRole(user_id=u.id, role_id=5, if_usable=False)
-            user_role6 = UserRole(user_id=u.id, role_id=6, if_usable=False)
-            db.session.add_all([user_role1, user_role2, user_role3, user_role4, user_role5, user_role6])
+            user_role7 = UserRole(user_id=u.id, role_id=7, if_usable=False)
+            db.session.add_all([user_role1, user_role2, user_role3, user_role4, user_role5, user_role7])
             db.session.commit()
             return {'id': u.id}, 201
 
@@ -73,6 +73,19 @@ class LoginView(Resource):
             return {'jwt': jwt}, 200
         else:return None, 409
 
+@api.route('/login1/')
+class LoginView(Resource):
+    @api.doc('登陆')
+    @api.expect(login_parser1, validate=True)
+    @api.response(201, '登录成功')
+    @api.response(409, '用户不存在')
+    def post(self):
+        args = login_parser1.parse_args()
+        u = User.query.filter(and_(User.username == args.get('username'), User.password == args.get('password'),User.disabled == False)).first()
+        if u is not None:
+            jwt = encode_jwt(user_id=u.id)
+            return {'jwt': jwt}, 200
+        return None, 409
 @api.route('/roles/')
 class RolesView(Resource):
     @user_require
@@ -143,6 +156,75 @@ class ProfileView(Resource):
     @user_require
     def get(self):
         return g.user
+@api.route('/<userid>/profile')
+class UserProfile(Resource):
+    @api.doc('修改用户个人信息')
+    @api.response(200, 'ok')
+    @api.expect(user_parser)
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin','superadmin'])
+    def put(self,userid):
+        user=User.query.get_or_404(userid)
+        args=user_parser.parse_args()
+        user_role=UserRole.query.filter(UserRole.user_id==g.user.id).all()
+        roles=Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+
+        def use(x):
+            if int(x) == 0:
+                return False
+            else:
+                return True
+        if 'admin'in [i.name for i in roles] and 'superadmin'not in [i.name for i in roles]:
+            if g.user.id==userid:
+                if args['username']:
+                    user.username=args['username']
+                else:pass
+                if args['password']:
+                    user.password=args['password']
+                else:pass
+                if args['email']:
+                    user.email=args['email']
+                else:pass
+                db.session.commit()
+                return '修改成功',200
+            else:return '权限不足',201
+        else:
+            if args['username']:
+                user.username = args['username']
+            else:
+                pass
+            if args['password']:
+                user.password = args['password']
+            else:
+                pass
+            if args['email']:
+                user.email = args['email']
+            else:
+                pass
+            if args['disabled']:
+                user.disabled=use(args['disabled'])
+            else:pass
+            db.session.commit()
+            return '修改成功', 200
+
+@api.route('/<userid>/password')
+class UserPassword(Resource):
+    @api.doc('修改用户个人信息')
+    @api.response(200, 'ok')
+    @api.expect(userpassword_parser)
+    @api.header('jwt', 'JSON Web Token')
+    @role_require( ['superadmin'])
+    def put(self,userid):
+        user=User.query.get_or_404(userid)
+        args=userpassword_parser.parse_args()
+        user.password=args['password']
+        db.session.commit()
+        return '修改成功',200
+
+
+
+
+
 
 
 @api.route('/telephone/')
@@ -306,7 +388,7 @@ class UserHomeView(Resource):
         return home, 200
 
 
-@api.route('/<userid>/roles')
+@api.route('/<userid>/auth')
 class UserRolesVsiew(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
@@ -317,9 +399,56 @@ class UserRolesVsiew(Resource):
     @page_range()
     def get(self, userid):
         user = User.query.get_or_404(userid)
-        print(type(user.roles))
-        return user.roles, 200
+        user_role1=UserRole.query.filter(UserRole.user_id ==g.user.id).all()
+        user_role=UserRole.query.filter(UserRole.user_id==user.id).all()
+        roles=Role.query.filter(Role.id.in_(i.role_id for i in user_role1))
+        roles1= Role.query.filter(Role.id.in_(i.role_id for i in user_role))
+        if 'admin' in [i.name for i in (roles1.all()) ] and 'superadmin' in [i.name for i in (roles.all())]:
+            print(roles1.all()[1].if_usable)
+            return roles1, 200
+        else: return roles1, 200
 
+
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
+    @api.doc('授权')
+    @api.expect(role_parser)
+    @api.response(200,'ok')
+    def post(self,userid):
+        user=User.query.get_or_404(userid)
+        args=role_parser.parse_args()
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+        user_role2=UserRole.query.filter(UserRole.user_id).filter(UserRole.role_id==2).first()
+        user_role3= UserRole.query.filter(UserRole.user_id).filter(UserRole.role_id == 3).first()
+        user_role4 = UserRole.query.filter(UserRole.user_id).filter(UserRole.role_id == 4).first()
+        user_role5 = UserRole.query.filter(UserRole.user_id).filter(UserRole.role_id == 5).first()
+        user_role7 = UserRole.query.filter(UserRole.user_id).filter(UserRole.role_id == 7).first()
+        def use(x):
+            if int(x)==0:
+                return False
+            else:return True
+        if args['propertyuser']:
+                print(args['propertyuser'])
+                user_role2.if_usable=use(args['propertyuser'])
+                print(user_role2.if_usable)
+        else:pass
+        if args['stationuser']:
+                user_role3.if_usable=use(args['stationuser'])
+        else:pass
+        if args['119user']:
+              user_role4.if_usable=use(args['119user'])
+        else:pass
+        if 'superadmin' in [i.name for i in roles]:
+            if args['admin']:
+                user_role5.if_usable=use(args['admin'])
+            else:pass
+        else:pass
+        if args['knowledgeadmin']:
+            user_role7.if_usable=use(args['knowledgeadmin'])
+        else:pass
+        db.session.commit()
+        return '授权成功',200
 
 @api.route('/<userid>/roles/<roleid>')
 class UserRoleView(Resource):

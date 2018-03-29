@@ -286,7 +286,7 @@ class HomeInsView(Resource):
 @api.route('/<homeid>/sensors')
 class HomeSensorView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser', '119user', 'insuser' 'admin', 'superadmin'])
+    @role_require(['homeuser', '119user', 'propertyuser', 'stationuser', 'admin', 'superadmin'])
     @api.doc('查询家中的传感器')
     def get(self, homeid):
         user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
