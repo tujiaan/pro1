@@ -266,6 +266,8 @@ class HomeInsView(Resource):
         for i in tuple(query.all()):
             __ = {}
             __['ins_id'] = i.id
+            __['ins_longitude'] = str(i.longitude)
+            __['ins_latitude'] = str(i.latitude)
             __['ins_type'] = i.type
             __['ins_place'] = i.name
             __['distance'] = getDistance(i.latitude,i.longitude,home.latitude,home.longitude)
