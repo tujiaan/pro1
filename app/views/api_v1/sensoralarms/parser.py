@@ -10,6 +10,7 @@ sensoralarms_parser.add_argument('is_timeout',type=str,help='是否超时',requi
 sensoralarms_parser.add_argument('is_confirm',type=str,help='是否确认',required=True,location='form')
 sensoralarms_parser.add_argument('user_id',type=str,help='用户id',required=True,location='form')
 
+
 sensoralarms_parser1=RequestParser()
 sensoralarms_parser1.add_argument('sensor_id',type=str,help='传感器id',required=False,location='form')
 sensoralarms_parser1.add_argument('sensor_type',type=str,help='报警项目',required=False,location='form')
@@ -19,4 +20,6 @@ sensoralarms_parser1.add_argument('confirm_time',type=str,help='确认时间',re
 sensoralarms_parser1.add_argument('is_timeout',type=str,help='是否超时',required=False,location='form')
 sensoralarms_parser1.add_argument('is_confirm',type=str,help='是否确认',required=False,location='form')
 sensoralarms_parser1.add_argument('user_id',type=str,help='用户id',required=False,location='form')
+sensoralarms_parser1.add_argument('note',type=str,help='备注',required=False,location='form')
+
 

@@ -184,8 +184,8 @@ class UserProfile(Resource):
                 user.username = args['username']
             else:
                 pass
-            if args['password']:
-                user.password = args['password']
+            if args['contract_tel']:
+                user.password = args['contract_tel']
             else:
                 pass
             if args['email']:

@@ -92,8 +92,8 @@ class UserAlarmRecordsView(Resource):
         return None,200
 @api.route('/<useralarmrecordid>')
 class UserAlarmRecordView(Resource):
-
     @api.doc('报警确认')
+    @api.expect(useralarmrecord1_parser)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser','119user','admin','superadmin'])
     @api.response(200,'ok')
@@ -101,9 +101,20 @@ class UserAlarmRecordView(Resource):
         user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
-        useralarmrecord.if_confirm=True
+        home=Home.query.get_or_404(useralarmrecord.home_id)
+        args=useralarmrecord1_parser.parse_args()
+        if args['note']:
+            useralarmrecord.note= args['note']
+        else:pass
+        if args['reference_alarm_id']:
+            useralarmrecord.reference_alarm_id=args['reference_alarm_id']
+        else:pass
+        if args['if_confirm']:
+            useralarmrecord.if_confirm=True
+            pass#############待添加逻辑
+        else:pass
         if g.role.name=='homeuser':
-            if g.user.id==useralarmrecord.user_id:
+            if g.user.id==home.admin_user_id:
                 db.session.commit()
                 return None,200
             else:return '权限不足',201

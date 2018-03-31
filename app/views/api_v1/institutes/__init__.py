@@ -6,7 +6,7 @@ from app.models import Ins, User, Facility, Community, FacilityIns, UserRole, Ro
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
-from app.views.api_v1.communities import community_model
+
 from app.views.api_v1.institutes.parser import institutes_parser, institutes_parser1
 
 

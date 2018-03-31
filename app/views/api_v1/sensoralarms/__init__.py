@@ -114,6 +114,10 @@ class SensorAlarmView(Resource):
         user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         sensoralarm=SensorAlarm.query.get_or_404(sensoralarmid)
+        args=sensoralarms_parser1.parse_args()
+        if args['note']:
+            sensoralarm.note=args['note']
+        else:pass
         if g.role.name=='homeuser':
             home=Home.query.get_or_404( sensoralarm.sensor.home_id)
             if home.admin_user_id==g.user.id:
@@ -123,6 +127,7 @@ class SensorAlarmView(Resource):
             else: return '权限不足',301
         else:
             sensoralarm.is_confirm=True
+
             db.session.commit()
             return None, 200
 

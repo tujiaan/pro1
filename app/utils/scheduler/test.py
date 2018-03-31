@@ -14,6 +14,37 @@
 #                 db.session.delete(i.pay)
 #             db.session.delete(i)
 #             db.session.commit()
+import datetime
+
+import requests
+
+from app.models import Sensor
+
+def sendMessage():
+   url=''
+   data=None
+   requests.post(url, data=data)
+
+
+
+
+
+
 
 def test(app):
-    print('aa')
+   sensor=Sensor.query.all()
+   for i in sensor:
+      if i.sensor_switch==True:
+         time=datetime.datetime.now()
+         if i.start_time==time:
+            sendMessage()
+         else:pass
+         if i.end_time==time:
+            sendMessage()
+         else:pass
+      else:pass
+
+
+
+
+

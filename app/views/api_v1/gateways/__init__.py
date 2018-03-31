@@ -9,7 +9,7 @@ from app.views.api_v1.gateways.parser import gateway_parser
 
 api = Namespace('Gateway', description='网关相关接口')
 from .model import *
-@api.route('/<gatewayid>')
+@api.route('/<gatewayid>/')
 class GatewayView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])

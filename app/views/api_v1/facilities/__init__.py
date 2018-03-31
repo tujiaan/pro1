@@ -1,4 +1,4 @@
-from flask import g
+from flask import g, request
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
@@ -124,16 +124,33 @@ class FacilitesInsView(Resource):
         except:return '信息有误',201
 @api.route('/facility-ins/<insid>')
 class FacilitesInsView(Resource):
-    @page_format(code=0,msg='ok')
     @api.doc("查询设施机构关联设施列表")
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @api.marshal_with(facility_model,as_list=True)
     @api.response(200,'ok')
-    @page_range()
     def get(self,insid):
-        facilityins=FacilityIns.query.filter(FacilityIns.ins_id==insid)
-        list=Facility.query.filter(Facility.id.in_(i.facility_id for i in facilityins))
-        return list,200
+        page=request.args.get('page',1)
+        limit=request.args.get('limit',10)
+        query=FacilityIns.query.filter(FacilityIns.ins_id==insid).offset((int(page) - 1) * limit).limit(limit)
+        total=query.count()
+        _=[]
+        for i in query.all():
+            __={}
+            __['id']=i.id
+            __['ins_id']=i.ins_id
+            __['ins_name']=Ins.query.get_or_404(i.ins_id).name
+            __['facility_id']=i.facility_id
+            __['count']=i.count
+            __['expire_time']=str(i.expire_time)
+            _.append(__)
+
+        result={
+            'code':0,
+            'msg':'ok',
+            'result':_
+        }
+        return result,200
+
+
 
 @api.route('/facility-ins/<facilityid>/')
 class FacilitesView(Resource):

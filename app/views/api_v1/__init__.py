@@ -17,6 +17,7 @@ from .tools import api as tool_ns
 from .useralarms import api as useralarmrecord_ns
 from .users import api as user_ns, RegisterView
 
+
 api = flask_restplus.Api(api_bp,
                          title="消防API",
                          description="API",
