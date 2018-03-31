@@ -63,6 +63,7 @@ class LoginView(Resource):
 @api.route('/login1/')
 class LoginView(Resource):
     @api.doc('登陆')
+    @api.header('jwt', 'JSON Web Token')
     @api.expect(login_parser1, validate=True)
     @api.response(201, '登录成功')
     @api.response(409, '用户不存在')
