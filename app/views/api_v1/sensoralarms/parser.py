@@ -2,7 +2,7 @@ from flask_restplus.reqparse import RequestParser
 
 sensoralarms_parser=RequestParser()
 sensoralarms_parser.add_argument('sensor_id',type=str,help='传感器id',required=True,location='form')
-sensoralarms_parser.add_argument('alarm_object',type=str,help='报警项目',required=True,location='form')
+sensoralarms_parser.add_argument('sensor_type',type=str,help='报警项目',required=True,location='form')
 sensoralarms_parser.add_argument('alarm_value',type=str,help='报警值',required=True,location='form')
 sensoralarms_parser.add_argument('alarm_time',type=str,help='报警时间',required=True,location='form')
 sensoralarms_parser.add_argument('confirm_time',type=str,help='确认时间',required=True,location='form')
