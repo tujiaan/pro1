@@ -53,10 +53,11 @@ class LoginView(Resource):
     def post(self):
         args = login_parser.parse_args()
         u = User.query.filter(and_(User.username == args.get('username'), User.password == args.get('password'),User.disabled == False)).first()
+        r=Role.query.filter(Role.id==args.get('role_id'))
         user_role = UserRole.query.filter(UserRole.user_id == u.id).filter(UserRole.if_usable == True).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         if u is not None and args.get('roleid', None) in [i.id for i in roles]:
-            jwt = encode_jwt(user_id=u.id)
+            jwt = encode_jwt(user_id=u.id,role_id=r.id)
             return {'jwt': jwt}, 200
         return None, 409
 @api.route('/login1/')
@@ -67,10 +68,10 @@ class LoginView(Resource):
     @api.response(409, '用户不存在')
     def post(self):
         args = login_parser1.parse_args()
-        u = User.query.filter(and_(User.username == args.get('username'), User.password == args.get('password'),User.disabled == False)).first()
-        if u is not None:
-            jwt = encode_jwt(user_id=u.id)
-            return {'jwt': jwt}, 200
+        user_role=UserRole.query.filter(UserRole.role_id==args.get('role_id')).first()
+        if user_role:
+            jwt = encode_jwt(user_id=g.user.id,role_id=args.get('role_id'))
+            return {'jwt':jwt},200
         else:return None, 409
 
 @api.route('/roles/')
