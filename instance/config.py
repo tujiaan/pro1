@@ -1,12 +1,6 @@
 import os
 import platform
 
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, scoped_session
-
-from app.ext import db
-
 DEBUG = False
 
 # System
@@ -58,3 +52,8 @@ JWT_EXP=60*60*24*30
 JWT_NBF=60
 
 CORS_RESOURCES = {r"/api/*": {"origins": "*"}}
+
+## JPUSH
+
+JPUSH_APP_KEY = 'f49b24f54dfff2cc6454f6ef'
+JPUSH_MASTER_SECRET = 'ba478d742873ce02a89d88d7'
