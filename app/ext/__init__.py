@@ -1,4 +1,4 @@
-
+from .apscheduler import scheduler
 from .cache import cache
 from .cors import cors
 from .csrf import csrf
@@ -14,3 +14,4 @@ def ext_init(app):
     logger.init_app(app)
     cors.init_app(app)
     Jpush.init_app(app)
+    scheduler.init_app(app)
