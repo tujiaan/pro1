@@ -5,7 +5,7 @@ from app.ext import db
 from app.models import User, Role, Ins, Home, HomeUser, UserRole
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
-from app.utils.auth.jwt import encode_jwt
+from app.utils.auth.jwt import encode_jwt, decode_jwt
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.institutes import institute_model
 
@@ -60,7 +60,7 @@ class LoginView(Resource):
             jwt = encode_jwt(user_id=u.id,role_id=r.id)
             return {'jwt': jwt}, 200
         return None, 409
-@api.route('/login1/')
+@api.route('/app/login/')
 class LoginView(Resource):
     @api.doc('登陆')
     @api.header('jwt', 'JSON Web Token')
@@ -69,9 +69,12 @@ class LoginView(Resource):
     @api.response(409, '用户不存在')
     def post(self):
         args = login_parser1.parse_args()
-        user_role=UserRole.query.filter(UserRole.role_id==args.get('role_id')).first()
-        if user_role:
-            jwt = encode_jwt(user_id=g.user.id,role_id=args.get('role_id'))
+        user_role=UserRole.query.filter(UserRole.role_id==args.get('role_id')).all()
+        jwt_str = request.headers.get('jwt', None)
+        identity = decode_jwt(jwt_str)
+        user_id=identity.get('user_id')
+        if user_id in [i.user_id for i in user_role]:
+            jwt=encode_jwt(user_id=user_id ,role_id=args.get('role_id'))
             return {'jwt':jwt},200
         else:return None, 409
 
