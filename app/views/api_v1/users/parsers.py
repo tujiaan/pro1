@@ -1,7 +1,7 @@
 from flask_restplus.reqparse import RequestParser
 
 login_parser = RequestParser()
-login_parser.add_argument('roleid', type=str, help='角色id', required=True, location='form')
+login_parser.add_argument('role_id', type=str, help='角色id', required=True, location='form')
 login_parser.add_argument('username', type=str, help='用户名', required=True, location='form')
 login_parser.add_argument('password', type=str, help='密码', required=True, location='form')
 
