@@ -155,19 +155,18 @@ class UserProfile(Resource):
         args=user_parser.parse_args()
         user_role=UserRole.query.filter(UserRole.user_id==g.user.id).all()
         roles=Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
-
         def use(x):
             if int(x) == 0:
                 return False
             else:
                 return True
-        if 'admin'in [i.name for i in roles] and 'superadmin'not in [i.name for i in roles]:
+        if g.role.name=='admin':
             if g.user.id==userid:
                 if args['username']:
                     user.username=args['username']
                 else:pass
-                if args['password']:
-                    user.password=args['password']
+                if args['contract_tel']:
+                    user.contract_tel=args['contract_tel']
                 else:pass
                 if args['email']:
                     user.email=args['email']
@@ -315,10 +314,11 @@ class user(Resource):
         user = User.query.get_or_404(userid)
         user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role))
-        if 'superadmin' in [i.name for i in roles] or 'admin' not in [i.name for i in roles]:
+        if g.role.name=='superadmin':
             return user, 200
-        else:
+        elif 'admin'in [i.name for i in roles]:
             return '权限不足', 200
+        else:return user,200
 
     @api.header('jwt', 'JSON Web Token')
     @api.doc('根据id删除用户')
@@ -326,15 +326,15 @@ class user(Resource):
     @role_require(['admin', 'superadmin'])
     def delete(self, userid):
         user = User.query.get_or_404(userid)
-
-        user.disabled = True
-        role1 = g.user.roles.all()
-        role2 = user.roles.all()
-        if 'superadmin' in [i.name for i in role1]:
+        userrole=UserRole.query.filter(UserRole.user_id==userid).all()
+        role=Role.query.filter(Role.id.in_(i.role_id for i in userrole)).all()
+        for i in userrole:
+           i.disabled=True
+        if g.role.name=='superadmin':
             db.session.commit()
             return None, 200
-        elif 'admin' in [i.name for i in role1]:
-            if 'admin' not in [i.name for i in role2] and 'superadmin' not in [i.name for i in role2]:
+        elif g.role.name=='admin':
+            if 'admin'not in [i.name for i in role]and 'superadmin'not in [i.name for i in role]:
                 db.session.commit()
                 return None, 200
             else:
@@ -354,7 +354,6 @@ class UserHomeView(Resource):
     @page_range()
     def get(self, userid):
         user = User.query.get_or_404(userid)
-
         return user.ins, 200
 
 
@@ -369,9 +368,8 @@ class UserHomeView(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self, userid):
-        homeuser = HomeUser.query.get_or_404(userid)
-        home = Home.query.filter(str(Home.id) in (homeuser.home_id))
-
+        homeuser = HomeUser.query.filter(HomeUser.user_id==userid).all()
+        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
         return home, 200
 
 
@@ -386,14 +384,13 @@ class UserRolesVsiew(Resource):
     @page_range()
     def get(self, userid):
         user = User.query.get_or_404(userid)
-        user_role1=UserRole.query.filter(UserRole.user_id ==g.user.id).all()
         user_role=UserRole.query.filter(UserRole.user_id==user.id).all()
-        roles=Role.query.filter(Role.id.in_(i.role_id for i in user_role1))
-        roles1= Role.query.filter(Role.id.in_(i.role_id for i in user_role))
-        if 'admin' in [i.name for i in (roles1.all()) ] and 'superadmin' in [i.name for i in (roles.all())]:
-            print(roles1.all()[1].if_usable)
-            return roles1, 200
-        else: return roles1, 200
+        roles= Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+        if g.role.name=='admin':
+            if 'admin'not in [i.name for i in roles] and  'superadmin'not in [i.name for i in roles]:
+                return roles,200
+            else:pass
+        else: return roles, 200
 
 
     @api.header('jwt', 'JSON Web Token')
@@ -404,8 +401,6 @@ class UserRolesVsiew(Resource):
     def post(self,userid):
         user=User.query.get_or_404(userid)
         args=role_parser.parse_args()
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         user_role2=UserRole.query.filter(UserRole.user_id).filter(UserRole.role_id==2).first()
         user_role3= UserRole.query.filter(UserRole.user_id).filter(UserRole.role_id == 3).first()
         user_role4 = UserRole.query.filter(UserRole.user_id).filter(UserRole.role_id == 4).first()
@@ -418,7 +413,6 @@ class UserRolesVsiew(Resource):
         if args['propertyuser']:
                 print(args['propertyuser'])
                 user_role2.if_usable=use(args['propertyuser'])
-                print(user_role2.if_usable)
         else:pass
         if args['stationuser']:
                 user_role3.if_usable=use(args['stationuser'])
@@ -426,7 +420,7 @@ class UserRolesVsiew(Resource):
         if args['119user']:
               user_role4.if_usable=use(args['119user'])
         else:pass
-        if 'superadmin' in [i.name for i in roles]:
+        if g.role.name=='superadmin':
             if args['admin']:
                 user_role5.if_usable=use(args['admin'])
             else:pass
@@ -445,18 +439,16 @@ class UserRoleView(Resource):
     @role_require(['admin', 'superadmin'])
     def post(self, userid, roleid):
         role = Role.query.get_or_404(roleid)
-        user_role = UserRole.query.filter( UserRole.user_id == g.user.id).all()
         user_role1=UserRole.query.filter(and_(UserRole.user_id==userid,UserRole.role_id==roleid)).first()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         if role.name != 'superadmin':
-            if role.name not in ['admin', 'superadmin'] or 'superadmin' in [i.name for i in roles]:
+            if role.name not in ['admin', 'superadmin'] or g.role.name== 'superadmin' :
                 try:
                     user_role1.if_usable = True
                     db.session.commit()
                     return None, 200
                 except:
                     return '该条记录已存在', 400
-            elif role.name == 'admin'  and 'superadmin' in [i.name for i in roles]:
+            elif role.name == 'admin'  and g.role.name=='superadmin':
                 try:
                     user_role1.if_usable = True
                     db.session.commit()
@@ -474,17 +466,15 @@ class UserRoleView(Resource):
     @role_require(['admin', 'superadmin'])
     def delete(self, userid, roleid):
         role = Role.query.get_or_404(roleid)
-        user_role1 = UserRole.query.filter(and_(UserRole.role_id == roleid), UserRole.user_id == userid).first()
-        user_role = UserRole.query.filter( UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
-        if role.name not in ['admin', 'superadmin'] or 'superadmin' in [i.name for i in roles]:
+        user_role1 = UserRole.query.filter(and_(UserRole.role_id == roleid, UserRole.user_id == userid)).first()
+        if role.name not in ['admin', 'superadmin'] or g.role.name=='superadmin' :
             try:
                 user_role1.if_usable = False
                 db.session.commit()
                 return None, 200
             except:
                 return '用户已不具备该角色', 200
-        elif role.name == 'admin' and 'superadmin' in [i.name for i in roles]:
+        elif role.name == 'admin' and g.role.name=='superadmin' :
             try:
                 user_role1.if_usable = False
                 db.session.commit()

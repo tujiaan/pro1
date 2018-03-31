@@ -21,17 +21,23 @@ class SensorsView(Resource):
     def get(self):
         page=request.args.get('page',1)
         limit=request.args.get('limit',10)
-        sensor_type=request.args.get('sensor_type',0)
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+        sensor_type=request.args.get('sensor_type',None)
         homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
         home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
-        if 'homeuser' in [i.name for i in roles] and len(roles) < 2:
-            query = db.session.query(Sensor,Home).join(Home,Home.id==Sensor.home_id).\
-                filter(Sensor.sensor_type==sensor_type).filter(Sensor.home_id.in_(i.id for i in home)).order_by(Sensor.id).offset((int(page) - 1) * limit).limit(limit)
+        if g.role.name=='homeuser':
+            if sensor_type!=None:
+                query = db.session.query(Sensor,Home).join(Home,Home.id==Sensor.home_id).\
+                    filter(Sensor.sensor_type==sensor_type).filter(Sensor.home_id.in_(i.id for i in home)).order_by(Sensor.id)\
+                    .offset((int(page) - 1) * limit).limit(limit)
+            else:  query = db.session.query(Sensor,Home).join(Home,Home.id==Sensor.home_id).\
+                  filter(Sensor.home_id.in_(i.id for i in home)).order_by(Sensor.id)\
+                    .offset((int(page) - 1) * limit).limit(limit)
         else:
-            query = db.session.query(Sensor,Home).join(Home,Home.id==Sensor.home_id).\
-                filter(Sensor.sensor_type==sensor_type).order_by(Sensor.id).offset((int(page) - 1) * limit).limit(limit)
+            if sensor_type!=None:
+                query = db.session.query(Sensor,Home).join(Home,Home.id==Sensor.home_id).\
+                    filter(Sensor.sensor_type==sensor_type).order_by(Sensor.id).offset((int(page) - 1) * limit).limit(limit)
+            else:     query = db.session.query(Sensor,Home).join(Home,Home.id==Sensor.home_id).\
+                   order_by(Sensor.id).offset((int(page) - 1) * limit).limit(limit)
         total=query.count()
         _=[]
         for i in query.all():
@@ -95,7 +101,7 @@ class SensorsView(Resource):
             'data': _
         }
 
-        if 'homeuser'in [i.name for i in roles] and len(roles)<2:
+        if g.role.name=='homeuser':
             if query.first()[2].id not in [i.id for i in home.all()]:
                 return '权限不足',201
             else:return result,200
@@ -110,7 +116,6 @@ class SensorsView(Resource):
         sensor1=Sensor.query.get_or_404(sensorid)
         home=Home.query.filter(sensor1.home_id.in_(Home.id)).first()
         args=sensor_parser.parse_args()
-
         if args['gateway_id']:
             sensor1.gateway_id=args.get('gateway_id')
         else:pass
@@ -155,22 +160,14 @@ class SensorAlarmsView(Resource):
         sensor=Sensor.query.get_or_404(sensorid)
         home=sensor.home
         homeuser=HomeUser.query.filter(HomeUser.home_id==home.id).all()
-        print(homeuser)
-        sensoralarm=SensorAlarm.query
-        if 'homeuser'in [i.name for i in roles] and len(roles)<2:
-            print('*****')
+        sensoralarm=SensorAlarm.query.filter(SensorAlarm.sensor_id==sensorid)
+        if g.roel.name=='homeuser':
             if g.user.id in [i.user_id for i in homeuser ] :
               return sensoralarm,200
-            else: print('%%%%%')
-            pass
-        elif 'property'in [i.name for i in roles] or '119user'in [i.name for i in roles] or 'stationuser'in [i.name for i in roles]:
-           # ins=(Home.query.get_or_404(sensor.home_id)).community.ins
-           # if g.user.id in [i.admin_user_id for i in ins] :
-            print('######')
+            else:  pass
+        elif g.role.name in ['119user','stationuser','propertyuser']:
             return  sensoralarm.filter(SensorAlarm.is_confirm==False).filter( SensorAlarm.is_timeout==True).\
                    filter(SensorAlarm.sensor_id==sensorid)
-           # else:
-           #     pass
         else:
             return sensoralarm,200
 
@@ -187,7 +184,7 @@ class SensorHistoryView(Resource):
         sensor=Sensor.query.get_or_404(sensorid)
         home=sensor.home
         sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensorid).order_by(SensorHistory.time.desc()).first()
-        if 'homeuser'in [i.name for i in roles] and len(roles)<2:
+        if g.role.name=='homeuser':
             if g.user.id in [i.user_id for i in (HomeUser.query.filter(HomeUser.home_id==home.id))]:
                 return  sensorhistory, 200
             else:return '权限不足',201

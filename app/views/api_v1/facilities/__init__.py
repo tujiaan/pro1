@@ -55,9 +55,9 @@ class FacilityDataView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin','propertyuser','stationuser'])
     def put(self,facilityid):
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         facility = Facility.query.get_or_404(facilityid)
+        facilityins=FacilityIns.query.filter(FacilityIns.facility_id==facilityid).first()
+        ins=Ins.query.filter(Ins.id==facilityins.ins_id).first()
         args = facility_parser1.parse_args()
         if args['facility_name']:
             facility.facility_name=args['facility_name']
@@ -65,14 +65,15 @@ class FacilityDataView(Resource):
         if args['facility_picture']:
             facility.facility_picture=args['facility_picture']
         else:pass
-        if 'propertyuser' not in [i.name for i in roles] and 'stationuser'not in [i.name for i in roles] :
-            db.session.commit()
-            return None, 200
-        elif facility.ins.admin_user_id == g.user.id and facility.ins.type != 'property':
-            db.session.commit()
-            return None, 200
-        else:
-            return '权限不足', 301
+        if g.role.name not in['propertyuser','stationuser']:
+           db.session.commit()
+           return'修改成功',200
+        elif g.user.id==ins.admin_user_id:
+                db.session.commit()
+                return '修改成功', 200
+        else: return'权限不足',201
+
+
 
     @api.doc('删除设施')
     @api.response(200, 'ok')
@@ -118,7 +119,7 @@ class FacilitesInsView(Resource):
             ins=Ins.query.get_or_404(facilityins.ins_id)
             facility=Facility.query.get_or_404(facilityins.facility_id)
             db.session.add(facilityins)
-            db.session.commit()
+            db.session.commit()################################################可能有问题###################
             return  None,200
         except:return '信息有误',201
 @api.route('/facility-ins/<insid>')
@@ -137,25 +138,20 @@ class FacilitesInsView(Resource):
 @api.route('/facility-ins/<facilityid>/')
 class FacilitesView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['insuser','admin', 'superadmin'])
+    @role_require(['propertyuser','stationuser','admin', 'superadmin'])
     @api.doc('删除机构设施关联')
     @api.response(200, 'ok')
     def delete(self,facilityid):
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
-        facility=FacilityIns.query.filter(FacilityIns.facility_id==facilityid).first()
-        db.session.delete(facility)
-        if 'insuser'not in [i.name for i in g.user.roles.all()]:
+        facilityins=FacilityIns.query.filter(FacilityIns.facility_id==facilityid).first()
+        ins=Ins.query.filter(Ins.id==facilityins.ins_id).first()
+        db.session.delete(facilityins)
+        if g.role.name not in ['propertyuser','stationuser']:
             db.session.commit()
             return None,200
-        elif'admin'not in [i.name for i in roles] and 'superadmin'not in [i.name for i in roles()]:
-                if g.user.id==facility.ins.admin_user_id:
-                    db.session.commit()
-                    return None, 200
-                else :return '权限不足',201
-        else:
+        elif g.user.id==ins.admin_user_id:
             db.session.commit()
-            return None, 200
+            return'删除成功',200
+        else:return'权限不足',201
 
 
 
@@ -164,7 +160,7 @@ class FacilitesView(Resource):
     @api.response(200,'ok')
     @api.expect(facility_parser1)
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin','insuser'])
+    @role_require(['admin', 'superadmin','propertyuser','stationuser'])
     def put(self,facilityid):
         args=facility_parser1.parse_args()
         facilityins=FacilityIns.query.filter(FacilityIns.facility_id==facilityid).first()
@@ -177,13 +173,7 @@ class FacilitesView(Resource):
         if args.get('expire_time'):
             facilityins.expire_time=args.get('expire_time')
         else:pass
-        if 'insuser'not in [i.namme for i in g.user.role]:
-            db.session.commit()
-            return None,200
-        elif facilityins.ins.admin_user_id==g.user.id:
-            db.session.commit()
-            return None, 200
-        else:return '权限不足',301
+       ##############################有问题########################
 
 
 

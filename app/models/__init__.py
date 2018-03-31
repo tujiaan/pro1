@@ -206,7 +206,7 @@ class Sensor(db.Model):
     gateway_id = db.Column(db.String(24), db.ForeignKey('gateway.id'), comment='网关id')
     gateway = db.relationship('Gateway')
     sensor_place = db.Column(db.String(255), comment='位置')
-    sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾 1.温度 2.燃气 3.电流,4)')
+    sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾1.温度 2.燃气 3.电流,4)')
     start_time=db.Column(db.DateTime,comment='开始时间')
     end_time=db.Column(db.DateTime,comment='结束时间')
     max_value=db.Column(db.Float,comment='阈值')
@@ -232,7 +232,8 @@ class SensorAlarm(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True, comment='')
     sensor_id = db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='网关id')
     sensor = db.relationship('Sensor')
-    note=db.Column(db.String(255),comment='内容')
+    gateway_id=db.Column(db.String(24),db.ForeignKey('gateway.id'),comment='关联网关id')
+    note=db.Column(db.String(255),comment='报警内容')
     sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾 1.温度 2.燃气 3.电流,4)')
     var_type=db.Column(db.String(24),comment='变量类型')
     unit = db.Column(db.String(24), comment='变量单位')
@@ -268,17 +269,29 @@ class UserAlarmRecord(db.Model):
     __tablename__ = 'user_alarm_record'
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    type = db.Column(db.Integer, default=0, comment='信息类型,(0:119,1：疏散,2：传感器，3：求救)')
+    type = db.Column(db.Integer, default=0, comment='参考创建信息类型 (0,119 1,疏散,2,传感器，3,求救)')
     content = db.Column(db.String(50), comment='报警内容')
-    if_confirm=db.Column(db.Boolean,default=False,comment='是否确认')
-    home_id = db.Column(db.String(24), db.ForeignKey('home.id'))
+    if_confirm=db.Column(db.Boolean,default=False,comment='是否关闭')
+    home_id = db.Column(db.String(24), db.ForeignKey('home.id'),comment='报警关联家庭id')
     home = db.relationship('Home')
+    reference_alarm_id=db.Column(db.String(24),comment='参考创建信息id')
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='发布人id')
     user = db.relationship('User')
     note=db.Column(db.String(256),comment='备注')
     origin=db.Column(db.String(256),comment='创建来源')
     mark=db.Column(db.String(256),comment='来源备注')
-    time=db.Column(db.DateTime,default=datetime.datetime.now,comment='时间')
+    create_time=db.Column(db.DateTime,default=datetime.datetime.now,comment='创建时间')
+
+class AlarmHandle(db.Model):
+    __tablename__='alarmhandle'
+    id = db.Column(db.String(24), default=objectid, primary_key=True)
+    type=db.Column(db.Integer,comment='信息类型(0,传感器报警 1，用户报警)')
+    handle_type=db.Column(db.Integer,comment='操作类型(100,系统新创建 101,系统参考传感器报警创建 102,系统参考用户报警创建 '
+        '103,系统修改 104,系统超时关闭 200,用户新创建 201,用户参考传感器报警创建 202,用户参考用户报警创建 203,用户修改 204,用户超时关闭 205，用户关闭)')
+    reference_message_id=db.Column(db.String(24),comment='参考信息id')
+    user_id=db.Column(db.String(24),comment='处理人员id')#不关联用户，可以写入系统操作
+    handle_time=db.Column(db.DateTime,comment='操作时间')
+    note=db.Column(db.String(255),comment='操作备注')
 
 
 

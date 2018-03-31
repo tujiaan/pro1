@@ -149,13 +149,13 @@ class Upload(Resource):
         date = now.strftime('%Y%m%d')
         filename = now.strftime('%H%M%S') + secure_filename(quote(file.filename))
         path = current_app.config.get('UPLOAD_FOLDER', None) + date
-        url = current_app.config.get('UPLOADED_URL', None) + date + '/' + filename
+        src = current_app.config.get('UPLOADED_URL', None) + date + '/' + filename
         if not os.path.exists(path):
             os.makedirs(path)
         file.save(path + '/' + filename)
         result={
             'code':0,
             'message':'ok',
-            'data':{'url':url}
+            'data':{'src':src}
         }
         return result, 200
