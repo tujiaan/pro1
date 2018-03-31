@@ -18,6 +18,7 @@ def role_function(r):
                 try:
                     identity = decode_jwt(jwt_str)
                     g.user = User.query.get(identity['user_id']) if identity['user_id'] else None
+                    g.role= Role.query.get(identity['role_id']) if identity['role_id'] else None
 
                 except Exception as e:
                     print(e)
@@ -32,11 +33,9 @@ def role_function(r):
             for role in roles:
                 _ = Role.query.filter_by(name=role).first()
                 _ and r_list.append(_)
-            user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-            g.user.roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role))
-            user_roles = tuple(g.user.roles)
+
             for i in r_list:
-                if i in user_roles:
+                if  i==g.role:
                     return method(*args, **kwargs)
             else:
                 return {'message': '权限不足'}, 402

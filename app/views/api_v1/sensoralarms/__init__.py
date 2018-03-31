@@ -4,7 +4,7 @@ from flask import g, request
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import SensorAlarm, Home, Community, HomeUser, UserRole, Role
+from app.models import SensorAlarm, Home, Community, HomeUser, UserRole, Role, Sensor
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms.parser import sensoralarms_parser, sensoralarms_parser1
@@ -23,17 +23,27 @@ class SensorAlarmsView(Resource):
         limit=request.args.get('limit',10)
         start=request.args.get('star',2018-1-1)
         end=request.args.get('end',datetime.datetime.now())
-        type=request.args.get('type',0)
+        type=request.args.get('type',None)
         user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
         home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
-        if 'homeuser' in [i.name for i in roles] and len(roles) < 2:
-            query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
-                .filter(SensorAlarm.sensor_type==type).filter(SensorAlarm.sensor_id.in_(i.first().id for i in ([i.sensor for i in home]))).order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+        sensors=Sensor.query.filter(Sensor.home_id.in_(i.id for i in home)).all()
+        if g.role.name=='homeuser':
+            if type!=None:
+                query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
+                    .filter(SensorAlarm.sensor_type==type).filter(SensorAlarm.sensor_id.in_( i.id  for i in sensors)).\
+                    order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+            else:query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
+                    .filter(SensorAlarm.sensor_id.in_( i.id  for i in sensors)).\
+                    order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
         else:
-            query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
-                .filter(SensorAlarm.sensor_type==type).order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+            if type!=None:
+                query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
+                    .order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+            else:
+                query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
+                    .filter(SensorAlarm.sensor_type==type).order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
 
         total=query.count()
         _=[]
@@ -104,7 +114,7 @@ class SensorAlarmView(Resource):
         user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         sensoralarm=SensorAlarm.query.get_or_404(sensoralarmid)
-        if 'homeuser'in [i.name for i in roles] and len(roles)<2:
+        if g.role.name=='homeuser':
             home=Home.query.get_or_404( sensoralarm.sensor.home_id)
             if home.admin_user_id==g.user.id:
                 sensoralarm.is_confirm=True

@@ -1,13 +1,13 @@
 from flask_restplus.reqparse import RequestParser
 
 login_parser = RequestParser()
-login_parser.add_argument('roleid', type=str, help='角色id', required=True, location='form')
+login_parser.add_argument('role_id', type=str, help='角色id', required=True, location='form')
 login_parser.add_argument('username', type=str, help='用户名', required=True, location='form')
 login_parser.add_argument('password', type=str, help='密码', required=True, location='form')
 
 login_parser1 = RequestParser()
-login_parser1.add_argument('username', type=str, help='用户名', required=True, location='form')
-login_parser1.add_argument('password', type=str, help='密码', required=True, location='form')
+login_parser1.add_argument('role_id', type=str, help='角色id', required=True, location='form')
+
 
 register_parser = RequestParser()
 register_parser.add_argument('username', type=str, help='用户名', required=True, location='form')
@@ -33,7 +33,7 @@ username_parser.add_argument('username',type=str,help='新用户名',location='f
 
 user_parser=RequestParser()
 user_parser.add_argument('username',type=str,help='用户名',required=False,location='form')
-user_parser.add_argument('password',type=str,help='密码',required=False,location='form')
+user_parser.add_argument('contract_tel',type=str,help='电话',required=False,location='form')
 user_parser.add_argument('email',type=str,help='邮箱',required=False,location='form')
 user_parser.add_argument('disabled',type=str,help='是否可用',required=False,location='form')
 

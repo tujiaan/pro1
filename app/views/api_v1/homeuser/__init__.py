@@ -27,11 +27,8 @@ class HomeUsersView(Resource):
     @page_range()
     def get(self):
         list = HomeUser.query
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         home=Home.query.filter(Home.admin_user_id==g.user.id)
-        if 'admin'  in [i.name for i in roles] or 'superadmin' in [i.name for i in roles]:
-
+        if g.role.name in ['admin','superadmin']:
             return list, 200
         else:
             return list.filter(

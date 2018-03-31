@@ -90,9 +90,7 @@ class CommunityView(Resource):
     @api.response(200,'ok')
     def get(self,communityid):
         community=Community.query.get_or_404(communityid)
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
-        ins=community.ins
+        ins=Ins.query.filter(Ins.id._in(i.id for i in community.ins)).all()
         _=[ ]
         for i in ins:
             __={}
@@ -112,13 +110,12 @@ class CommunityView(Resource):
             'ins_data':_
 
         }
+        if g.role.name=='propertyuser'or g.role.name=='stationuser':
+            if g.user.id in[i.admin_user_id for i in ins]:
+                return community,200
+            else:return'权限不足',201
+        else:return community,200
 
-        if 'insuser'not in [i.name for i in roles]:
-            return community, 200
-        elif g.user.id==community.ins.admin_user_id:
-            return community, 200
-        else:
-            return None, 200
 
 
     @api.doc('更新社区的信息')
@@ -133,10 +130,10 @@ class CommunityView(Resource):
             community.name = args.get('name')
         else:
             pass
-        if 'ins_id' in args and args['ins_id']:
-            community.ins_id = args.get('ins_id')
-        else:
-            pass
+        # if 'ins_id' in args and args['ins_id']:
+        #     community.ins_id = args.get('ins_id')
+        # else:
+        #     pass
         if 'longitude' in args and args['longitude']:
             community.longitude = args.get('longitude')
         else:

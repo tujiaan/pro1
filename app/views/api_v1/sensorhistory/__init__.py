@@ -18,12 +18,10 @@ class SensorHistoriesView(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
         home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
         sensor = Sensor.query.filter(Sensor.home_id.in_(i.id for i in home)).all()
-        if 'homeuser' in [i.name for i in roles] and len(roles)<2 :
+        if g.role.name=='homeuser':
             return SensorHistory.query.filter(SensorHistory.sensor_id.in_(i.id for i in sensor)),200
         else: return SensorHistory.query,200
 
@@ -44,7 +42,7 @@ class SensorHistoryView(Resource):
         home=Home.query.filter(Home.sensor.contains(sensor)).first()
         sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensorid)
         homeuser=HomeUser.query.filter(HomeUser.home_id==home.id)
-        if 'homeuser'in [i.name for i in roles] and len(roles)<2:
+        if g.role.name=='homeuser':
             if g.user.id in [i.user_id for i in homeuser]:
                 return sensorhistory, 200
             else: pass

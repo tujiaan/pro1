@@ -26,10 +26,8 @@ class InstitutesViews(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         list = Ins.query
-        if 'admin'in [i.name for i in roles] or 'superadmin'in [i.name for i in roles]:
+        if g.role.name in ['admin','superadmin']:
             return list, 200
         else:
             return list.filter(Ins.admin_user_id == g.user.id)
@@ -91,13 +89,11 @@ class InstituteView(Resource):
     def put(self,insid):
         institute = Ins.query.get_or_404(insid)
         args = institutes_parser1.parse_args()
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         if 'name'in args and args['name'] :
             institute.name=args['name']
         else:pass
         if 'admin_user_id'in args and args['admin_user_id']:
-            if 'admin' in [i.name for i in roles] or 'superadmin' in [i.name for i in roles]:
+            if g.role.name in ['admin','superadmin']:
                 institute.admin_user_id=args['admin_user_id']
             else: pass
         else:pass
@@ -124,11 +120,12 @@ class InstituteView(Resource):
                 institute.ins_picture = args['ins_picture'].read()
             else:pass
         except:pass
-        if 'propertyuser' in [i.name for i in roles] or'stationuser' in [i.name for i in roles]:
+        if g.role.name in ['propertyuser','stationuser']:
             if institute.admin_user_id == g.user.id:
                 db.session.commit()
                 return institute,200
-        elif 'admin' in [i.name for i in roles] or 'superadmin' in [i.name for i in roles]:
+            else:return '权限不足', 301
+        elif g.role.name in ['admin','superadmin']:
             db.session.commit()
             return institute, 200
         else:return'权限不足',301
@@ -140,7 +137,6 @@ class InstituteView(Resource):
     def delete(self,insid):
         institute = Ins.query.get_or_404(insid)
         facilityins=FacilityIns.query.filter(FacilityIns.ins_id==insid).all()
-
         for i in facilityins:
          db.session.delete(i)
         list=institute.user
@@ -174,12 +170,10 @@ class InsUserView(Resource):
     @role_require(['propertyuser','stationuser', 'admin', 'superadmin'])
     @api.response(200,'ok')
     def post(self,insid,userid):
-     user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-     roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
      ins=Ins.query.get_or_404(insid)
      user=User.query.get_or_404(userid)
      if user not in ins.user:
-         if g.user.id == ins.admin_user_id or 'admin' in [i.name for i in roles] or 'superadmin' in [i.name for i in roles] :
+         if g.user.id == ins.admin_user_id or g.role.name in ['admin','admin'] :
                 ins.user.append(user)
                 db.session.commit()
                 return '添加成功',200
@@ -197,7 +191,7 @@ class InsUserView(Resource):
       ins = Ins.query.get_or_404(insid)
       user = User.query.get_or_404(userid)
       if  user in ins.user:
-          if g.user.id == ins.admin_user_id or 'admin' in [i.name for i in roles] or 'superadmin' in [i.name for i in roles]:
+          if g.user.id == ins.admin_user_id or g.role.name in ['admin', 'admin']:
                 ins.user.remove(user)
                 db.session.commit()
                 return '删除成功', 200
@@ -214,8 +208,8 @@ class InsCommunityView(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self,insid):
-        community=Community.query.filter(Community.ins_id==insid)
-        return community,200
+        ins=Ins.query.get_or_404(insid)
+        return ins.community,200
 
 
 
