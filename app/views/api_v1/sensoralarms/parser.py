@@ -12,7 +12,7 @@ sensoralarms_parser.add_argument('user_id',type=str,help='用户id',required=Tru
 
 sensoralarms_parser1=RequestParser()
 sensoralarms_parser1.add_argument('sensor_id',type=str,help='传感器id',required=False,location='form')
-sensoralarms_parser1.add_argument('alarm_object',type=str,help='报警项目',required=False,location='form')
+sensoralarms_parser1.add_argument('sensor_type',type=str,help='报警项目',required=False,location='form')
 sensoralarms_parser1.add_argument('alarm_value',type=str,help='报警值',required=False,location='form')
 sensoralarms_parser1.add_argument('alarm_time',type=str,help='报警时间',required=False,location='form')
 sensoralarms_parser1.add_argument('confirm_time',type=str,help='确认时间',required=False,location='form')

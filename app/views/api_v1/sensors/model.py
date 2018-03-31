@@ -9,5 +9,6 @@ sensor_model = api.model('SensorModel', {
     'home_id':fields.String,
     'start_time':fields.DateTime,
     'end_time':fields.DateTime,
-    'max_value':fields.Float
+    'max_value':fields.Float,
+    'sensor_switch':fields.String
 })

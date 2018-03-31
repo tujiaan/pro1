@@ -138,6 +138,9 @@ class SensorsView(Resource):
         if args['max_value']:
             sensor1.max_value=args.get('max_value')
         else:pass
+        if args['sensor_switch']:
+            sensor1.sensor_switch=True
+        else:pass
         if g.user.id==home.admin_user_id:
             db.session.commit()
             return None,200
@@ -155,13 +158,11 @@ class SensorAlarmsView(Resource):
     @api.response(200,'ok')
     @page_range()
     def get(self,sensorid):
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         sensor=Sensor.query.get_or_404(sensorid)
         home=sensor.home
         homeuser=HomeUser.query.filter(HomeUser.home_id==home.id).all()
         sensoralarm=SensorAlarm.query.filter(SensorAlarm.sensor_id==sensorid)
-        if g.roel.name=='homeuser':
+        if g.role.name=='homeuser':
             if g.user.id in [i.user_id for i in homeuser ] :
               return sensoralarm,200
             else:  pass
@@ -190,7 +191,6 @@ class SensorHistoryView(Resource):
             else:return '权限不足',201
 
         else:
-            print(sensorhistory)
             return sensorhistory, 200
 
 

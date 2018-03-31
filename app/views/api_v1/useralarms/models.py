@@ -14,7 +14,9 @@ useralarmrecord_model=api.model('UserAlarmRecord',{
     'detail_address':fields.String,
     'user_id':fields.String,
     'user_name':fields.String,
-    'contract_tel':fields.String
+    'contract_tel':fields.String,
+    'if_confirm':fields.String
 
 
 })
+

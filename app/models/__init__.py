@@ -208,6 +208,7 @@ class Sensor(db.Model):
     sensor_place = db.Column(db.String(255), comment='位置')
     sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾1.温度 2.燃气 3.电流,4)')
     start_time=db.Column(db.DateTime,comment='开始时间')
+    sensor_switch=db.Column(db.Boolean,default=False,comment='传感器开关')
     end_time=db.Column(db.DateTime,comment='结束时间')
     max_value=db.Column(db.Float,comment='阈值')
     alarms_history = db.relationship('SensorAlarm', lazy='dynamic')
@@ -239,10 +240,10 @@ class SensorAlarm(db.Model):
     unit = db.Column(db.String(24), comment='变量单位')
     alarm_value = db.Column(db.String, comment='报警数值')
     alarm_time = db.Column(db.DateTime,default=datetime.datetime.now, comment='报警时间')
-    confirm_time = db.Column(db.DateTime, comment='确认时间')
+    #confirm_time = db.Column(db.DateTime, comment='确认时间')
     is_timeout = db.Column(db.Boolean, default=False, comment='是否超时')
-    user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='确认人id')
-    user = db.relationship('User')
+   # user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='确认人id')
+   # user = db.relationship('User')
     is_confirm = db.Column(db.Boolean, default=False, comment='是否确认')
 
 
@@ -280,7 +281,7 @@ class UserAlarmRecord(db.Model):
     note=db.Column(db.String(256),comment='备注')
     origin=db.Column(db.String(256),comment='创建来源')
     mark=db.Column(db.String(256),comment='来源备注')
-    create_time=db.Column(db.DateTime,default=datetime.datetime.now,comment='创建时间')
+    time=db.Column(db.DateTime,default=datetime.datetime.now,comment='创建时间')
 
 class AlarmHandle(db.Model):
     __tablename__='alarmhandle'
