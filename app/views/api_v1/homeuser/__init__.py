@@ -96,15 +96,19 @@ class HomeUserView2(Resource):
 
     @api.doc('删除家庭成员记录')
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser'])
+    @role_require(['homeuser','admin','superadmin'])
     @api.response(200, 'ok')
     def delete(self, homeid, userid):
         home = Home.query.get_or_404(homeid)
-        if g.user.id == home.admin_user_id:
-            homeuser = HomeUser.query.filter(HomeUser.home_id == homeid ).filter( HomeUser.user_id == userid).first()
-            db.session.delete(homeuser)
-            db.session.commit()
-            return '删除成功', 200
+        homeuser = HomeUser.query.filter(HomeUser.home_id == homeid).filter(HomeUser.user_id == userid).first()
+        db.session.delete(homeuser)
+        if g.role.name=='homeuser':
+            if g.user.id == home.admin_user_id:
+                db.session.commit()
+                return '删除成功', 200
+            else:
+                return '权限不足', 201
         else:
-            return '权限不足', 201
+            db.session.commit()
+            return'删除成功',200
 

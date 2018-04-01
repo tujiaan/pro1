@@ -1,10 +1,10 @@
 import base64
 
-from flask import g
+from flask import g, request
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Community, Ins, Home, UserRole, Role
+from app.models import Community, Ins, Home, UserRole, Role, Location
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -19,15 +19,38 @@ from app.views.api_v1.communities.models import community_model, _community_mode
 class CommunitiesView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', '119user','superadmin'])
-    @api.doc('查询所有的社区列表')#
-    @page_format(code=0,msg='ok')
-    @api.marshal_with(community_model,as_list=True)
+    @api.doc('查询所有的社区列表')
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @page_range()
     def get(self):
-        list=Community.query
-        return list,200
+        page = request.args.get('page', 1)
+        limit = request.args.get('limit', 10)
+        query=Community.query.order_by(Community.id).offset((int(page) - 1) * limit).limit(limit)
+        total=query.count()
+        _=[]
+        for i in query.all():
+            __={}
+            __['id']=i.id
+            __['name']=i.name
+            __['detail_address']=i.detail_address
+            __['save_distance']=i.save_distance
+            __['eva_distance']=i.eva_distance
+            __['longitude']=i.longitude
+            __['latitude']=i.latitude
+            __['location_id']=i.location_id
+            __['location_district']=Location.query.get_or_404(i.location_id).district
+            __['community_picture']=base64.b64encode(i.community_picture).decode()
+            _.append(__)
+            result={
+                'code':0,
+                'message':'ok',
+                'count':total,
+                'data':_
+
+            }
+            return result,200
+
+
 
 
     @api.route('/showlist')
