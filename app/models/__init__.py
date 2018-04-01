@@ -195,7 +195,6 @@ class Sensor(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     gateway_id = db.Column(db.String(24), db.ForeignKey('gateway.id'), comment='网关id')
     gateway = db.relationship('Gateway')
-    sensor_switch=db.Column(db.Boolean,default=False,comment='传感器开关')
     sensor_place = db.Column(db.String(255), comment='位置')
     sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾 1.温度 2.燃气 3.电流)')
     start_time=db.Column(db.DateTime,comment='开始时间')
