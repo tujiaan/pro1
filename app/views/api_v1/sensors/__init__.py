@@ -82,7 +82,6 @@ class SensorsView(Resource):
         home=Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
         query=db.session.query(Sensor,SensorHistory,Home).join(SensorHistory,Sensor.id==SensorHistory.sensor_id).\
             join(Home,Sensor.home_id==Home.id).filter(Sensor.id==sensorid)
-        print(query.first())
         total=query.count()
         _=[]
         for i in [query.first()]:

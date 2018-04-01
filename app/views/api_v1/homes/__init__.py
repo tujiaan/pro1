@@ -37,7 +37,7 @@ class HomesView(Resource):
     def get(self):
         list=Home.query
         homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id)
-        if  g.user.name=='homeuser':
+        if  g.role.name=='homeuser':
             return list.filter(g.user.id.in_(homeuser.user_id))
 
         else: return list,200

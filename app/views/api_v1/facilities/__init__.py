@@ -84,8 +84,10 @@ class FacilityDataView(Resource):
         facilityins=FacilityIns.query.filter(FacilityIns.facility_id==facilityid).first()
         knowledge=facility.knowledge
         db.session.delete(facilityins)
+        db.session.commit()
         for i in knowledge:
             FacilityKnowledgeView.delete(self,facilityid,i.id)
+            db.session.commit()
         db.session.delete(facility)
         db.session.commit()
         return None,200

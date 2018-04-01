@@ -23,9 +23,27 @@ from app.ext import db
 from app.models import Sensor
 
 def sendMessage(url):
-   data={}
-   r=requests.post(url, data=data)
-   return None,200
+    headers = {
+        'FromAgent': 'third',
+        'appKey': 'cfjbmqCwh50dShvDGhytug==',
+        'appSecret': '9r2OQ+Z2j6QDdupm1mo8yQ=='
+    }
+    data = {
+        'switch': [True]
+    }
+    r=requests.post(url, headers=headers,data=data)
+    return None,200
+def sendMessage2(url):
+    headers = {
+        'FromAgent': 'third',
+        'appKey': 'cfjbmqCwh50dShvDGhytug==',
+        'appSecret': '9r2OQ+Z2j6QDdupm1mo8yQ=='
+    }
+    data = {
+        'switch': [False]
+    }
+    r=requests.post(url, headers=headers,data=data)
+    return None,200
 
 
 
@@ -44,8 +62,8 @@ def test(app):
                 sendMessage(url)
              else:pass
              if i.end_time==time:
-                sendMessage(url)
-                i.sensor_switch=True
+                sendMessage2(url)
+                i.sensor_switch=False
                 db.session.commit()
              else:pass
           else:pass

@@ -17,7 +17,7 @@ class SensorAlarmsView(Resource):
     @role_require(['homeuser','admin','superadmin'])
     @api.doc('查询传感器报警记录列表')
     @api.response(200,'ok')
-    @api.doc(params={'page': '页数', 'limit': '数量','start':'开始时间见','end':'结束时间','type':'报警项目'})
+    @api.doc(params={'page': '页数', 'limit': '数量','start':'开始时间见','end':'结束时间','type':'传感器类型'})
     def get(self):
         page=request.args.get('page',1)
         limit=request.args.get('limit',10)
@@ -39,11 +39,11 @@ class SensorAlarmsView(Resource):
                     order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
         else:
             if type!=None:
-                query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
+                query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end)).filter(SensorAlarm.sensor_type==type)\
                     .order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
             else:
                 query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
-                    .filter(SensorAlarm.sensor_type==type).order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+                    .order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
 
         total=query.count()
         _=[]

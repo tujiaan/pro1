@@ -1,5 +1,6 @@
 import datetime
 
+import math
 from flask import g, request
 from flask_restplus import Namespace, Resource
 from sqlalchemy import and_
@@ -10,7 +11,6 @@ from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.utils.myutil.pushmessage import JPush2
 from app.views.api_v1.useralarms.parser import useralarmrecord_parser, useralarmrecord1_parser, useralarmrecord2_parser
-
 api=Namespace('UserAlarmsRecords',description='用户报警记录相关操作')
 from .models import *
 @api.route('/')
@@ -26,8 +26,8 @@ class UserAlarmRecordsView(Resource):
         start = request.args.get('start', 2018-1-1 )
         end = request.args.get('end', datetime.datetime.now().isoformat())
         type = request.args.get('type', None)
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+        myhomeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
+        myhome=Home.query.filter(Home.id.in_(i.home_id for i in myhomeuser)).all()
         homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
         home=Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
         if g.role.name=='homeuser':
@@ -55,6 +55,15 @@ class UserAlarmRecordsView(Resource):
             if abs((time-datetime.datetime.now()).seconds)<60:
                 return '未超时'
             else:return '超时'
+        def getDistance(lat0, lng0, lat1, lng1):
+            lat0 = math.radians(lat0)
+            lat1 = math.radians(lat1)
+            lng0 = math.radians(lng0)
+            lng1 = math.radians(lng1)
+            dlng = math.fabs(lng0 - lng1)
+            dlat = math.fabs(lat0 - lat1)
+            miles = ((69.1 * dlat) ** 2 + (53.0 * dlng) ** 2) ** .5
+            return miles * 1.6092953
         _ = []
         for i in query.all():
             __ = {}
@@ -70,7 +79,17 @@ class UserAlarmRecordsView(Resource):
             __['user_id']=i[2].id
             __['user_name']=i[2].username
             __['contract_tel']=i[2].contract_tel
-            _.append(__)
+            if g.role.name!='homeuser':
+             _.append(__)
+            else:
+                home=Home.query.get_or_404(i[1].id)
+                for i in myhome:
+                    if getDistance(i.community.latitude, i.community.longitude, home.latitude, home.longitude)<i.community.\
+                        eva_distance or getDistance(i.community.latitude, i.community.longitude, home.latitude, home.longitude)\
+                        <i.community.save_distance:
+                        _.append(__)
+                    else:pass
+
         result = {
             'code': 200,
             'msg': 'ok',
@@ -134,9 +153,12 @@ class UserAlarmRecordView(Resource):
                 JPush2.post(self,alert)
             else:pass
         else:pass
-
-
-
+    @api.doc('查询单条用户报警记录')
+    @api.response(200, 'ok')
+    @api.marshal_with(useralarmrecord_model,as_list=False)
+    def get(self,useralarmrecordid):
+        useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
+        return useralarmrecord,200
 
     @api.doc('删除用户报警记录')
     @api.header('jwt', 'JSON Web Token')
