@@ -105,7 +105,7 @@ class SensorAlarmView(Resource):
         db.session.delete(sensoralarm)
         db.session.commit()
         return None,200
-    @api.doc('更新传感器的报警记录/报警确认')
+    @api.doc('更新传感器的报警记录')
     @api.expect(sensoralarms_parser1,validate=True)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser','119user','admin','superadmin'])
@@ -130,6 +130,14 @@ class SensorAlarmView(Resource):
 
             db.session.commit()
             return None, 200
+
+    @api.doc('发送报警')
+    @api.expect(sensoralarms_parser1, validate=True)
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser', '119user', 'admin', 'superadmin'])
+    @api.response(200, 'ok')
+    def post(self):
+        pass
 
 
 

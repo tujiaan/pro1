@@ -8,7 +8,8 @@ from app.ext import db
 from app.models import UserAlarmRecord, Community, Home, User, Sensor, UserRole, Role, HomeUser
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
-from app.views.api_v1.useralarms.parser import useralarmrecord_parser, useralarmrecord1_parser
+from app.utils.myutil.pushmessage import JPush2
+from app.views.api_v1.useralarms.parser import useralarmrecord_parser, useralarmrecord1_parser, useralarmrecord2_parser
 
 api=Namespace('UserAlarmsRecords',description='用户报警记录相关操作')
 from .models import *
@@ -92,7 +93,7 @@ class UserAlarmRecordsView(Resource):
         return None,200
 @api.route('/<useralarmrecordid>')
 class UserAlarmRecordView(Resource):
-    @api.doc('报警确认')
+    @api.doc('报警更新')
     @api.expect(useralarmrecord1_parser)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser','119user','admin','superadmin'])
@@ -109,10 +110,6 @@ class UserAlarmRecordView(Resource):
         if args['reference_alarm_id']:
             useralarmrecord.reference_alarm_id=args['reference_alarm_id']
         else:pass
-        if args['if_confirm']:
-            useralarmrecord.if_confirm=True
-            pass#############待添加逻辑
-        else:pass
         if g.role.name=='homeuser':
             if g.user.id==home.admin_user_id:
                 db.session.commit()
@@ -120,6 +117,26 @@ class UserAlarmRecordView(Resource):
             else:return '权限不足',201
         else:db.session.commit()
         return None,200
+
+    @api.doc('报警确认以及推送信息')
+    @api.expect(useralarmrecord2_parser)
+    @api.header('jwt', 'JSON Web Token')
+    @role_require([ '119user', 'admin', 'superadmin'])
+    @api.response(200, 'ok')
+    def post(self,useralarmrecordid):
+        useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
+        args=useralarmrecord2_parser.parse_args()
+        alert=str(useralarmrecord.content)
+        if useralarmrecord.if_confirm==False:
+            if args['if_confirm']:
+                useralarmrecord.if_confirm=True
+                db.session.commit()
+                JPush2.post(self,alert)
+            else:pass
+        else:pass
+
+
+
 
     @api.doc('删除用户报警记录')
     @api.header('jwt', 'JSON Web Token')

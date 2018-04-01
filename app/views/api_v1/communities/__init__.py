@@ -90,7 +90,7 @@ class CommunityView(Resource):
     @api.response(200,'ok')
     def get(self,communityid):
         community=Community.query.get_or_404(communityid)
-        ins=Ins.query.filter(Ins.id._in(i.id for i in community.ins)).all()
+        ins=community.ins
         _=[ ]
         for i in ins:
             __={}

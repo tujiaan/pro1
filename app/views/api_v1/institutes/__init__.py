@@ -203,6 +203,8 @@ class InsUserView(Resource):
 class InsCommunityView(Resource):
     @page_format(code=0,msg='ok')
     @api.doc('查询机构覆盖的社区')
+    @ api.header('jwt', 'JSON Web Token')
+    @ role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
     @api.marshal_with(community_model,as_list=True)
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})

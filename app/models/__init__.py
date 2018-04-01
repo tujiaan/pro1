@@ -271,16 +271,16 @@ class UserAlarmRecord(db.Model):
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     type = db.Column(db.Integer, default=0, comment='参考创建信息类型 (0,119 1,疏散,2,传感器，3,求救)')
-    content = db.Column(db.String(50), comment='报警内容')
+    content = db.Column(db.String(255), comment='报警内容')
     if_confirm=db.Column(db.Boolean,default=False,comment='是否关闭')
     home_id = db.Column(db.String(24), db.ForeignKey('home.id'),comment='报警关联家庭id')
     home = db.relationship('Home')
     reference_alarm_id=db.Column(db.String(24),comment='参考创建信息id')
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='发布人id')
     user = db.relationship('User')
-    note=db.Column(db.String(256),comment='备注')
-    origin=db.Column(db.String(256),comment='创建来源')
-    mark=db.Column(db.String(256),comment='来源备注')
+    note=db.Column(db.String(255),comment='备注')
+    origin=db.Column(db.String(255),comment='创建来源')
+    mark=db.Column(db.String(255),comment='来源备注')
     time=db.Column(db.DateTime,default=datetime.datetime.now,comment='创建时间')
 
 class AlarmHandle(db.Model):

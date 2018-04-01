@@ -114,8 +114,8 @@ class SensorsView(Resource):
     @api.expect(sensor_parser1)
     def put(self,sensorid):
         sensor1=Sensor.query.get_or_404(sensorid)
-        home=Home.query.filter(sensor1.home_id.in_(Home.id)).first()
-        args=sensor_parser.parse_args()
+        home=Home.query.filter(Home.id==sensor1.home_id).first()
+        args=sensor_parser1.parse_args()
         if args['gateway_id']:
             sensor1.gateway_id=args.get('gateway_id')
         else:pass

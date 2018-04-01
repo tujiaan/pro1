@@ -17,13 +17,15 @@
 import datetime
 
 import requests
+from flask import app
 
+from app.ext import db
 from app.models import Sensor
 
-def sendMessage():
-   url=''
-   data=None
-   requests.post(url, data=data)
+def sendMessage(url):
+   data={}
+   r=requests.post(url, data=data)
+   return None,200
 
 
 
@@ -32,17 +34,21 @@ def sendMessage():
 
 
 def test(app):
-   sensor=Sensor.query.all()
-   for i in sensor:
-      if i.sensor_switch==True:
-         time=datetime.datetime.now()
-         if i.start_time==time:
-            sendMessage()
-         else:pass
-         if i.end_time==time:
-            sendMessage()
-         else:pass
-      else:pass
+    with app.app_context():
+        sensor=Sensor.query.all()
+        url=''
+        for i in sensor:
+          if i.sensor_switch==True:
+             time=datetime.datetime.now()
+             if i.start_time==time:
+                sendMessage(url)
+             else:pass
+             if i.end_time==time:
+                sendMessage(url)
+                i.sensor_switch=True
+                db.session.commit()
+             else:pass
+          else:pass
 
 
 
