@@ -1,8 +1,8 @@
-from flask import g
+from flask import g, request
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Ins, User, FacilityIns, UserRole, Role
+from app.models import Ins, User, FacilityIns, UserRole, Role, Location
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -17,19 +17,44 @@ from .model import *
 @api.route('/')
 class InstitutesViews(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin', '119user'])
-    @page_format(code=0, msg='ok')
+    @role_require(['admin', 'superadmin','propertyuser','stationuser', '119user'])
     @api.doc('查询所有机构列表')
-    @api.marshal_with(institute_model, as_list=True)
     @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @page_range()
     def get(self):
+        page = request.args.get('page', 1)
+        limit = request.args.get('limit', 10)
         list = Ins.query
-        if g.role.name in ['admin','superadmin']:
-            return list, 200
+        if g.role.name in ['admin','119user','superadmin']:
+           query=list.order_by(Ins.id).offset((int(page) - 1) * limit).limit(limit)
         else:
-            return list.filter(Ins.admin_user_id == g.user.id)
+            query= list.filter(Ins.admin_user_id == g.user.id).order_by(Ins.id).offset((int(page) - 1) * limit).limit(limit)
+        total=query.count()
+        _=[]
+        for i in query.all():
+            __={}
+            __['ins_id']=i.id
+            __['ins_type']=i.type
+            __['ins_name']=i.name
+            __['ins_picture']=i.ins_picture
+            __['location_id']=i.location_id
+            __['location_district']=Location.query.get_or_404(i.location_id).district
+            __['ins_address']=i.ins_address
+            __['ins_note']=i.note
+            __['longitude']=str(i.longitude)
+            __['latitude']=str(i.latitude)
+            __['admin_user_id']=i.admin_user_id
+            __['admin_name']=User.query.get_or_404(i.admin_user_id).name
+            _.append(__)
+            result={
+                'code':0,
+                'msg':'ok',
+                'count':total,
+                'data':_
+            }
+            return result,200
+
+
 
     @api.doc('新增机构')
     @api.expect(institutes_parser, validate=True)
@@ -55,7 +80,7 @@ class InstitutesViews(Resource):
             institute.latitude = args['latitude']
             institute.longitude = args['longitude']
             institute.ins_address = args['ins_address']
-            institute.location_id = args['location_id']
+            #institute.location_id = args['location_id']
             institute.ins_picture = upload_file(args['ins_picture'])
             # if args['ins_picture']:
             #     institute.ins_picture = args['ins_picture'].read()
@@ -70,20 +95,25 @@ class InstitutesViews(Resource):
 
 @api.route('/<insid>')
 class InstituteView(Resource):
-   # @api.header('jwt', 'JSON Web Token')
-    #@role_require(['insuser', 'admin', 'superadmin'])
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['propertyuser', 'stationuser','admin', 'superadmin'])
     @api.doc('根据机构id查询机构')
     @api.marshal_with(institute_model)
     @api.response(200,'ok')
     def get(self,insid):
         institute=Ins.query.get_or_404(insid)
-        return institute,200
+        if g.role.name in ['propertyuser','stationuser']:
+            if institute.admin_user_id!=g.user.id:
+                return '权限不足',201
+            else: return institute,200
+        else:
+            return institute,200
 
 
     @api.doc('根据id更新机构信息')
     @api.expect(institutes_parser1)
     @api.response(200,'ok')
-    @api.marshal_with(institute_model,as_list=True)
+   # @api.marshal_with(institute_model,as_list=True)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['propertyuser','stationuser', 'admin', 'superadmin'])
     def put(self,insid):
@@ -127,7 +157,7 @@ class InstituteView(Resource):
             else:return '权限不足', 301
         elif g.role.name in ['admin','superadmin']:
             db.session.commit()
-            return institute, 200
+            return '修改成功', 200
         else:return'权限不足',301
 
     @api.doc('根据id删除机构')
@@ -150,8 +180,8 @@ class InstituteView(Resource):
 
 @api.route('/<insid>/users')
 class InsUsesrView(Resource):
-    #@api.header('jwt', 'JSON Web Token')
-    #@role_require(['insuser', 'admin', 'superadmin'])
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['propertyuser','stationuser', 'admin', 'superadmin'])
     @page_format(code=0,msg='ok')
     @api.doc('查询机构下面的用户列表')
     @api.marshal_with(user_model,as_list=True)
@@ -159,9 +189,9 @@ class InsUsesrView(Resource):
     @page_range()
     def get(self,insid):
         ins=Ins.query.get_or_404(insid)
-        #if g.user.id==ins.admin_user_id or 'admin'ior 'superadmin'in [i.name for i in g.user.roles] :
-        return ins.user,200
-        #else:return '权限不足，200'
+        if g.user.id==ins.admin_user_id or g.role.name in ['admin','superadmin'] :
+            return ins.user,200
+        else:return g.user,201
 
 @api.route('/<insid>/users/<userid>')
 class InsUserView(Resource):

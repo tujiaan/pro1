@@ -10,17 +10,6 @@ from app.views.api_v1.sensors import sensor_model
 
 api = Namespace('Gateway', description='网关相关接口')
 from .model import *
-@api.route('/<gatewayid>/')
-class GatewayView(Resource):
-    @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin'])
-    @api.doc('查询特定的网关')
-    @api.marshal_with(gateway_model)
-    @api.response(200,'ok')
-    def get(self,gatewayid):
-        gateway=Gateway.query.get_or_404(gatewayid)
-        return gateway
-
 @api.route('/')
 class GatewayView1(Resource):
     @api.header('jwt', 'JSON Web Token')
@@ -63,13 +52,25 @@ class GatewayView2(Resource):
 
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
-    @api.doc('查询网关下的传感器')
-    @api.marshal_with(sensor_model,as_list=True)
+    @api.doc('查询特定的网关')
+    @api.marshal_with(gateway_model)
     @api.response(200, 'ok')
-    def get(self,gatewayid):
-        gateway=Gateway.query.get_or_404(gatewayid)
+    def get(self, gatewayid):
+        gateway = Gateway.query.get_or_404(gatewayid)
+        return gateway
+
+@api.route('/<gatewayid>/sensor')
+class GatewayView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
+    @api.doc('查询网关下的传感器')
+    @api.marshal_with(sensor_model, as_list=True)
+    @api.response(200, 'ok')
+    def get(self, gatewayid):
+        gateway = Gateway.query.get_or_404(gatewayid)
         return gateway.sensors
-    ############################需要从平台获取###############
+
+
 
 
 

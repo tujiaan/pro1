@@ -5,7 +5,7 @@ from flask_restplus import Namespace, Resource
 from sqlalchemy import and_
 
 from app.ext import db
-from app.models import Home, Ins, User, HomeUser, Sensor, SensorHistory, UserRole, Role
+from app.models import Home, Ins, User, HomeUser, Sensor, SensorHistory, UserRole, Role, Community
 from app.utils.auth import decode_jwt, user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -28,19 +28,47 @@ from.model import *
 class HomesView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin','homeuser', 'superadmin'])
-    @page_format(code=0,msg='ok')
     @api.doc('查询家庭列表')
-    @api.marshal_with(home_model,as_list=True)
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @page_range()
     def get(self):
+        page = request.args.get('page', 1)
+        limit = request.args.get('limit', 10)
         list=Home.query
         homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id)
         if  g.role.name=='homeuser':
-            return list.filter(g.user.id.in_(homeuser.user_id))
+           query= list.filter(g.user.id.in_(homeuser.user_id))
 
-        else: return list,200
+        else: query= list
+        query1=query.orde_by(Home.id).offset((int(page) - 1) * limit).limit(limit)
+        total=query1.count()
+        _=[]
+        for i in query1.all():
+            __={}
+            __['home_id']=i.id
+            __['home_name']=i.name
+            __['community_id']=i.community_id
+            __['community_name']=Community.query.get_or_404(i.community_id).name
+            __['detail_address']=i.detail_address
+            __['link_name']=i.link_name
+            __['tephone']=i.telephone
+            __['longitude']=str(i.longitude)
+            __['latitude']=str(i.latitude)
+            __['gateway_id']=i.gateway_id
+            __['alternate_phone']=i.alternate_phone
+            __['admin_user_id']=i.admin_user_id
+            __['admin_name']=User.query.get_or_404(i.admin_user_id).name
+            _.append(__)
+        result={
+            'code':0,
+            'msg':'ok',
+            'count':total,
+            'data':_
+        }
+        return result,200
+
+
+
 
 
     @api.doc('新增家庭')
@@ -246,8 +274,6 @@ class HomeInsView(Resource):
             c = 2 * math.asin(math.sqrt(a))
             r = 6371  # 地球平均半径，单位为公里
             return c * r * 1000
-            # miles = ((69.1 * dlat) ** 2 + (53.0 * dlng) ** 2) ** .5
-            # return miles * 1.6092953
         query=Ins.query
         query=query.offset((int(page) - 1) * limit).limit(limit)
         _ = []
@@ -257,7 +283,7 @@ class HomeInsView(Resource):
             __['ins_longitude'] = str(i.longitude)
             __['ins_latitude'] = str(i.latitude)
             __['ins_type'] = i.type
-            __['ins_place'] = i.name
+            __['ins_name'] = i.name
             __['distance'] = round(getDistance(i.latitude,i.longitude,home.latitude,home.longitude))
             if  getDistance(i.latitude,i.longitude,home.latitude,home.longitude)<float(distance):
               _.append(__)
