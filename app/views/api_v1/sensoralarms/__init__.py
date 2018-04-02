@@ -4,7 +4,7 @@ from flask import g, request
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import SensorAlarm, Home, Community, HomeUser
+from app.models import SensorAlarm, Home, Community, HomeUser, UserRole, Role, Sensor
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms.parser import sensoralarms_parser, sensoralarms_parser1
@@ -14,21 +14,38 @@ from .models import *
 @api.route('/')
 class SensorAlarmsView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin','superadmin'])
+    @role_require(['homeuser','admin','superadmin'])
     @api.doc('查询传感器报警记录列表')
     @api.response(200,'ok')
-    @api.doc(params={'page': '页数', 'limit': '数量','start':'开始时间见','end':'结束时间','type':'报警项目'})
+    @api.doc(params={'page': '页数', 'limit': '数量','start':'开始时间见','end':'结束时间','type':'传感器类型'})
     def get(self):
         page=request.args.get('page',1)
         limit=request.args.get('limit',10)
         start=request.args.get('star',2018-1-1)
         end=request.args.get('end',datetime.datetime.now())
-        type=request.args.get('type',0)
-        query=db.session.query(SensorAlarm)
+        type=request.args.get('type',None)
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+        homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
+        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
+        sensors=Sensor.query.filter(Sensor.home_id.in_(i.id for i in home)).all()
+        if g.role.name=='homeuser':
+            if type!=None:
+                query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
+                    .filter(SensorAlarm.sensor_type==type).filter(SensorAlarm.sensor_id.in_( i.id  for i in sensors)).\
+                    order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+            else:query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
+                    .filter(SensorAlarm.sensor_id.in_( i.id  for i in sensors)).\
+                    order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+        else:
+            if type!=None:
+                query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end)).filter(SensorAlarm.sensor_type==type)\
+                    .order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+            else:
+                query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
+                    .order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+
         total=query.count()
-        print(total)
-        query = query.filter(SensorAlarm.alarm_time.between(start,end)).filter(SensorAlarm.sensor_type==type).\
-            order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
         _=[]
         for i in query.all():
          __={}
@@ -48,7 +65,7 @@ class SensorAlarmsView(Resource):
             'count':total,
             'data':_
         }
-        return result
+        return result,200
 
 
     @api.doc('新增传感器报警记录')
@@ -88,14 +105,20 @@ class SensorAlarmView(Resource):
         db.session.delete(sensoralarm)
         db.session.commit()
         return None,200
-    @api.doc('更新传感器的报警记录/报警确认')
+    @api.doc('更新传感器的报警记录')
     @api.expect(sensoralarms_parser1,validate=True)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser','119user','admin','superadmin'])
     @api.response(200, 'ok')
     def put(self,sensoralarmid):
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         sensoralarm=SensorAlarm.query.get_or_404(sensoralarmid)
-        if 'homeuser'in [i.name for i in g .user.role] and len(g.user.roles.all())<2:
+        args=sensoralarms_parser1.parse_args()
+        if args['note']:
+            sensoralarm.note=args['note']
+        else:pass
+        if g.role.name=='homeuser':
             home=Home.query.get_or_404( sensoralarm.sensor.home_id)
             if home.admin_user_id==g.user.id:
                 sensoralarm.is_confirm=True
@@ -104,8 +127,17 @@ class SensorAlarmView(Resource):
             else: return '权限不足',301
         else:
             sensoralarm.is_confirm=True
+
             db.session.commit()
             return None, 200
+
+    @api.doc('发送报警')
+    @api.expect(sensoralarms_parser1, validate=True)
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser', '119user', 'admin', 'superadmin'])
+    @api.response(200, 'ok')
+    def post(self):
+        pass
 
 
 

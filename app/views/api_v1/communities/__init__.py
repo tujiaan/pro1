@@ -1,8 +1,10 @@
-from flask import g
+import base64
+
+from flask import g, request
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Community, Ins, Home
+from app.models import Community, Ins, Home, UserRole, Role, Location
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -17,22 +19,45 @@ from app.views.api_v1.communities.models import community_model, _community_mode
 class CommunitiesView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', '119user','superadmin'])
-    @api.doc('查询所有的社区列表')#
-    @page_format(code=0,msg='ok')
-    @api.marshal_with(community_model,as_list=True)
+    @api.doc('查询所有的社区列表')
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @page_range()
     def get(self):
-        community=Community.query
-        print(type(community))
-        return community,200
+        page = request.args.get('page', 1)
+        limit = request.args.get('limit', 10)
+        query=Community.query.order_by(Community.id).offset((int(page) - 1) * limit).limit(limit)
+        total=query.count()
+        _=[]
+        for i in query.all():
+            __={}
+            __['id']=i.id
+            __['name']=i.name
+            __['detail_address']=i.detail_address
+            __['save_distance']=i.save_distance
+            __['eva_distance']=i.eva_distance
+            __['longitude']=i.longitude
+            __['latitude']=i.latitude
+            __['location_id']=i.location_id
+            __['location_district']=Location.query.get_or_404(i.location_id).district
+            __['community_picture']=base64.b64encode(i.community_picture).decode()
+            _.append(__)
+            result={
+                'code':0,
+                'message':'ok',
+                'count':total,
+                'data':_
+
+            }
+            return result,200
+
+
+
 
     @api.route('/showlist')
     class CommunitiesView1(Resource):
         @api.header('jwt', 'JSON Web Token')
-        @user_require
-        @api.doc('查询所有的社区名称')  #
+        @ role_require(['admin', '119user', 'superadmin'])
+        @api.doc('查询所有的社区名称')
         @page_format(code=0, msg='ok')
         @api.marshal_with(_community_model, as_list=True)
         @api.response(200, 'ok')
@@ -42,7 +67,7 @@ class CommunitiesView(Resource):
             community = Community.query
             return community, 200
 
-    @api.doc('新增社区')#
+    @api.doc('新增社区')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     @api.expect(community_parser,validate=True)
@@ -83,19 +108,37 @@ class CommunitiesView(Resource):
 @api.route('/<communityid>/')
 class CommunityView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin','119user','insuser' ,'superadmin'])
+    @role_require(['admin','119user','propertyuser','stationuser' ,'superadmin'])
     @api.doc('查询特定的小区信息')
-    @api.marshal_with(community_model)
     @api.response(200,'ok')
     def get(self,communityid):
         community=Community.query.get_or_404(communityid)
-        if 'insuser'not in [i.name for i in g.user.roles]:
-            return community, 200
-        elif g.user.id==community.ins.admin_user_id:
-            return community, 200
-        else:
+        ins=community.ins
+        _=[ ]
+        for i in ins:
+            __={}
+            __['ins_id']=i.id
+            __['ins_type']=i.type
+            _.append(__)
+        community={
+            'community_id':community.id,
+            'community_name':community.name,
+            'community_longitude':float(community.longitude),
+            'community_latitude':float(community.latitude),
+            'detail_address':community.detail_address,
+            'save_distance':float(community.save_distance),
+            'eva_distance':float(community.eva_distance),
+            'location_id':community.location_id,
+            'community_picture':base64.b64encode(community.community_picture).decode(),
+            'ins_data':_
 
-            return None, 200
+        }
+        if g.role.name=='propertyuser'or g.role.name=='stationuser':
+            if g.user.id in[i.admin_user_id for i in ins]:
+                return community,200
+            else:return'权限不足',201
+        else:return community,200
+
 
 
     @api.doc('更新社区的信息')
@@ -110,10 +153,10 @@ class CommunityView(Resource):
             community.name = args.get('name')
         else:
             pass
-        if 'ins_id' in args and args['ins_id']:
-            community.ins_id = args.get('ins_id')
-        else:
-            pass
+        # if 'ins_id' in args and args['ins_id']:
+        #     community.ins_id = args.get('ins_id')
+        # else:
+        #     pass
         if 'longitude' in args and args['longitude']:
             community.longitude = args.get('longitude')
         else:
@@ -151,8 +194,11 @@ class CommunityView(Resource):
     def delete(self,communityid):
         community=Community.query.get_or_404(communityid)
         home=Home.query.filter(Home.id.in_( i.id for i in community.homes))
+        list=community.ins
         for i in home:
           homes.HomeView.delete(self,i.id)
+        for i in list:
+            community.ins.remove(i)
         db.session.delete(community)
         db.session.commit()
         return None,200
@@ -169,6 +215,20 @@ class CommunityHome(Resource):
     def get(self,communityid):
         community=Community.query.get_or_404(communityid)
         return community.homes,200
+
+@api.route('/<communityid>/ins/<insid>')
+class CommunityInsViews(Resource):
+    @api.doc('增加机构和社区绑定')
+    @api.response(200,'ok')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin',  'superadmin'])
+    def post(self,communityid,insid):
+        community=Community.query.get_or_404(communityid)
+        ins=Ins.query.get_or_404(insid)
+        community.ins.add(ins)
+        return None,200
+
+
 
 
 

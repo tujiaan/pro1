@@ -25,7 +25,6 @@ class Knowledges(Resource):
     @api.response(200,'ok')
     @page_range()
     def get(self):
-
             list=Knowledge.query
             return list,200
 
@@ -42,9 +41,11 @@ class Knowledges(Resource):
         return None,200
 @api.route('/<knowledgetype>')
 class KnowledgeView(Resource):
+    @page_format(code=0,msg='ok')
     @api.doc('根据类型查询知识列表')
     @api.marshal_with(knowledges_model)
     @api.response(200,'ok')
+    @page_range()
     def get(self,knowledgetype):
      list=Knowledge.query.filter(Knowledge.type==knowledgetype)
      return list,200
@@ -110,11 +111,8 @@ class KnowledgeFacilityView1(Resource):
     def post(self,knowledgeid,facilityid):
             try:
                 facility = Facility.query.get_or_404(facilityid)
-
                 knowledge = Knowledge.query.get_or_404(knowledgeid)
-
                 knowledge.facility.append(facility)
-
                 db.session.commit()
                 return '绑定成功', 200
             except: return '已经绑定'
@@ -136,6 +134,8 @@ class KnowledgeFacilityView1(Resource):
 @api.route('/picture')
 class Upload(Resource):
     @api.doc('上传文件')
+    # @api.header('jwt', 'JSON Web Token')
+    # @role_require(['knowledgeadmin', 'superadmin'])
     @api.expect(upload_parser, validate=True)
     @api.response(200, '已创建')
     @api.response(415, '格式不支持')
@@ -149,8 +149,13 @@ class Upload(Resource):
         date = now.strftime('%Y%m%d')
         filename = now.strftime('%H%M%S') + secure_filename(quote(file.filename))
         path = current_app.config.get('UPLOAD_FOLDER', None) + date
-        url = current_app.config.get('UPLOADED_URL', None) + date + '/' + filename
+        src = current_app.config.get('UPLOADED_URL', None) + date + '/' + filename
         if not os.path.exists(path):
             os.makedirs(path)
         file.save(path + '/' + filename)
-        return {'url': url}, 200
+        result={
+            'code':0,
+            'message':'ok',
+            'data':{'src':src}
+        }
+        return result, 200

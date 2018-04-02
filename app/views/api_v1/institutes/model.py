@@ -32,3 +32,20 @@ user_model = api.model('UserModel', {
     'real_name': fields.String
 })
 
+community_pic_model=api.model('CommunityPictureModel',{
+   # 'id':fields.String,
+    'community_picture':fields.String(attribute=lambda x : base64.b64encode(x).decode() if x else None)
+})
+community_model=api.model('CommunityModel',{
+    'id':fields.String,
+    'name':fields.String,
+    'detail_address':fields.String,
+    'save_distance':fields.Integer,
+    'eva_distance':fields.Integer,
+    # 'ins_id':fields.String,
+    'longitude':fields.Float,
+    'latitude':fields.Float,
+    'location_id': fields.String,
+    'community_picture':fields.Nested(community_pic_model)
+
+})

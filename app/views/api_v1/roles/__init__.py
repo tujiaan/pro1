@@ -20,9 +20,8 @@ class RolesView(Resource ):
     @page_range()
     def get(self):
         list=Role.query
-        print(type(list))
         return list,200
-    @api.doc('新建角色')########用不上
+    @api.doc('新建角色')
     @api.expect(roles_parser)
     @api.response(200,'ok')
     def post(self):
@@ -33,14 +32,14 @@ class RolesView(Resource ):
         return None,200
 @api.route('/<roleid>')
 class RoleView(Resource):
-    @api.doc('删除角色')#####用不上
+    @api.doc('删除角色')
     @api.response(200,'ok')
     def delete(self,roleid):
         role=Role.query.get_or_404(roleid)
         db.session.delete(role)
         db.session.commit()
         return None,200
-    @api.doc('更新角色信息（授权操作）')
+    @api.doc('更新角色信息')
     @api.expect(roles_parser1)
     @api.response(200,'ok')
     def put(self,roleid):

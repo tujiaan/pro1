@@ -5,7 +5,7 @@ from flask_restplus import Namespace, Resource
 from sqlalchemy import and_
 
 from app.ext import db
-from app.models import Home, Ins, User, HomeUser, Sensor, SensorHistory
+from app.models import Home, Ins, User, HomeUser, Sensor, SensorHistory, UserRole, Role
 from app.utils.auth import decode_jwt, user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -36,24 +36,23 @@ class HomesView(Resource):
     @page_range()
     def get(self):
         list=Home.query
-        if 'admin'or 'superadmin'in [i.name for i in g.user.roles]:
-            return list,200
-        else:
-            return list.filter(g.user in [Home.user] )
+        homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id)
+        if  g.role.name=='homeuser':
+            return list.filter(g.user.id.in_(homeuser.user_id))
+
+        else: return list,200
+
 
     @api.doc('新增家庭')
     @api.expect(home_parser)
     @api.response(200, 'ok')
-    # @api.marshal_with(home_model)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser'])
     def post(self):
         args = home_parser.parse_args()
         home = Home(**args)
         if g.user.contract_tel != args.get('telephone'):
-
             return '号码不一致', 200
-
         elif home.gateway_id in [i.gateway_id for i in Home.query.all()]:
             return '网关被占用', 201
         else:
@@ -66,19 +65,23 @@ class HomesView(Resource):
             homeuser.confirm_time=datetime.datetime.now()
             db.session.add(homeuser)
             db.session.commit()
-
-
-
             return '创建成功', 201
 
 @api.route('/<homeid>')
 class HomeView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser','admin', 'superadmin'])
     @api.doc('根据家庭id查找家庭')
     @api.marshal_with(home_model)
     @api.response(200,'ok')
     def get(self,homeid):
-        home=Home.query.get_or_404(homeid)
-        return home,200
+        home = Home.query.get_or_404(homeid)
+        homeuser=HomeUser.query.filter(HomeUser.home_id==homeid).all()
+        if g.role.name=='homeuser':
+            if g.user.id in [i.user_id for i in homeuser]:
+                return home,200
+            else: return '权限不足',201
+        else: return home,200
 
     @api.doc('根据家庭id删除家庭')
     @api.header('jwt', 'JSON Web Token')
@@ -87,8 +90,7 @@ class HomeView(Resource):
     def delete(self,homeid):
         home = Home.query.get_or_404(homeid)
         homeuser=HomeUser.query.filter(HomeUser.home_id==homeid).all()
-
-        if  'admin' in [i.name for i in g.user.roles]or 'superadmin'in[i.name for i in g.user.roles]  :
+        if g.role.name in ['admin','superadmin']  :
             for u in homeuser:
                 db.session.delete(u)
             db.session.delete(home)
@@ -103,17 +105,17 @@ class HomeView(Resource):
         else: return '权限不足',200
 
 
-    @api.doc('根据家庭id更新家庭')######待测
+    @api.doc('根据家庭id更新家庭')
     @api.expect(home_parser1,validate=True)
     @api.marshal_with(home_model)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser', 'admin', 'superadmin'])
-
+    @api.response(200,'ok')
     def put(self,homeid):
         args=home_parser1.parse_args()
         home1=Home(**args)
         home = Home.query.get_or_404(homeid)
-        if home.admin_user_id == g.user.id or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+        if home.admin_user_id == g.user.id or g.role.name in['admin', 'superadmin']:
             if home1.admin_user_id:
                 home.admin_user_id=home1.admin_user_id
             else:pass
@@ -147,7 +149,7 @@ class HomeView(Resource):
              home.name=home1.name
             else:pass
             if home1.admin_user_id:
-                if 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
+                if  g.role.name in ['admin', 'superadmin']:
                  home.admin_user_id=home1.admin_user_id
             db.session.commit()
             return home,200
@@ -160,11 +162,9 @@ class HomeGatewayView(Resource):
     @api.marshal_with(gateway_model)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser','admin','superadmin'])
-
     def post(self,homeid,gatewayid):
         home=Home.query.get_or_404(homeid)
-
-        if 'homeuser'in [i.name for i in g.user.roles] and g.user.id!=home.admin_user_id:
+        if g.role.name=='homeuser'and g.user.id!=home.admin_user_id:
             return '权限不足',301
         else:
             home.gateway_id = gatewayid
@@ -176,8 +176,10 @@ class HomeGatewayView(Resource):
     @role_require(['homeuser','admin', 'superadmin'])
     @api.header('jwt', 'JSON Web Token')
     def delete(self,homeid,gatewayid):
+        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         home = Home.query.get_or_404(homeid)
-        if 'homeuser'in [i.name for i in g.user.roles] and g.user.id!=home.admin_user_id:
+        if g.role.name == 'homeuser' and g.user.id != home.admin_user_id:
             return '权限不足',301
         else:
             db.session.delete(home)
@@ -199,8 +201,7 @@ class HomeUsersView(Resource):
     def get(self, homeid):
         home = Home.query.get_or_404(homeid)
         homeuser=HomeUser.query.filter(HomeUser.home_id==homeid).all()
-        if g.user.id in [i.user_id for i in homeuser ] or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [
-            i.name for i in g.user.roles]:
+        if g.user.id in [i.user_id for i in homeuser ] or g.role.name in ['admin', 'superadmin']:
             return User.query.filter(User.id.in_(i.user_id for i in homeuser)), 200
         else:
             return User.query.filter(User.id==g.user.id), 401
@@ -210,7 +211,6 @@ class HomeUsersView(Resource):
     @api.doc('用户退出家庭')
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
-
     @role_require(['homeuser' ])
     def delete(self, homeid):
         home = Home.query.get_or_404(homeid)
@@ -222,8 +222,6 @@ class HomeUsersView(Resource):
             return '退出家庭成功', 200
 
         else:return '不是该家庭成员',301
-
-
 
 @api.route('/<homeid>/<distance>/ins')
 class HomeInsView(Resource):
@@ -251,6 +249,8 @@ class HomeInsView(Resource):
         for i in tuple(query.all()):
             __ = {}
             __['ins_id'] = i.id
+            __['ins_longitude'] = str(i.longitude)
+            __['ins_latitude'] = str(i.latitude)
             __['ins_type'] = i.type
             __['ins_place'] = i.name
             __['distance'] = getDistance(i.latitude,i.longitude,home.latitude,home.longitude)
@@ -263,7 +263,7 @@ class HomeInsView(Resource):
             'count': total,
             'data': _
         }
-        if homeid in [i.home_id for i in homeuser] or 'admin' in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles] :
+        if homeid in [i.home_id for i in homeuser] or g.role.name in ['admin','superadmin'] :
                 return result,200
         else:return '权限不足',201
 
@@ -271,12 +271,12 @@ class HomeInsView(Resource):
 @api.route('/<homeid>/sensors')
 class HomeSensorView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser', '119user', 'insuser' 'admin', 'superadmin'])
+    @role_require(['homeuser', '119user', 'propertyuser', 'stationuser', 'admin', 'superadmin'])
     @api.doc('查询家中的传感器')
     def get(self, homeid):
         home=Home.query.get_or_404(homeid)
         homeuser=HomeUser.query.filter(HomeUser.home_id==homeid).all()
-        if  'homeuser' in [i.name for i in g.user.roles.all()] and len(g.user.roles.all())<2:
+        if g.role.name=='homeuser':
             if g.user.id in [i.user_id for i in homeuser]:
                 query=Sensor.query.filter(Sensor.home_id==home.id).all()
             else:pass
@@ -299,20 +299,16 @@ class HomeSensorView(Resource):
 @api.route('/applies/')
 class HomeApplyView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @api.doc('显示家庭申请')
+    @role_require(['homeuser'])
+    @api.doc('显示自己家庭申请')
     @api.response(200,'ok')
     @user_require
     def get(self):
         page = request.args.get('page', 1)
         limit = request.args.get('limit', 10)
         query = db.session.query(User,Home).join(HomeUser,User.id==HomeUser.user_id).filter(HomeUser.if_confirm == False).join(Home,HomeUser.home_id==Home.id ).order_by(Home.id)
-
         total = query.count()
-        print(total)
-        print(query.all())
-
         query = query.offset((int(page) - 1) * limit).limit(limit)
-        # [{''} for i in query.all()]
         _ = []
         for i in query.all():
             __ = {}

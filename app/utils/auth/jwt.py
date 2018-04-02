@@ -12,12 +12,12 @@ with open(puk_path) as f:
     puk = f.read()
 
 
-def encode_jwt(user_id=None, exp=None, nbf=None):
+def encode_jwt(user_id=None,role_id=None, exp=None, nbf=None):
     now = datetime.datetime.utcnow()
     exp = exp or current_app.config.get('JWT_EXP', 300)
     nbf = nbf or current_app.config.get('JWT_NBF', 0)
 
-    identity = {'user_id': user_id, 'exp': now + datetime.timedelta(seconds=exp),
+    identity = {'user_id': user_id,'role_id':role_id, 'exp': now + datetime.timedelta(seconds=exp),
                 'nbf': now - datetime.timedelta(seconds=nbf), 'iat': now}
     encoded_jwt = jwt.encode(identity, pk, algorithm='RS256').decode()
     return encoded_jwt

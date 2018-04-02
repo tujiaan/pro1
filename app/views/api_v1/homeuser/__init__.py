@@ -5,7 +5,7 @@ from flask_restplus import Namespace, Resource
 from sqlalchemy import DateTime, and_
 
 from app.ext import db
-from app.models import HomeUser, Home
+from app.models import HomeUser, Home, UserRole, Role
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_format, page_range
@@ -28,8 +28,7 @@ class HomeUsersView(Resource):
     def get(self):
         list = HomeUser.query
         home=Home.query.filter(Home.admin_user_id==g.user.id)
-        if 'admin'  in [i.name for i in g.user.roles] or 'superadmin' in [i.name for i in g.user.roles]:
-
+        if g.role.name in ['admin','superadmin']:
             return list, 200
         else:
             return list.filter(
@@ -80,12 +79,12 @@ class HomeUserView1(Resource):
 class HomeUserView2(Resource):
     @api.header('jwt', 'JSON Web Token')
     @api.doc('批准加入家庭')
+    @role_require(['homeuser'])
     @api.response(200, 'ok')
     @user_require
     def put( self,homeid,userid):
         home = Home.query.get_or_404(homeid)
         homeuser = HomeUser.query.filter(and_(HomeUser.home_id == homeid ,HomeUser.user_id == userid)).first()
-        print(homeuser)
         homeuser.if_confirm = True
         homeuser.confirm_time = datetime.datetime.now()
         if g.user.id == home.admin_user_id:
@@ -97,15 +96,19 @@ class HomeUserView2(Resource):
 
     @api.doc('删除家庭成员记录')
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser'])
+    @role_require(['homeuser','admin','superadmin'])
     @api.response(200, 'ok')
     def delete(self, homeid, userid):
         home = Home.query.get_or_404(homeid)
-        if g.user.id == home.admin_user_id:
-            homeuser = HomeUser.query.filter(HomeUser.home_id == homeid ).filter( HomeUser.user_id == userid).first()
-            db.session.delete(homeuser)
-            db.session.commit()
-            return '删除成功', 200
+        homeuser = HomeUser.query.filter(HomeUser.home_id == homeid).filter(HomeUser.user_id == userid).first()
+        db.session.delete(homeuser)
+        if g.role.name=='homeuser':
+            if g.user.id == home.admin_user_id:
+                db.session.commit()
+                return '删除成功', 200
+            else:
+                return '权限不足', 201
         else:
-            return '权限不足', 201
+            db.session.commit()
+            return'删除成功',200
 

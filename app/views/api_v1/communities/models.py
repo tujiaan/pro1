@@ -15,7 +15,7 @@ community_model=api.model('CommunityModel',{
     'detail_address':fields.String,
     'save_distance':fields.Integer,
     'eva_distance':fields.Integer,
-    'ins_id':fields.String,
+    # 'ins_id':fields.String,
     'longitude':fields.Float,
     'latitude':fields.Float,
     'location_id': fields.String,

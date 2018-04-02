@@ -13,7 +13,6 @@ user_model = api.model('UserModel', {
     'lastTime': fields.DateTime,
     'real_name': fields.String
 })
-#from app.views.api_v1.homes import api
 
 home_model = api.model('HomeModel', {
     'id': fields.String,

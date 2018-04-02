@@ -2,19 +2,21 @@ import flask_restplus
 
 from app.views import api_v1_bp as api_bp
 from app.views.api_v1.facilities import api as facility_ns
+from .communities import api as community_ns
 from .gateways import api as gateway_ns
 from .homes import api as home_ns
-from .institutes import api as institut_ns
-from .sensors import api as sensor_ns
-from .tools import api as tool_ns
-from .users import api as user_ns
-from.knowledges import api as knowledge_ns
-from .sensoralarms import api as sensoralarm_ns
-from .roles import api as role_ns
-from .useralarms import api as useralarmrecord_ns
-from .communities import api as community_ns
 from .homeuser import api as homeuser_ns
+from .institutes import api as institut_ns
+from .knowledges import api as knowledge_ns
+from .roles import api as role_ns
+from .sensoralarms import api as sensoralarm_ns
 from .sensorhistory import api as sensorhistory_ns
+from .sensors import api as sensor_ns
+from .test import api as test_ns
+from .tools import api as tool_ns
+from .useralarms import api as useralarmrecord_ns
+from .users import api as user_ns, RegisterView
+
 
 api = flask_restplus.Api(api_bp,
                          title="消防API",
@@ -37,8 +39,11 @@ api.add_namespace(useralarmrecord_ns,path='/useralarmrecords')
 api.add_namespace(community_ns,path='/community')
 api.add_namespace(homeuser_ns,path='/homeusers')
 api.add_namespace(sensorhistory_ns,path='/sensorhistory')
-
+api.add_namespace(test_ns, path='/test')
 
 @api_bp.before_request
 def before_request():
+    # g.user = current_user
+    # current_user.id=RegisterView.post(self=RegisterView)
+   # gLog.debug(“g = % s”, g)
     pass

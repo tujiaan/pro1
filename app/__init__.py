@@ -14,4 +14,7 @@ def create_app():
         from app.views import api_v1_bp
         ext_init(app)
         app.register_blueprint(api_v1_bp)
+        from app.ext import scheduler
+        from app.utils.scheduler import scheduler_init_job
+        scheduler_init_job(app)
     return app

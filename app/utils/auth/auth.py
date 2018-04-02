@@ -4,7 +4,7 @@ import types
 from flask import request, g
 from flask.views import MethodView
 
-from app.models import User, Role
+from app.models import User, Role, UserRole
 from app.utils.auth import decode_jwt
 
 
@@ -18,6 +18,7 @@ def role_function(r):
                 try:
                     identity = decode_jwt(jwt_str)
                     g.user = User.query.get(identity['user_id']) if identity['user_id'] else None
+                    g.role= Role.query.get(identity['role_id']) if identity['role_id'] else None
 
                 except Exception as e:
                     print(e)
@@ -33,9 +34,8 @@ def role_function(r):
                 _ = Role.query.filter_by(name=role).first()
                 _ and r_list.append(_)
 
-            user_roles = tuple(g.user.roles)
             for i in r_list:
-                if i in user_roles:
+                if  i==g.role:
                     return method(*args, **kwargs)
             else:
                 return {'message': '权限不足'}, 402
