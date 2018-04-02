@@ -11,7 +11,7 @@ institute_model = api.model('InstituteModel', {
     'type':fields.String,
     'name':fields.String,
     'ins_address': fields.String,
-    'ins_picture': fields.Nested(institute_picture_model),
+    'ins_picture': fields.String,#fields.Nested(institute_picture_model),
     'admin_user_id': fields.String,
     'location_id':fields.String,
     'note': fields.String,
@@ -46,6 +46,6 @@ community_model=api.model('CommunityModel',{
     'longitude':fields.Float,
     'latitude':fields.Float,
     'location_id': fields.String,
-    'community_picture':fields.Nested(community_pic_model)
+    'community_picture':fields.String#fields.Nested(community_pic_model)
 
 })

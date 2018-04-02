@@ -27,6 +27,7 @@ class CommunitiesView(Resource):
         limit = request.args.get('limit', 10)
         query=Community.query.order_by(Community.id).offset((int(page) - 1) * limit).limit(limit)
         total=query.count()
+        print(query.all())
         _=[]
         for i in query.all():
             __={}
@@ -35,20 +36,19 @@ class CommunitiesView(Resource):
             __['detail_address']=i.detail_address
             __['save_distance']=i.save_distance
             __['eva_distance']=i.eva_distance
-            __['longitude']=i.longitude
-            __['latitude']=i.latitude
+            __['longitude']=str(i.longitude)
+            __['latitude']=str(i.latitude)
             __['location_id']=i.location_id
             __['location_district']=Location.query.get_or_404(i.location_id).district
-            __['community_picture']=base64.b64encode(i.community_picture).decode()
+            __['community_picture']=i.community_picture#base64.b64encode(i.community_picture).decode()
             _.append(__)
-            result={
-                'code':0,
-                'message':'ok',
-                'count':total,
-                'data':_
-
-            }
-            return result,200
+        result={
+            'code':0,
+            'message':'ok',
+            'count':total,
+            'data':_
+        }
+        return result,200
 
 
 
