@@ -4,6 +4,7 @@ from flask_restplus import  Resource
 from app.ext import db
 from app.models import Facility, Sensor, Home, SensorAlarm, SensorHistory, HomeUser, UserRole, Role
 from app.utils.auth.auth import role_require
+from app.utils.myutil.url import getResponse
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms import sensoralarms_model
 from app.views.api_v1.sensorhistory import sensorhistory_model
@@ -64,9 +65,12 @@ class SensorsView(Resource):
     @api.response(200, 'ok')
     @api.expect(sensor_parser,validate=True)
     def post(self):
-        args=sensor_parser.parse_args()
-        sensor=Sensor(**args)
-        db.session.add(sensor)
+        url='119.28.155.88:8080/data/api/v1/dataPoint/53/list'
+        result=getResponse(url)
+
+
+
+
         db.session.commit()
         return None,200
 @api.route('/<sensorid>/')

@@ -17,7 +17,7 @@ from .model import *
 @api.route('/')
 class InstitutesViews(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin','propertyuser','stationuser', '119user'])
+    @role_require(['homeuser','admin', 'superadmin','propertyuser','stationuser', '119user'])
     @api.doc('查询所有机构列表')
     @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
@@ -96,12 +96,18 @@ class InstitutesViews(Resource):
 @api.route('/<insid>')
 class InstituteView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['propertyuser', 'stationuser','admin', 'superadmin'])
+    @role_require(['homeuser','propertyuser', 'stationuser','admin', 'superadmin'])
     @api.doc('根据机构id查询机构')
-    @api.marshal_with(institute_model)
+  #  @api.marshal_with(institute_model)
     @api.response(200,'ok')
     def get(self,insid):
-        institute=Ins.query.get_or_404(insid)
+        ins=Ins.query.get_or_404(insid)
+        _=Ins()
+        instute={
+
+        }
+
+
         if g.role.name in ['propertyuser','stationuser']:
             if institute.admin_user_id!=g.user.id:
                 return '权限不足',201

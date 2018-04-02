@@ -317,7 +317,7 @@ class user(Resource):
     @role_require(['admin', 'superadmin'])
     def get(self, userid):
         user = User.query.get_or_404(userid)
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
+        user_role = UserRole.query.filter(UserRole.user_id == user.id).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role))
         if g.role.name=='superadmin':
             return user, 200
