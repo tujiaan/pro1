@@ -57,7 +57,7 @@ class HomesView(Resource):
             __['gateway_id']=i.gateway_id
             __['alternate_phone']=i.alternate_phone
             __['admin_user_id']=i.admin_user_id
-            __['admin_name']=User.query.get_or_404(i.admin_user_id).name
+            __['admin_name']=User.query.get_or_404(i.admin_user_id).username
             _.append(__)
         result={
             'code':0,
