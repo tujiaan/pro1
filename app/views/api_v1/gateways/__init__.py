@@ -63,12 +63,14 @@ class GatewayView2(Resource):
 class GatewayView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
+    @page_format(code=0, msg='ok')
     @api.doc('查询网关下的传感器')
     @api.marshal_with(sensor_model, as_list=True)
     @api.response(200, 'ok')
+    @page_range()
     def get(self, gatewayid):
         gateway = Gateway.query.get_or_404(gatewayid)
-        return gateway.sensors
+        return gateway.sensors,200
 
 
 

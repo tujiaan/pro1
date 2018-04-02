@@ -207,7 +207,7 @@ class FacilityKnowledgesView(Resource):
     @api.response(200,'ok')
     def get(self,facilityid):
         facility=Facility.query.get_or_404(facilityid)
-        return facility.knowledges,200
+        return facility.knowledge,200
 
 @api.route('/<facilityid>/knowledges/<knowledgeid>/')
 class FacilityKnowledgeView(Resource):

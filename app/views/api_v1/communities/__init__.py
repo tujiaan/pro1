@@ -129,7 +129,7 @@ class CommunityView(Resource):
             'save_distance':float(community.save_distance),
             'eva_distance':float(community.eva_distance),
             'location_id':community.location_id,
-            'community_picture':base64.b64encode(community.community_picture).decode(),
+            'community_picture':community.community_picture,
             'ins_data':_
 
         }

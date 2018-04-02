@@ -248,7 +248,7 @@ class ProfileView(Resource):
         if u.email == args.get('old_email'):
             u.email = args.get('email')
             db.session.commit()
-        return None, 204
+        return None, 200
 
 
 @api.route('/username/')
@@ -390,7 +390,7 @@ class UserRolesVsiew(Resource):
     def get(self, userid):
         user = User.query.get_or_404(userid)
         user_role=UserRole.query.filter(UserRole.user_id==user.id).all()
-        roles= Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+        roles= Role.query.filter(Role.id.in_(i.role_id for i in user_role))
         if g.role.name=='admin':
             if 'admin'not in [i.name for i in roles] and  'superadmin'not in [i.name for i in roles]:
                 return roles,200

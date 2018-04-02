@@ -35,9 +35,9 @@ class HomeUsersView(Resource):
               HomeUser.home_id.in_(i.id for i in home)).filter(HomeUser.if_confirm == True), 200
 
 
-@api.route('/<homeid>')
+@api.route('/<homeid>/')
 class HomeUserView1(Resource):
-    @api.doc('申请加入家庭/')
+    @api.doc('申请加入家庭')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser'])
     @api.response(200, 'ok')
