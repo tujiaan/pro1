@@ -40,7 +40,7 @@ class HomesView(Resource):
            query= list.filter(g.user.id.in_(homeuser.user_id))
 
         else: query= list
-        query1=query.orde_by(Home.id).offset((int(page) - 1) * limit).limit(limit)
+        query1=query.order_by(Home.id).offset((int(page) - 1) * limit).limit(limit)
         total=query1.count()
         _=[]
         for i in query1.all():

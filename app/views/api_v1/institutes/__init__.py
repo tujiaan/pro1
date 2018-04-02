@@ -44,7 +44,7 @@ class InstitutesViews(Resource):
             __['longitude']=str(i.longitude)
             __['latitude']=str(i.latitude)
             __['admin_user_id']=i.admin_user_id
-            __['admin_name']=User.query.get_or_404(i.admin_user_id).name
+            __['admin_name']=User.query.get_or_404(i.admin_user_id).username
             _.append(__)
             result={
                 'code':0,
@@ -102,18 +102,28 @@ class InstituteView(Resource):
     @api.response(200,'ok')
     def get(self,insid):
         ins=Ins.query.get_or_404(insid)
-        _=Ins()
+
         instute={
-
+            'ins_id':ins.id,
+            'ins_admin':ins.admin_user_id,
+            'admin_name':User.query.get_or_404(ins.admin_user_id).username,
+            'admin_tel':User.query.get_or_404(ins.admin_user_id).contract_tel,
+            'type':ins.type,
+            'ins_name':ins.name,
+            'ins_picture':ins.ins_picture,
+            'ins_address':ins.ins_address,
+            'location_id':ins.location_id,
+            'location_district':Location.query.get_or_404(ins.location_id).district,
+            'longitude':str(ins.longitude),
+            'latitude':str(ins.latitude),
+            'note':ins.note
         }
-
-
         if g.role.name in ['propertyuser','stationuser']:
-            if institute.admin_user_id!=g.user.id:
+            if ins.admin_user_id!=g.user.id:
                 return '权限不足',201
-            else: return institute,200
+            else: return instute,200
         else:
-            return institute,200
+            return instute,200
 
 
     @api.doc('根据id更新机构信息')
