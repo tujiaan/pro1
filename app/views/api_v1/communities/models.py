@@ -19,7 +19,7 @@ community_model=api.model('CommunityModel',{
     'longitude':fields.Float,
     'latitude':fields.Float,
     'location_id': fields.String,
-    'community_picture':fields.Nested(community_pic_model)
+    'community_picture':fields.String#fields.Nested(community_pic_model)
 
 })
 home_model = api.model('HomeModel', {

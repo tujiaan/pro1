@@ -8,6 +8,7 @@ from app.models import Community, Ins, Home, UserRole, Role, Location
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
+from app.utils.tools.upload_file import upload_file
 from app.views.api_v1 import homes
 
 from app.views.api_v1.communities.parser import community_parser, community_parser1
@@ -97,7 +98,7 @@ class CommunitiesView(Resource):
             community.detail_address=args.get('detail_address',None)
         else:pass
         if args['community_picture']:
-            community.community_picture= args['community_picture'].read()
+            community.community_picture= upload_file(args['community_picture'])
         else:pass
         if args['location_id']:
             community.location_id=args['location_id']
@@ -178,7 +179,7 @@ class CommunityView(Resource):
         else:
             pass
         if args['community_picture']:
-            community.community_picture = args['community_picture'].read()
+            community.community_picture = upload_file(args['community_picture'])
         else:
             pass
         if args['location_id']:

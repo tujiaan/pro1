@@ -94,7 +94,7 @@ class Community(db.Model):
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     name = db.Column(db.String(255), comment='社区名')
-    community_picture = db.Column(db.LargeBinary, comment='社区图片')
+    community_picture = db.Column(db.String(200), comment='社区图片')
     detail_address = db.Column(db.String(255), comment='详细地址')
     save_distance = db.Column(db.Integer, comment='求救距离')
     eva_distance = db.Column(db.Integer, comment='疏散距离')
