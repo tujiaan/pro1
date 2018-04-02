@@ -2,13 +2,12 @@ from flask import g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Ins, User, Facility, Community, FacilityIns, UserRole, Role
+from app.models import Ins, User, FacilityIns, UserRole, Role
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
-
+from app.utils.tools.upload_file import upload_file
 from app.views.api_v1.institutes.parser import institutes_parser, institutes_parser1
-
 
 api = Namespace('Institutes', description='组织相关接口')
 
@@ -57,10 +56,11 @@ class InstitutesViews(Resource):
             institute.longitude = args['longitude']
             institute.ins_address = args['ins_address']
             institute.location_id = args['location_id']
-            if args['ins_picture']:
-                institute.ins_picture = args['ins_picture'].read()
-            else:
-                pass
+            institute.ins_picture = upload_file(args['ins_picture'])
+            # if args['ins_picture']:
+            #     institute.ins_picture = args['ins_picture'].read()
+            # else:
+            #     pass
             institute.location_id = args['location_id']
             db.session.add(institute)
             institute.user.append(user)
