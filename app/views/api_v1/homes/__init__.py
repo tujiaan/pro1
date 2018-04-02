@@ -239,10 +239,15 @@ class HomeInsView(Resource):
             lat1 = math.radians(lat1)
             lng0 = math.radians(lng0)
             lng1 = math.radians(lng1)
+
             dlng = math.fabs(lng0 - lng1)
             dlat = math.fabs(lat0 - lat1)
-            miles = ((69.1 * dlat) ** 2 + (53.0 * dlng) ** 2) ** .5
-            return miles * 1.6092953
+            a = math.sin(dlat / 2) ** 2 + math.cos(lat0) * math.cos(lat1) * math.sin(dlng / 2) ** 2
+            c = 2 * math.asin(math.sqrt(a))
+            r = 6371  # 地球平均半径，单位为公里
+            return c * r * 1000
+            # miles = ((69.1 * dlat) ** 2 + (53.0 * dlng) ** 2) ** .5
+            # return miles * 1.6092953
         query=Ins.query
         query=query.offset((int(page) - 1) * limit).limit(limit)
         _ = []
@@ -253,7 +258,7 @@ class HomeInsView(Resource):
             __['ins_latitude'] = str(i.latitude)
             __['ins_type'] = i.type
             __['ins_place'] = i.name
-            __['distance'] = getDistance(i.latitude,i.longitude,home.latitude,home.longitude)
+            __['distance'] = round(getDistance(i.latitude,i.longitude,home.latitude,home.longitude))
             if  getDistance(i.latitude,i.longitude,home.latitude,home.longitude)<float(distance):
               _.append(__)
         total=len(_)

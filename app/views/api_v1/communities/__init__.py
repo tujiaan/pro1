@@ -28,7 +28,6 @@ class CommunitiesView(Resource):
         limit = request.args.get('limit', 10)
         query=Community.query.order_by(Community.id).offset((int(page) - 1) * limit).limit(limit)
         total=query.count()
-        print(query.all())
         _=[]
         for i in query.all():
             __={}

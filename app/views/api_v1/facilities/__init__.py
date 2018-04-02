@@ -5,6 +5,7 @@ from app.ext import db
 from app.models import Facility, FacilityIns, Knowledge, UserRole, Role, Ins
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
+from app.utils.tools.upload_file import upload_file
 from app.views.api_v1.facilities.parser import facility_parser, facility_parser1, f_parser, f1_parser
 
 api = Namespace('Facilities', description='设备相关接口')
@@ -35,7 +36,7 @@ class FacilitiesInsView(Resource):
         facility_data=Facility()
         facility_data.facility_name=args['facility_name']
         p=args['facility_picture']
-        facility_data.facility_picture=p.read()
+        facility_data.facility_picture=upload_file(p)
         db.session.add(facility_data)
         db.session.commit()
         return None,200
@@ -63,7 +64,7 @@ class FacilityDataView(Resource):
             facility.facility_name=args['facility_name']
         else:pass
         if args['facility_picture']:
-            facility.facility_picture=args['facility_picture']
+            facility.facility_picture=upload_file(args['facility_picture'])
         else:pass
         if g.role.name not in['propertyuser','stationuser']:
            db.session.commit()

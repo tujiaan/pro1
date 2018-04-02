@@ -20,7 +20,7 @@ facility_data_picture_model=api.model('FacilityPictureModel',{
 facility_data_model = api.model('FacilityDataModel', {
     'id': fields.String,
     'facility_name':fields.String,
-    'facility_picture':fields.Nested(facility_data_picture_model)
+    'facility_picture':fields.String#Nested(facility_data_picture_model)
 
 
 
