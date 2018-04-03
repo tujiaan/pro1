@@ -26,12 +26,13 @@ class InstitutesViews(Resource):
         limit = request.args.get('limit', 10)
         list = Ins.query
         if g.role.name in ['admin','119user','superadmin']:
-           query=list.order_by(Ins.id).offset((int(page) - 1) * limit).limit(limit)
+           query=list
         else:
-            query= list.filter(Ins.admin_user_id == g.user.id).order_by(Ins.id).offset((int(page) - 1) * limit).limit(limit)
-        total=query.count()
+            query= list.filter(Ins.admin_user_id == g.user.id)
+        query1=query.order_by(Ins.id).offset((int(page) - 1) * limit).limit(limit)
+        total=query1.count()
         _=[]
-        for i in query.all():
+        for i in query1.all():
             __={}
             __['ins_id']=i.id
             __['ins_type']=i.type
@@ -46,13 +47,13 @@ class InstitutesViews(Resource):
             __['admin_user_id']=i.admin_user_id
             __['admin_name']=User.query.get_or_404(i.admin_user_id).username
             _.append(__)
-            result={
-                'code':0,
-                'msg':'ok',
-                'count':total,
-                'data':_
-            }
-            return result,200
+        result={
+            'code':0,
+            'msg':'ok',
+            'count':total,
+            'data':_
+        }
+        return result,200
 
 
 
