@@ -66,6 +66,9 @@ class FacilityDataView(Resource):
         if args['facility_picture']:
             facility.facility_picture=upload_file(args['facility_picture'])
         else:pass
+        if args['note']:
+            facility.facility_picture=args['note']
+        else:pass
         if g.role.name not in['propertyuser','stationuser']:
            db.session.commit()
            return'修改成功',200
@@ -107,7 +110,6 @@ class FacilitesInsView(Resource):
     @page_range()
     def get(self):
        list=FacilityIns.query
-       print( i.expire_time for i in list.all())
        return list,200
 
 
@@ -134,8 +136,10 @@ class FacilitesInsView(Resource):
     def get(self,insid):
         page=request.args.get('page',1)
         limit=request.args.get('limit',10)
-        query=FacilityIns.query.filter(FacilityIns.ins_id==insid).offset((int(page) - 1) * limit).limit(limit)
-        total=query.count()
+        query = FacilityIns.query
+        total = query.count()
+        query=query.filter(FacilityIns.ins_id==insid).offset((int(page) - 1) * limit).limit(limit)
+
         _=[]
         for i in query.all():
             __={}
@@ -143,6 +147,7 @@ class FacilitesInsView(Resource):
             __['ins_id']=i.ins_id
             __['ins_name']=Ins.query.get_or_404(i.ins_id).name
             __['facility_id']=i.facility_id
+            __['facility_name']=Facility.query.get_or_404(i.facility_id).facility_name
             __['count']=i.count
             __['expire_time']=str(i.expire_time)
             _.append(__)
@@ -194,6 +199,11 @@ class FacilitesView(Resource):
         if args.get('expire_time'):
             facilityins.expire_time=args.get('expire_time')
         else:pass
+        if args.get('note'):
+            facilityins.expire_time=args.get('note')
+        else:pass
+        db.session.commit()
+        return None,200
        ##############################有问题########################
 
 
