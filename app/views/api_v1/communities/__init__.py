@@ -231,8 +231,18 @@ class CommunityInsViews(Resource):
     def post(self,communityid,insid):
         community=Community.query.get_or_404(communityid)
         ins=Ins.query.get_or_404(insid)
-        community.ins.add(ins)
+        community.ins.append(ins)
         return None,200
+
+    @api.doc('解除机构和社区绑定')
+    @api.response(200, 'ok')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['admin', 'superadmin'])
+    def post(self, communityid, insid):
+        community = Community.query.get_or_404(communityid)
+        ins = Ins.query.get_or_404(insid)
+        community.ins.remove(ins)
+        return None, 200
 
 
 
