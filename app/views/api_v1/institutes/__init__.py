@@ -25,14 +25,14 @@ class InstitutesViews(Resource):
         page = request.args.get('page', 1)
         limit = request.args.get('limit', 10)
         list = Ins.query
-        if g.role.name in ['admin','119user','superadmin']:
+        if g.role.name in ['propertyuser','stationuser','admin','119user','superadmin']:
            query=list
         else:
             query= list.filter(Ins.admin_user_id == g.user.id)
-        query1=query.order_by(Ins.id).offset((int(page) - 1) * limit).limit(limit)
-        total=query1.count()
+        query=query.order_by(Ins.id).offset((int(page) - 1) * int(limit)).limit(int(limit))
+        total=query.count()
         _=[]
-        for i in query1.all():
+        for i in query.all():
             __={}
             __['ins_id']=i.id
             __['ins_type']=i.type
@@ -103,7 +103,6 @@ class InstituteView(Resource):
     @api.response(200,'ok')
     def get(self,insid):
         ins=Ins.query.get_or_404(insid)
-
         instute={
             'ins_id':ins.id,
             'ins_admin':ins.admin_user_id,
@@ -119,12 +118,12 @@ class InstituteView(Resource):
             'latitude':str(ins.latitude),
             'note':ins.note
         }
-        if g.role.name in ['propertyuser','stationuser']:
-            if ins.admin_user_id!=g.user.id:
-                return '权限不足',201
-            else: return instute,200
-        else:
-            return instute,200
+        # if g.role.name in ['propertyuser','stationuser']:
+        #     if ins.admin_user_id!=g.user.id:
+        #         return '权限不足',201
+        #     else: return instute,200
+        # else:
+        return instute,200
 
 
     @api.doc('根据id更新机构信息')

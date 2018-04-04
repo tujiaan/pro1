@@ -107,6 +107,7 @@ class FacilitesInsView(Resource):
     @page_range()
     def get(self):
        list=FacilityIns.query
+       print( i.expire_time for i in list.all())
        return list,200
 
 

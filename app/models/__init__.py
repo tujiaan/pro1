@@ -200,7 +200,7 @@ class Sensor(db.Model):
     gateway_id = db.Column(db.String(24), db.ForeignKey('gateway.id'), comment='网关id')
     gateway = db.relationship('Gateway')
     sensor_place = db.Column(db.String(255), comment='位置')
-    sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾1.温度 2.燃气 3.电流,4)')
+    sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾,1.温度 2.燃气 3.智能插座,4.电磁阀，5.湿度)')
     start_time=db.Column(db.DateTime,comment='开始时间')
     sensor_switch=db.Column(db.Boolean,default=False,comment='传感器开关')
     end_time=db.Column(db.DateTime,comment='结束时间')
@@ -255,6 +255,7 @@ class User(db.Model):
     lastTime = db.Column(db.DateTime, comment='最后登陆时间')
     user_role = db.relationship('UserRole',foreign_keys=[UserRole.user_id], backref=db.backref('f_user_role', lazy='joined'), lazy='dynamic')
     real_name = db.Column(db.String(50), comment='姓名')
+   # sensor_visable=db.Column(db.Boolean,default=True,comment='传感器是否可见')
     ins = db.relationship('Ins', secondary=t_user_ins,
                           backref=db.backref('f_ins', lazy='dynamic'), lazy='dynamic')
 

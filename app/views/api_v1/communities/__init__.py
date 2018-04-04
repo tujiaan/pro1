@@ -19,7 +19,7 @@ from app.views.api_v1.communities.models import community_model, _community_mode
 @api.route('/')
 class CommunitiesView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', '119user','superadmin'])
+    @role_require(['propertyuser','stationuser','admin', '119user','superadmin'])
     @api.doc('查询所有的社区列表')
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
@@ -40,8 +40,14 @@ class CommunitiesView(Resource):
             __['latitude']=str(i.latitude)
             __['location_id']=i.location_id
             __['location_district']=Location.query.get_or_404(i.location_id).district
-            __['community_picture']=i.community_picture#base64.b64encode(i.community_picture).decode()
-            _.append(__)
+            __['community_picture']=i.community_picture
+            if g.role.name in['propertyuser','stationuser']:
+                for j in i.ins.all():
+                 if g.user.id== j.admin_user_id:
+                     _.append(__)
+                 else:pass
+            else:
+                _.append(__)
         result={
             'code':0,
             'message':'ok',

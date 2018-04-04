@@ -14,7 +14,7 @@ from .models import *
 @api.route('/')
 class SensorAlarmsView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser','admin','superadmin'])
+    @role_require(['homeuser','propertyuser','stationuser','admin','superadmin'])
     @api.doc('查询传感器报警记录列表')
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量','start':'开始时间见','end':'结束时间','type':'传感器类型'})
@@ -24,8 +24,6 @@ class SensorAlarmsView(Resource):
         start=request.args.get('star',2018-1-1)
         end=request.args.get('end',datetime.datetime.now())
         type=request.args.get('type',None)
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
         home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
         sensors=Sensor.query.filter(Sensor.home_id.in_(i.id for i in home)).all()

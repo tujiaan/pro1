@@ -65,14 +65,17 @@ class SensorsView(Resource):
     @api.response(200, 'ok')
     @api.expect(sensor_parser,validate=True)
     def post(self):
-        url='119.28.155.88:8080/data/api/v1/dataPoint/53/list'
-        result=getResponse(url)
-
-
-
-
-        db.session.commit()
+        url = 'http://119.28.155.88:8080/data/api/v1/dataPoint/53/list'
+        result = getResponse(url)
+        list = result.get('data')
+        for i in list:
+            name = i.get('name')
+            str = name.split('-')
+            sensor= Sensor(id=str[1],sensor_type=str[0])
+            db.session.add(sensor)
+        db.session.commit()##########################################待修改
         return None,200
+
 @api.route('/<sensorid>/')
 class SensorsView(Resource):
     @api.header('jwt', 'JSON Web Token')
