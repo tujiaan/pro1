@@ -8,6 +8,7 @@ from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.utils.tools.upload_file import upload_file
 from app.views.api_v1.institutes.parser import institutes_parser, institutes_parser1
+from app.views.api_v1.homes import HomeInsView
 
 api = Namespace('Institutes', description='组织相关接口')
 
@@ -193,6 +194,40 @@ class InstituteView(Resource):
         db.session.delete(institute)
         db.session.commit()
         return '删除成功',200
+@api.route('/<insid>/<distance>/ins')
+class InsIns(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['propertyuser','stationuser','admin', 'superadmin'])
+    @api.doc('查询机构附近的机构')
+    @api.doc(params={'page':'页数','limit':'数量'})
+    @api.response(200,'ok')
+    def get(self,insid,distance):
+        distance=request.args.get('distance',200)
+        page=request.args.get('page',1)
+        limit=request.args.get('limit',10)
+        ins=Ins.query.get_or_404(insid)
+        query=Ins.query.offset((int(page) - 1) * limit).limit(limit)
+        _=[]
+        for i in query.all():
+            __={}
+            __['ins_id']=i.id
+            __['ins_type']=i.type
+            __['ins_name']=i.name
+            __['longitude']=str(i.longitude)
+            __['latitude']=str(i.latitude)
+            __['ins_picture']=i.ins_picture
+            __['distance'] = round(HomeInsView.getDistance(i.latitude,i.longitude,ins.latitude,ins.longitude))
+            if HomeInsView.getDistance(i.latitude,i.longitude,ins.latitude,ins.longitude)<float(distance):
+              _.append(__)
+        total=len(_)
+        result={
+            'code':0,
+            'msg':'ok',
+            'count':total,
+            'data':_
+        }
+        return result,200
+
 
 @api.route('/<insid>/users')
 class InsUsesrView(Resource):

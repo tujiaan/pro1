@@ -137,9 +137,8 @@ class FacilitesInsView(Resource):
         page=request.args.get('page',1)
         limit=request.args.get('limit',10)
         query = FacilityIns.query
-        total = query.count()
         query=query.filter(FacilityIns.ins_id==insid).offset((int(page) - 1) * limit).limit(limit)
-
+        total = query.count()
         _=[]
         for i in query.all():
             __={}
@@ -148,8 +147,10 @@ class FacilitesInsView(Resource):
             __['ins_name']=Ins.query.get_or_404(i.ins_id).name
             __['facility_id']=i.facility_id
             __['facility_name']=Facility.query.get_or_404(i.facility_id).facility_name
+            __['facility_picture']=Facility.query.get_or_404(i.facility_id).facility_picture
             __['count']=i.count
             __['expire_time']=str(i.expire_time)
+            __['note']=i.note
             _.append(__)
 
         result={

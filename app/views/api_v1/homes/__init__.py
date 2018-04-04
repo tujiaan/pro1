@@ -35,14 +35,13 @@ class HomesView(Resource):
         page = request.args.get('page', 1)
         limit = request.args.get('limit', 10)
         list=Home.query
-        total = list.count()
         homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id)
         if  g.role.name=='homeuser':
            query= list.filter(g.user.id.in_(homeuser.user_id))
 
         else: query= list
         query1=query.order_by(Home.id).offset((int(page) - 1) * limit).limit(limit)
-
+        total=query1.count()
         _=[]
         for i in query1.all():
             __={}
