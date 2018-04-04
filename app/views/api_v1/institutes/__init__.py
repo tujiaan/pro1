@@ -8,7 +8,7 @@ from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.utils.tools.upload_file import upload_file
 from app.views.api_v1.institutes.parser import institutes_parser, institutes_parser1
-from app.views.api_v1.homes import HomeInsView
+from app.views.api_v1.homes import *
 
 api = Namespace('Institutes', description='组织相关接口')
 

@@ -25,7 +25,6 @@ f_parser.add_argument('note', type=str, help='备注', required=True, location='
 f_parser.add_argument('facility_picture', type=FileStorage, help='设施图片', required=True, location='files')
 
 f1_parser = RequestParser()
-
 f1_parser.add_argument('facility_name', type=str, help='设施名', required=False, location='form')
 f1_parser.add_argument('note', type=str, help='备注', required=False, location='form')
 f1_parser.add_argument('facility_picture', type=FileStorage, help='设施图片', required=False, location='files')
