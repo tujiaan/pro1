@@ -2,7 +2,7 @@ from flask import g, request
 from flask_restplus import Namespace
 from flask_restplus import  Resource
 from app.ext import db
-from app.models import Facility, Sensor, Home, SensorAlarm, SensorHistory, HomeUser, UserRole, Role
+from app.models import Facility, Sensor, Home, SensorAlarm, SensorHistory, HomeUser, UserRole, Role, User
 from app.utils.auth.auth import role_require
 from app.utils.myutil.url import getResponse
 from app.utils.tools.page_range import page_range, page_format
@@ -83,10 +83,9 @@ class SensorsView(Resource):
     @api.doc('获取传感器详情')
     @api.response(200, 'ok')
     def get(self,sensorid):
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
-        homeuser= HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
-        home=Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
+        sensor=Sensor.query.get_or_404(sensorid)
+        user=User.query.get_or_404(sensor.home.admin_user_id)
+        homeuser= HomeUser.query.filter(HomeUser.home_id==sensor.home_id).all()
         query=db.session.query(Sensor,SensorHistory,Home).join(SensorHistory,Sensor.id==SensorHistory.sensor_id).\
             join(Home,Sensor.home_id==Home.id).filter(Sensor.id==sensorid)
         total=query.count()
@@ -106,12 +105,25 @@ class SensorsView(Resource):
             'count': total,
             'data': _
         }
-
-        if g.role.name=='homeuser':
-            if query.first()[2].id not in [i.id for i in home.all()]:
-                return '权限不足',201
+        if user.sensor_visable==False:
+            if g.role.name=='homeuser':
+                if g.user.id not in homeuser:
+                    return '权限不足',201
+                else: return result,200
+            elif g.role.name in[ 'propertyuser', 'stationuser', '119user']:
+                return '权限不足', 201
             else:return result,200
-        return result,200
+        else:
+            if g.role.name == 'homeuser':
+                if g.user.id not in homeuser:
+                    return '权限不足', 201
+                else:return result,200
+            else:
+                return result,200
+
+
+
+
 
     @api.doc('更新传感器信息')
     @api.header('jwt', 'JSON Web Token')

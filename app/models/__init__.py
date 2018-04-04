@@ -257,7 +257,7 @@ class User(db.Model):
     lastTime = db.Column(db.DateTime, comment='最后登陆时间')
     user_role = db.relationship('UserRole',foreign_keys=[UserRole.user_id], backref=db.backref('f_user_role', lazy='joined'), lazy='dynamic')
     real_name = db.Column(db.String(50), comment='姓名')
-   # sensor_visable=db.Column(db.Boolean,default=True,comment='传感器是否可见')
+    sensor_visable=db.Column(db.Boolean,default=True,comment='传感器是否可见')
     ins = db.relationship('Ins', secondary=t_user_ins,
                           backref=db.backref('f_ins', lazy='dynamic'), lazy='dynamic')
 
