@@ -202,6 +202,8 @@ class Sensor(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     gateway_id = db.Column(db.String(24), db.ForeignKey('gateway.id'), comment='网关id')
     gateway = db.relationship('Gateway')
+    home_id=db.Column(db.String(24),comment='家庭id')
+    home=db.relationship('Home')
     sensor_place = db.Column(db.String(255), comment='位置')
     sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾,1.温度 2.燃气 3.智能插座,4.电磁阀)')
     max_value=db.Column(db.Float,comment='阈值')
