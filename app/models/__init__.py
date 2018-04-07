@@ -130,7 +130,8 @@ class Gateway(db.Model):
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     useable = db.Column(db.Boolean, default=True, comment='是否可用')
-    home_id = db.Column(db.String(24),  comment='家庭id')
+    #home_id = db.Column(db.String(24), db.ForeignKey('home.id'), comment='家庭id')
+    #home = db.relationship('Home')
     sensors = db.relationship('Sensor', lazy='dynamic')
 
 
@@ -149,7 +150,7 @@ class Home(db.Model):
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     alternate_phone = db.Column(db.String(50), comment='备用电话')
     gateway_id=db.Column(db.String(50),db.ForeignKey('gateway.id'),comment='网关id')
-    sensor=db.relationship('Sensor',lazy='dynamic')
+    #sensor=db.relationship('Sensor',lazy='dynamic')
 
 
 class Knowledge(db.Model):
@@ -202,14 +203,18 @@ class Sensor(db.Model):
     gateway_id = db.Column(db.String(24), db.ForeignKey('gateway.id'), comment='网关id')
     gateway = db.relationship('Gateway')
     sensor_place = db.Column(db.String(255), comment='位置')
-    sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾,1.温度 2.燃气 3.智能插座,4.电磁阀，5.湿度)')
-    start_time=db.Column(db.DateTime,comment='开始时间')
-    sensor_switch=db.Column(db.Boolean,default=False,comment='传感器开关')
-    end_time=db.Column(db.DateTime,comment='结束时间')
+    sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾,1.温度 2.燃气 3.智能插座,4.电磁阀)')
     max_value=db.Column(db.Float,comment='阈值')
     alarms_history = db.relationship('SensorAlarm', lazy='dynamic')
-    home_id=db.Column(db.String(24),db.ForeignKey('home.id'),comment='家庭id')
-    home=db.relationship('Home')
+
+class SensorTime(Sensor):
+    __tablename__ = 'sensortime'
+    id = db.Column(db.String(24), default=objectid, primary_key=True)
+    sensor_id=db.Column(db.String(50),db.ForeignKey('sensor.id'),comment='传感器id')
+    start_time = db.Column(db.DateTime, comment='开始时间')
+    end_time = db.Column(db.DateTime, comment='结束时间')
+
+
 
 
 class SensorHistory(db.Model):
@@ -242,10 +247,8 @@ class SensorAlarm(db.Model):
    # user = db.relationship('User')
     is_confirm = db.Column(db.Boolean, default=False, comment='是否确认')
 
-
 class User(db.Model):
     __tablename__ = 'user'
-
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     disabled = db.Column(db.Boolean, default=False, comment='是否停用   (1、禁用 0、正常)')
     contract_tel = db.Column(db.String(20), comment='用户电话')

@@ -5,6 +5,7 @@ from .csrf import csrf
 from .db import db
 from .jpush import Jpush
 from .logger import logger
+from .getui import getui
 
 
 def ext_init(app):
@@ -15,3 +16,4 @@ def ext_init(app):
     cors.init_app(app)
     Jpush.init_app(app)
     scheduler.init_app(app)
+    getui.init_app(app)

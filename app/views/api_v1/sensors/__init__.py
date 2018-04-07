@@ -2,13 +2,13 @@ from flask import g, request
 from flask_restplus import Namespace
 from flask_restplus import  Resource
 from app.ext import db
-from app.models import Facility, Sensor, Home, SensorAlarm, SensorHistory, HomeUser, UserRole, Role, User
+from app.models import Facility, Sensor, Home, SensorAlarm, SensorHistory, HomeUser, UserRole, Role, User, SensorTime
 from app.utils.auth.auth import role_require
-from app.utils.myutil.url import getResponse
+#from app.utils.myutil.url import getResponse
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms import sensoralarms_model
 from app.views.api_v1.sensorhistory import sensorhistory_model
-from app.views.api_v1.sensors.parsers import sensor_parser, sensor_parser1
+from app.views.api_v1.sensors.parsers import sensor_parser, sensor_parser1, sensor_parser2
 
 api = Namespace('Sensors', description='传感器相关接口')
 from .model import *
@@ -65,15 +65,15 @@ class SensorsView(Resource):
     @api.response(200, 'ok')
     @api.expect(sensor_parser,validate=True)
     def post(self):
-        url = 'http://119.28.155.88:8080/data/api/v1/dataPoint/53/list'
-        result = getResponse(url)
-        list = result.get('data')
-        for i in list:
-            name = i.get('name')
-            str = name.split('-')
-            sensor= Sensor(id=str[1],sensor_type=str[0])
-            db.session.add(sensor)
-        db.session.commit()##########################################待修改
+        # url = 'http://119.28.155.88:8080/data/api/v1/dataPoint/53/list'
+        # result = getResponse(url)
+        # list = result.get('data')
+        # for i in list:
+        #     name = i.get('name')
+        #     str = name.split('-')
+        #     sensor= Sensor(id=str[1],sensor_type=str[0])
+        #     db.session.add(sensor)
+        # db.session.commit()##########################################待修改
         return None,200
 
 @api.route('/<sensorid>/')
@@ -147,12 +147,6 @@ class SensorsView(Resource):
             sensor1.home_id = args.get('home_id')
         else:
             pass
-        if args['start_time']:
-            sensor1.start_time=args.get('start_time')
-        else:pass
-        if args['end_time']:
-            sensor1.end_time=args.get('end_time')
-        else:pass
         if args['max_value']:
             sensor1.max_value=args.get('max_value')
         else:pass
@@ -163,6 +157,25 @@ class SensorsView(Resource):
             db.session.commit()
             return None,200
         else:return '权限不足',301
+
+    @api.doc('定时设定')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser'])
+    @api.response(200, 'ok')
+    @api.expect(sensor_parser2)
+    def post(self,sensorid):
+        sensor=SensorTime.query.get_or_404(sensorid)
+        args=sensor_parser2.parse_args()
+        if sensor.sensor_type==3:
+            if args['start_time']:
+                sensor.start_time=['start_time']
+            else:pass
+            if args['end_time']:
+                sensor.end_time= args['end_time']
+            else:pass
+            db.session.commit()
+
+
 
 
 @api.route('/<sensorid>/sensoralarm')

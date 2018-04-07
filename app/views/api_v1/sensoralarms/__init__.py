@@ -52,6 +52,8 @@ class SensorAlarmsView(Resource):
          __['sensoralarms_sensor_type']=i.sensor_type
          __['sensoralarms_alarm_value']=i.alarm_value
          __['sensoralarms_note'] = i.note
+         __['home_name']=Sensor.query.get_or_404(i.sensor_id).home.name
+         __['home_admin_id']=Sensor.query.get_or_404(i.sensor_id).home.admin_user_id
          __['sensoralarm_is_confirm']=i.is_confirm
          __['sensoralarms_alarm_time']=str(i.alarm_time)
          __['detail_address']=i.sensor.home.detail_address

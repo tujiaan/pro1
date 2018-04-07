@@ -9,6 +9,7 @@ from app.utils.tools.page_range import page_range, page_format
 from app.utils.tools.upload_file import upload_file
 from app.views.api_v1.institutes.parser import institutes_parser, institutes_parser1
 from app.views.api_v1.homes import *
+import math
 
 api = Namespace('Institutes', description='组织相关接口')
 
@@ -98,7 +99,7 @@ class InstitutesViews(Resource):
 @api.route('/<insid>')
 class InstituteView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser','propertyuser', 'stationuser','admin', 'superadmin'])
+    @role_require(['homeuser','propertyuser','119user', 'stationuser','admin', 'superadmin'])
     @api.doc('根据机构id查询机构')
   #  @api.marshal_with(institute_model)
     @api.response(200,'ok')
@@ -202,7 +203,18 @@ class InsIns(Resource):
     @api.doc(params={'page':'页数','limit':'数量'})
     @api.response(200,'ok')
     def get(self,insid,distance):
-        distance=request.args.get('distance',200)
+        def getDistance(lat0, lng0, lat1, lng1):
+            lat0 = math.radians(lat0)
+            lat1 = math.radians(lat1)
+            lng0 = math.radians(lng0)
+            lng1 = math.radians(lng1)
+            dlng = math.fabs(lng0 - lng1)
+            dlat = math.fabs(lat0 - lat1)
+            a = math.sin(dlat / 2) ** 2 + math.cos(lat0) * math.cos(lat1) * math.sin(dlng / 2) ** 2
+            c = 2 * math.asin(math.sqrt(a))
+            r = 6371  # 地球平均半径，单位为公里
+            return c * r * 1000
+        distance=request.args.get('distance',distance)
         page=request.args.get('page',1)
         limit=request.args.get('limit',10)
         ins=Ins.query.get_or_404(insid)
@@ -216,9 +228,11 @@ class InsIns(Resource):
             __['longitude']=str(i.longitude)
             __['latitude']=str(i.latitude)
             __['ins_picture']=i.ins_picture
-            __['distance'] = round(HomeInsView.getDistance(i.latitude,i.longitude,ins.latitude,ins.longitude))
-            if HomeInsView.getDistance(i.latitude,i.longitude,ins.latitude,ins.longitude)<float(distance):
+            __['distance'] = round(getDistance(i.latitude,i.longitude,ins.latitude,ins.longitude))
+            if getDistance(i.latitude,i.longitude,ins.latitude,ins.longitude)<float(distance) \
+                    and getDistance(i.latitude,i.longitude,ins.latitude,ins.longitude)!=0:
               _.append(__)
+            else :continue
         total=len(_)
         result={
             'code':0,
@@ -227,6 +241,7 @@ class InsIns(Resource):
             'data':_
         }
         return result,200
+
 
 
 @api.route('/<insid>/users')

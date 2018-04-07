@@ -4,6 +4,7 @@ login_parser = RequestParser()
 login_parser.add_argument('role_id', type=str, help='角色id', required=True, location='form')
 login_parser.add_argument('username', type=str, help='用户名', required=True, location='form')
 login_parser.add_argument('password', type=str, help='密码', required=True, location='form')
+#login_parser.add_argument('cid', type=str, help='客户端id', required=False, location='form')
 
 login_parser1 = RequestParser()
 login_parser1.add_argument('role_id', type=str, help='角色id', required=True, location='form')

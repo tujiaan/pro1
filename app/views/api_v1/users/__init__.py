@@ -8,6 +8,7 @@ from app.utils.auth.auth import role_require
 from app.utils.auth.jwt import encode_jwt, decode_jwt
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.institutes import institute_model
+from app.ext import getui
 
 from .parsers import *
 
@@ -59,7 +60,7 @@ class LoginView(Resource):
         if u is not None and args.get('role_id', None) in [i.id for i in roles]:
             jwt = encode_jwt(user_id=u.id,role_id=r.id)
             return {'jwt': jwt}, 200
-        return None, 409
+        else:return None, 409
 @api.route('/app/login/')
 class LoginView(Resource):
     @api.doc('登陆')

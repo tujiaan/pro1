@@ -18,8 +18,10 @@ sensor_parser1.add_argument('gateway_id', type=str, help='网关id', required=Fa
 sensor_parser1.add_argument('sensor_type', type=str, help='传感器类型', required=False, location='form')
 sensor_parser1.add_argument('sensor_place', type=str, help='传感器位置', required=False, location='form')
 sensor_parser1.add_argument('home_id', type=str, help='家庭id', required=False, location='form')
-sensor_parser1.add_argument('start_time', type=str, help='开始时间', required=False, location='form')
-sensor_parser1.add_argument('end_time', type=str, help='结束时间', required=False, location='form')
 sensor_parser1.add_argument('max_value', type=float, help='最大值', required=False, location='form')
-sensor_parser1.add_argument('sensor_switch', type=str, help='传感器开关', required=False, location='form')
+
+sensor_parser2= RequestParser()
+sensor_parser2.add_argument('start_time',type=str,help='开启时间',required=True,location='form')
+sensor_parser2.add_argument('end_time',type=str,help='关闭时间',required=True,location='form')
+
 
