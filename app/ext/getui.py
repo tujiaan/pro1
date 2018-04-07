@@ -84,7 +84,7 @@ class Getui(object):
                 "notification": {
                     "style": {
                         "type": 0,
-                        "text": "你好",
+                        "text": content,
                         "title": "消息推送"
                     },
                     "transmission_type": True,
