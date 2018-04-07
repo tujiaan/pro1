@@ -311,7 +311,8 @@ class HomeSensorView(Resource):
             if g.user.id in [i.user_id for i in homeuser]:
                 query=Sensor.query.filter(Sensor.home_id==home.id).all()
             else:pass
-        else:query=Sensor.query.all()
+        else:
+            query=Sensor.query.all()
         _=[]
         for i in query:
             __={}
