@@ -111,14 +111,18 @@ class UserHomeView1(Resource):
 
 @api.route('/ins/')
 class UserHomeView1(Resource):
-    @user_require
-    @page_format(code='0', msg='success')
     @api.header('jwt', 'JSON Web Token')
+    @role_require(['stationuser','propertyuser'])
+    @page_format(code='0', msg='success')
     @api.doc('查询自己关联的机构')
     @api.marshal_with(institute_model, as_list=True)
     @page_range()
     def get(self):
         ins = Ins.query.filter(Ins.user.contains(g.user))
+        if g.role.name=='propertyuser':
+            ins=ins.filter(Ins.type=='物业')
+        else:
+            ins = ins.filter(Ins.type == '消防站')
         return ins, 200
 
 

@@ -107,7 +107,7 @@ class SensorsView(Resource):
         }
         if user.sensor_visable==False:
             if g.role.name=='homeuser':
-                if g.user.id not in homeuser:
+                if g.user.id not in [i.user_id for i in homeuser]:
                     return '权限不足',201
                 else: return result,200
             elif g.role.name in[ 'propertyuser', 'stationuser', '119user']:
@@ -115,7 +115,7 @@ class SensorsView(Resource):
             else:return result,200
         else:
             if g.role.name == 'homeuser':
-                if g.user.id not in homeuser:
+                if g.user.id not in [i.user_id for i in homeuser]:
                     return '权限不足', 201
                 else:return result,200
             else:
@@ -149,9 +149,6 @@ class SensorsView(Resource):
             pass
         if args['max_value']:
             sensor1.max_value=args.get('max_value')
-        else:pass
-        if args['sensor_switch']:
-            sensor1.sensor_switch=True
         else:pass
         if g.user.id==home.admin_user_id:
             db.session.commit()

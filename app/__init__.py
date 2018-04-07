@@ -17,4 +17,8 @@ def create_app():
         from app.ext import scheduler
         from app.utils.scheduler import scheduler_init_job
         scheduler_init_job(app)
+        # from app.views import api_v1_bp
+        # app.register_blueprint(api_v1_bp)
+        from app.utils.mqtt import mqtt_register
+        mqtt_register(app)
     return app

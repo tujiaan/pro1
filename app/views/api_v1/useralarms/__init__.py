@@ -26,9 +26,6 @@ class UserAlarmRecordsView(Resource):
         start = request.args.get('start', 2018-1-1 )
         end = request.args.get('end', datetime.datetime.now().isoformat())
         type = request.args.get('type', None)
-        ins=Ins.query.filter(Ins.admin_user_id==g.user.id).all()
-        community=ins.community
-        home1=Home.query.filter(community.contains(Home.community)).all()
         homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
         home=Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
         query = db.session.query(UserAlarmRecord, Home, User).join(Home, UserAlarmRecord.home_id == Home.id) \
@@ -37,19 +34,43 @@ class UserAlarmRecordsView(Resource):
             query= query.filter(UserAlarmRecord.type==type)
             if g.role.name=='homeuser':
                 query=query. filter(UserAlarmRecord.home_id.in_(i.id for i in home))
-            elif g.role.name in ['propertyuser','stationuser']:
+            elif g.role.name == 'propertyuser':
+                ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type=='物业').all()
+                community = []
+                for i in ins:
+                    community.extend(i.community.all())
+                home1 = Home.query.filter(Home.community_id.in_(i.id for i in community)).all()
                 query=query.filter(UserAlarmRecord.home_id.in_(i.id for i in home1))
+            elif g.role.name=='stationuser':
+                ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '消防站').all()
+                community = []
+                for i in ins:
+                    community.extend(i.community.all())
+                home1 = Home.query.filter(Home.community_id.in_(i.id for i in community)).all()
+                query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home1))
             elif g.role.name=='119user':
-                query=query.filter(UserAlarmRecord.type==0)
+                query=query.filter(UserAlarmRecord.type!=2)
             else:query=query
         else:
             query = query
             if g.role.name == 'homeuser':
                 query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home)).order_by(UserAlarmRecord.id)
-            elif g.role.name in ['propertyuser', 'stationuser']:
-                query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home1)).order_by(UserAlarmRecord.id)
+            elif g.role.name == 'propertyuser':
+                ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '物业').all()
+                community = []
+                for i in ins:
+                    community.extend(i.community.all())
+                home1 = Home.query.filter(Home.community_id.in_(i.id for i in community)).all()
+                query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home1))
+            elif g.role.name == 'stationuser':
+                ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '消防站').all()
+                community = []
+                for i in ins:
+                    community.extend(i.community.all())
+                home1 = Home.query.filter(Home.community_id.in_(i.id for i in community)).all()
+                query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home1))
             elif g.role.name == '119user':
-                query = query.filter(UserAlarmRecord.type == 0)
+                query = query.filter(UserAlarmRecord.type != 2)
             else:
                 query = query
         query = query.order_by(UserAlarmRecord.id).offset((int(page) - 1) * limit).limit(limit)
@@ -67,14 +88,14 @@ class UserAlarmRecordsView(Resource):
             __['useralarmrecord_time'] = str(i[0].time)
             __['useralarmrecord_note'] = i[0].note
             __['useralarmrecord_is_timeout']= if_timeout(i[0].time)
+            __['rference_alarm_id']=i[0].reference_alarm_id
             __['home_id']=i[1].id
             __['home_name']=i[1].name
             __['detail_address']=i[1].detail_address
             __['user_id']=i[2].id
             __['user_name']=i[2].username
             __['contract_tel']=i[2].contract_tel
-            if g.role.name!='homeuser':
-             _.append(__)
+            _.append(__)
         result = {
             'code': 200,
             'msg': 'ok',
@@ -82,7 +103,6 @@ class UserAlarmRecordsView(Resource):
             'data': _
         }
         return result,200
-
 
     @api.doc('新增用户报警记录(用户提交传感器报警信息)')
     @api.header('jwt', 'JSON Web Token')

@@ -16,8 +16,7 @@ from .test import api as test_ns
 from .tools import api as tool_ns
 from .useralarms import api as useralarmrecord_ns
 from .users import api as user_ns, RegisterView
-
-
+from .mqtt import api as mqtt_ns
 api = flask_restplus.Api(api_bp,
                          title="消防API",
                          description="API",
@@ -40,6 +39,7 @@ api.add_namespace(community_ns,path='/community')
 api.add_namespace(homeuser_ns,path='/homeusers')
 api.add_namespace(sensorhistory_ns,path='/sensorhistory')
 api.add_namespace(test_ns, path='/test')
+api.add_namespace(mqtt_ns,path='/mqtt')
 
 @api_bp.before_request
 def before_request():

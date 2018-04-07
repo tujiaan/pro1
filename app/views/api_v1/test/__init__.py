@@ -8,7 +8,7 @@ api = Namespace('Test', description='测试接口')
 from .parser import *
 from app.ext import *
 from app.ext.getui import getui
-from app.utils.myutil.bind import utils
+#from app.utils.myutil.bind import utils
 #from app.views.api_v1 import api
 
 

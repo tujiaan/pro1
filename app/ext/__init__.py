@@ -6,6 +6,7 @@ from .db import db
 from .jpush import Jpush
 from .logger import logger
 from .getui import getui
+from .mqtt import mqtt
 
 
 def ext_init(app):
@@ -17,3 +18,4 @@ def ext_init(app):
     Jpush.init_app(app)
     scheduler.init_app(app)
     getui.init_app(app)
+    mqtt.init_app(app)
