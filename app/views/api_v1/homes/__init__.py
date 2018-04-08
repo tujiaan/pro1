@@ -98,7 +98,7 @@ class HomesView(Resource):
 @api.route('/<homeid>')
 class HomeView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser','admin', 'superadmin'])
+    @role_require(['homeuser','propertyuser','stationuser','119user','admin', 'superadmin'])
     @api.doc('根据家庭id查找家庭')
     @api.marshal_with(home_model)
     @api.response(200,'ok')
@@ -218,7 +218,7 @@ class HomeGatewayView(Resource):
 @api.route('/<homeid>/users')
 class HomeUsersView(Resource):
 
-    @role_require(['homeuser', 'admin', 'superadmin'])
+    @role_require(['homeuser','propertyuser','stationuser','119user','admin', 'superadmin'])
     @page_format(code=0, msg='ok')
     @api.doc('查找家庭下的所有用户')
     @api.header('jwt', 'JSON Web Token')

@@ -4,7 +4,7 @@ from flask import g, request
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Community, Ins, Home, UserRole, Role, Location
+from app.models import Community, Ins, Home, UserRole, Role, Location, UserAlarmRecord
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -194,15 +194,18 @@ class CommunityView(Resource):
         db.session.commit()
         return None,200
 
-    @api.doc('删除社区')
+    @api.doc('删除社区')################################################
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin',  'superadmin'])
     @api.response(200,'ok')
     def delete(self,communityid):
         community=Community.query.get_or_404(communityid)
         home=Home.query.filter(Home.id.in_( i.id for i in community.homes))
+
         list=community.ins
         for i in home:
+          useralarmrecord = UserAlarmRecord.query.filter(UserAlarmRecord.home_id == i.id)
+          db.session.delete(useralarmrecord)
           homes.HomeView.delete(self,i.id)
         for i in list:
             community.ins.remove(i)

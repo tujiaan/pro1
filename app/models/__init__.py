@@ -127,7 +127,6 @@ class Facility(db.Model):
                                 lazy='dynamic')
 class Gateway(db.Model):
     __tablename__ = 'gateway'
-
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     useable = db.Column(db.Boolean, default=True, comment='是否可用')
     home_id = db.Column(db.String(24), comment='家庭id')
@@ -227,6 +226,7 @@ class SensorHistory(db.Model):
     sensor_id=db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='传感器id')
     sensor_state=db.Column(db.String,comment='传感器状态 ')
     sensor_code = db.Column(db.Boolean, comment='是否正常 ')
+    sensor_value=db.Column(db.String(255),comment='当前值')
     time=db.Column(db.DateTime,comment='时间')
 
 

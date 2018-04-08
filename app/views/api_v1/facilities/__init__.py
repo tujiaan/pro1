@@ -59,7 +59,7 @@ class FacilityDataView(Resource):
         facility = Facility.query.get_or_404(facilityid)
         facilityins=FacilityIns.query.filter(FacilityIns.facility_id==facilityid).first()
         ins=Ins.query.filter(Ins.id==facilityins.ins_id).first()
-        args = facility_parser1.parse_args()
+        args = f1_parser.parse_args()
         if args['facility_name']:
             facility.facility_name=args['facility_name']
         else:pass
@@ -85,9 +85,11 @@ class FacilityDataView(Resource):
     @role_require(['admin', 'superadmin'])
     def delete(self,facilityid):
         facility = Facility.query.get_or_404(facilityid)
-        facilityins=FacilityIns.query.filter(FacilityIns.facility_id==facilityid).first()
-        knowledge=facility.knowledge
-        db.session.delete(facilityins)
+        knowledge = facility.knowledge
+        try:
+            facilityins=FacilityIns.query.filter(FacilityIns.facility_id==facilityid).first()
+            db.session.delete(facilityins)
+        except: pass
         db.session.commit()
         for i in knowledge:
             FacilityKnowledgeView.delete(self,facilityid,i.id)

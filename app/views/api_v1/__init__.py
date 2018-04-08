@@ -12,7 +12,7 @@ from .roles import api as role_ns
 from .sensoralarms import api as sensoralarm_ns
 from .sensorhistory import api as sensorhistory_ns
 from .sensors import api as sensor_ns
-from .test import api as test_ns
+from .getui import api as getui_ns
 from .tools import api as tool_ns
 from .useralarms import api as useralarmrecord_ns
 from .users import api as user_ns, RegisterView
@@ -38,7 +38,7 @@ api.add_namespace(useralarmrecord_ns,path='/useralarmrecords')
 api.add_namespace(community_ns,path='/community')
 api.add_namespace(homeuser_ns,path='/homeusers')
 api.add_namespace(sensorhistory_ns,path='/sensorhistory')
-api.add_namespace(test_ns, path='/test')
+api.add_namespace(getui_ns, path='/getui')
 api.add_namespace(mqtt_ns,path='/mqtt')
 
 @api_bp.before_request

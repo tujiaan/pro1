@@ -2,7 +2,7 @@ from flask import g, request
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Ins, User, FacilityIns, UserRole, Role, Location
+from app.models import Ins, User, FacilityIns, UserRole, Role, Location, UserAlarmRecord
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -10,6 +10,8 @@ from app.utils.tools.upload_file import upload_file
 from app.views.api_v1.institutes.parser import institutes_parser, institutes_parser1
 from app.views.api_v1.homes import *
 import math
+
+from app.views.api_v1.useralarms import useralarmrecord_model
 
 api = Namespace('Institutes', description='组织相关接口')
 
@@ -131,7 +133,6 @@ class InstituteView(Resource):
     @api.doc('根据id更新机构信息')
     @api.expect(institutes_parser1)
     @api.response(200,'ok')
-   # @api.marshal_with(institute_model,as_list=True)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['propertyuser','stationuser', 'admin', 'superadmin'])
     def put(self,insid):
@@ -171,7 +172,7 @@ class InstituteView(Resource):
         if g.role.name in ['propertyuser','stationuser']:
             if institute.admin_user_id == g.user.id:
                 db.session.commit()
-                return institute,200
+                return  '修改成功',200
             else:return '权限不足', 301
         elif g.role.name in ['admin','superadmin']:
             db.session.commit()
@@ -248,16 +249,36 @@ class InsIns(Resource):
 class InsUsesrView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['propertyuser','stationuser', 'admin', 'superadmin'])
-    @page_format(code=0,msg='ok')
     @api.doc('查询机构下面的用户列表')
-    @api.marshal_with(user_model,as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @page_range()
     def get(self,insid):
-        ins=Ins.query.get_or_404(insid)
-        if g.user.id==ins.admin_user_id or g.role.name in ['admin','superadmin'] :
-            return ins.user,200
-        else:return g.user,201
+        page=request.args.get('page',1)
+        limit=request.args.get('limit',10)
+        if g.role.name=='propertyuser':
+            ins=Ins.query.filter(Ins.id==insid).filter(Ins.type=='物业').first()
+        elif g.role.name=='stationuser':
+            ins=Ins.query.filter(Ins.id==insid).filter(Ins.type=='消防站').first()
+        else: ins=Ins.query.get_or_404(insid)
+        users=User.query.filter(User.id.in_( i.id for i in ins.user)).order_by(User.id).offset((int(page)-1)*limit).\
+            limit(limit).all()
+        total=len(users)
+        _=[]
+        for user in users:
+            __={}
+            __['user_id']=user.id
+            __['user_name']=user.username
+            __['telephone']=user.contract_tel
+            _.append(__)
+
+        result={
+            'code':0,
+            'message':"ok",
+            "count":total,
+            "data":_
+        }
+        return result,200
+
+
 
 @api.route('/<insid>/users/<userid>')
 class InsUserView(Resource):
@@ -308,6 +329,50 @@ class InsCommunityView(Resource):
     def get(self,insid):
         ins=Ins.query.get_or_404(insid)
         return ins.community,200
+
+@api.route('/<insid>/useralarmrecord')
+class InsUseralarmrecordViews(Resource):
+    @api.response(200, 'ok')
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
+    def get(self,insid):
+        ins1=Ins.query.get_or_404(insid)
+        user=ins1.user
+        if g.user in user or  g.role.name in ['admin','superadmin']:
+            if g.role.name=='propertyuser':
+                ins = Ins.query.filter(Ins.type=='物业').filter(Ins.id==insid).first()
+            elif g.role.name=='stationuser':
+                ins = Ins.query.filter(Ins.type == '消防站').filter(Ins.id == insid).first()
+            else:ins=Ins.query.get_or_404(insid)
+            community=ins.community
+            home=[]
+            for i in community:
+                home.extend(i.homes.all())
+            useralarmrecord=UserAlarmRecord.query.filter(UserAlarmRecord.home_id.in_(i.id for i in home)).all()
+            _=[]
+            total=len(useralarmrecord)
+            for i in useralarmrecord:
+                __={}
+                __['id']=i.id
+                __['type'] = i.type
+                __['content'] = i.content
+                __['time'] = str(i.time)
+                __['home_id'] = i.home_id
+                __['home_name']=Home.query.get(i.home_id).name
+                __['user_id'] = i.user_id
+                __['note'] = i.note
+                __['reference_alarm_id'] = i.reference_alarm_id
+                __['if_confirm'] = i.if_confirm
+                _.append(__)
+            result={
+                'code':0,
+                'msg':'ok',
+                'total':total,
+                'data':_
+            }
+            return result,200
+
+
 
 
 

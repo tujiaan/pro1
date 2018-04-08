@@ -3,7 +3,7 @@ from flask_restplus import Namespace, Resource
 #
 # from app.ext import Jpush
 #
-from app.views.api_v1.test.parser import test_parser, test_parser1
+from app.views.api_v1.getui.parser import test_parser, test_parser1
 api = Namespace('Test', description='测试接口')
 from .parser import *
 from app.ext import *
