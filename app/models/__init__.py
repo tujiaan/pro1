@@ -210,13 +210,21 @@ class Sensor(db.Model):
     alarms_history = db.relationship('SensorAlarm', lazy='dynamic')
 
 class SensorTime(Sensor):
-    __tablename__ = 'sensortime'
+    __tablename__ = 'sensor_time'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     sensor_id=db.Column(db.String(50),db.ForeignKey('sensor.id'),comment='传感器id')
     start_time = db.Column(db.DateTime, comment='开始时间')
     end_time = db.Column(db.DateTime, comment='结束时间')
 
 
+class MessageSend(db.Model):
+    __tablename__='messagesend'
+    id = db.Column(db.String(24), default=objectid, primary_key=True)
+    message_id=db.Column(db.String(24),comment='报警id')
+    message_type=db.Column(db.String(24),comment='报警信息类型')
+    user_id=db.Column(db.String,db.ForeignKey('user.id'),comment='接受用户id')
+    if_send=db.Column(db.Boolean,default=False,comment='是否已经发送')
+    if_read=db.Column(db.Boolean,default=False,comment='是否阅读')
 
 
 class SensorHistory(db.Model):

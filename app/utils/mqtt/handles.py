@@ -53,11 +53,9 @@ def gateway_data(client, userdata, message):
                  else:pass
             elif i.get('id')>='S1001'and i.get('id')<'S1999':
                 sensorhistory.sensor_id = i['id']
-                print(time)
                 sensorhistory.time =time
                 sensorhistory.sensor_value = i.get('value')
-                print(type(SensorHistory.sensor_value))
-                if  int(SensorHistory.sensor_value) >50:
+                if  int(sensorhistory.sensor_value) >50:
                     sensoralarm=SensorAlarm(sensor_id=i['id'],sensor_type=1,var_type='温度',alarm_value=i.get('value'),unit='℃',alarm_time=time,gateway_id=Sensor.query.get(i['id']).gateway_id )
                     db.session.add(sensoralarm)
                     sm=SensorHistory.query.filter(SensorHistory.sensor_id==i['id']).filter(SensorHistory.time.between(time,time-timedelta(minutes=10)))
@@ -84,7 +82,7 @@ def gateway_data(client, userdata, message):
                 sensorhistory.sensor_id = i
                 sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
-                if float(SensorHistory.sensor_value)>Sensor.query.get(i).max_value:
+                if float(sensorhistory.sensor_value)>Sensor.query.get(i).max_value:
                   sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=3,alarm_value=i.get('value'),var_type='电流', unit='A', alarm_time=time, gateway_id=Sensor.query.get(i['id']).gateway_id)
                   db.session.add(sensoralarm)
                   sm = SensorHistory.query.filter(SensorHistory.sensor_id == i['id']).filter(
