@@ -22,7 +22,6 @@ WTF_CSRF_ENABLED = False
 ##Sqlalchemy
 SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:yangjiawei@47.91.222.196:3306/firefighting'
 #SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:root@127.0.0.1:3306/firefighting'
-#SQLALCHEMY_DATABASE_URI='sqlite:////tmp/test.db'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 ##Cache
@@ -67,7 +66,7 @@ APP_SCRET = 'dQ25Qzxkrb8avPi3GyeNLA'
 # APP_KEY = 'Q44tX55Jbv8AKOYJOJyrF'
 # MASTER_KEY= 'KyHs20ukV5AnGIve7nbIC8'
 ##mqtt
-MQTT_BROKER_URL = '127.0.0.1'
+MQTT_BROKER_URL = '47.91.222.196'
 MQTT_BROKER_PORT = 1883
 MQTT_USERNAME = 'admin'
 MQTT_PASSWORD = 'public'
