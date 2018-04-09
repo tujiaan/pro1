@@ -222,7 +222,7 @@ class MessageSend(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     message_id=db.Column(db.String(24),comment='报警id')
     message_type=db.Column(db.String(24),comment='报警信息类型')
-    user_id=db.Column(db.String,db.ForeignKey('user.id'),comment='接受用户id')
+    user_id=db.Column(db.String(24),db.ForeignKey('user.id'),comment='接受用户id')
     if_send=db.Column(db.Boolean,default=False,comment='是否已经发送')
     if_read=db.Column(db.Boolean,default=False,comment='是否阅读')
 
