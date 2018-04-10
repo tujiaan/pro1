@@ -290,6 +290,7 @@ class UserAlarmRecord(db.Model):
     if_confirm=db.Column(db.Boolean,default=False,comment='是否关闭')
     home_id = db.Column(db.String(24), db.ForeignKey('home.id'),comment='报警关联家庭id')
     home = db.relationship('Home')
+    ins_id=db.Column(db.String(24),db.ForeignKey('ins.id'),comment='机构id')
     reference_alarm_id=db.Column(db.String(24),comment='参考创建信息id')
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='发布人id')
     user = db.relationship('User')

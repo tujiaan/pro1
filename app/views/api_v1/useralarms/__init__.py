@@ -91,6 +91,9 @@ class UserAlarmRecordsView(Resource):
             __['useralarmrecord_is_timeout']= if_timeout(i[0].time)
             __['rference_alarm_id']=i[0].reference_alarm_id
             __['home_id']=i[1].id
+            __['community_id']=Home.query.get_or_404(i[1].id).community.id
+            __['community_id'] = Home.query.get_or_404(i[1].id).community.name
+            __['ins_id']=i[0].ins_id
             __['home_name']=i[1].name
             __['detail_address']=i[1].detail_address
             __['user_id']=i[2].id
@@ -105,7 +108,7 @@ class UserAlarmRecordsView(Resource):
         }
         return result,200
 
-    @api.doc('新增用户报警记录(用户提交传感器报警信息)')
+    @api.doc('新增用户报警记录(用户提交传感器报警信息)')######################################
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin','homeuser', 'superadmin', 'propertyuser','119user', 'stationuser'])
     @api.expect(useralarmrecord_parser,validate=True)
@@ -217,7 +220,6 @@ class UseralarmrecordView2(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser','propertyuser','stationuser', '119user', 'admin', 'superadmin'])
     @api.doc('推送')
-    #@api.marshal_with(user_id_model,as_list=False)
     @api.response(200, 'ok')
     def get(self,useralarmrecordid):
        useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)

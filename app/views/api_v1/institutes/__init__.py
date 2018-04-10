@@ -329,10 +329,12 @@ class InsCommunityView(Resource):
     @page_range()
     def get(self,insid):
         ins=Ins.query.get_or_404(insid)
+        print(ins.community)
         return ins.community,200
 
-@api.route('/<insid>/useralarmrecord')
+@api.route('/<insid>/subuseralarmrecord')
 class InsUseralarmrecordViews(Resource):
+    @api.doc('查询机构管辖范围内的报警')
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
@@ -373,6 +375,16 @@ class InsUseralarmrecordViews(Resource):
             }
             return result,200
 
+@api.route('/<insid>/useralarmrecord')
+class InsUseralarmrecordViews1(Resource):
+    @api.doc('查询机构的报警')
+    @api.response(200, 'ok')
+    @api.marshal_with(useralarmrecord_model,as_list=True)
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
+    def get(self,insid):
+        useralarmrecord=UserAlarmRecord.query.filter(UserAlarmRecord.ins_id==insid).all()
+        return useralarmrecord,200
 
 
 
