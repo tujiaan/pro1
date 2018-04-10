@@ -139,8 +139,8 @@ class FacilitesInsView(Resource):
         page=request.args.get('page',1)
         limit=request.args.get('limit',10)
         query = FacilityIns.query
-        query=query.filter(FacilityIns.ins_id==insid).offset((int(page) - 1) * limit).limit(limit)
         total = query.count()
+        query=query.filter(FacilityIns.ins_id==insid).offset((int(page) - 1) * limit).limit(limit)
         _=[]
         for i in query.all():
             __={}
@@ -158,6 +158,7 @@ class FacilitesInsView(Resource):
         result={
             'code':0,
             'msg':'ok',
+            'count':total,
             'result':_
         }
         return result,200

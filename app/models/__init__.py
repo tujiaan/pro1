@@ -79,6 +79,7 @@ class Ins(db.Model):
     user = db.relationship('User', secondary=t_user_ins,
                           backref=db.backref('f_user', lazy='dynamic') , lazy='dynamic' )
 
+
 class Location (db.Model):
         __tablename__='location'
         id = db.Column(db.String(24), default=objectid, primary_key=True)
@@ -105,6 +106,7 @@ class Community(db.Model):
     location_id = db.Column(db.String(50), db.ForeignKey('location.id'), comment='位置')
 
 
+
 class FacilityIns(db.Model):
     __tablename__ = 'facility_ins'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
@@ -125,6 +127,7 @@ class Facility(db.Model):
     knowledge = db.relationship('Knowledge', secondary=t_facility_knowledge,
                                  backref=db.backref('f_knowledge', lazy='dynamic'),
                                 lazy='dynamic')
+
 class Gateway(db.Model):
     __tablename__ = 'gateway'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
@@ -149,6 +152,7 @@ class Home(db.Model):
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     alternate_phone = db.Column(db.String(50), comment='备用电话')
     gateway_id=db.Column(db.String(50),db.ForeignKey('gateway.id'),comment='网关id')
+
     #sensor=db.relationship('Sensor',lazy='dynamic')
 
 

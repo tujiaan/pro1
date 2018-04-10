@@ -160,10 +160,6 @@ class CommunityView(Resource):
             community.name = args.get('name')
         else:
             pass
-        # if 'ins_id' in args and args['ins_id']:
-        #     community.ins_id = args.get('ins_id')
-        # else:
-        #     pass
         if 'longitude' in args and args['longitude']:
             community.longitude = args.get('longitude')
         else:

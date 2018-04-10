@@ -5,8 +5,9 @@ from flask import g, request
 from flask_restplus import Namespace, Resource
 from sqlalchemy import and_, or_
 
-from app.ext import db
-from app.models import UserAlarmRecord, Community, Home, User, Sensor, UserRole, Role, HomeUser, Ins
+from app.ext import db, getui
+from app.models import UserAlarmRecord, Community, Home, User, Sensor, UserRole, Role, HomeUser, Ins, MessageSend, \
+    SensorAlarm
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 #from app.utils.myutil.pushmessage import JPush2
@@ -74,7 +75,7 @@ class UserAlarmRecordsView(Resource):
             else:
                 query = query
         query = query.order_by(UserAlarmRecord.id).offset((int(page) - 1) * limit).limit(limit)
-        total = query.count()
+        total = UserAlarmRecord.query.count()
         def if_timeout(time):
             if abs((time-datetime.datetime.now()).seconds)<60:
                 return '未超时'
@@ -215,46 +216,31 @@ class UserAlarmRecordView(Resource):
 class UseralarmrecordView2(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser','propertyuser','stationuser', '119user', 'admin', 'superadmin'])
-    @api.doc('获得报警推送信息的对象')
+    @api.doc('推送')
     #@api.marshal_with(user_id_model,as_list=False)
     @api.response(200, 'ok')
     def get(self,useralarmrecordid):
-        useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
-        homeuser = HomeUser.query.filter(HomeUser.home_id == useralarmrecord.home_id).all()
-        user1=User.query.filter(User.id.in_(i.user_id for i in homeuser)).all()
-        home = Home.query.get_or_404(useralarmrecord.home_id)
-        ins = home.community.ins
-        list1=[]
-        for i in ins:
-            list1.append(i.user)
-        if useralarmrecord.type==0 or useralarmrecord.type==1 :
-            userrole = UserRole.query.filter(or_(UserRole.role_id == 4, UserRole.role_id == 5, UserRole.role_id == 6)).all()
-            query1=User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
-            query2=User.query.with_entities(User.id).filter(User.id.in_(i.id for i in list1))
-            query3=User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
+       useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
+       messagesend=MessageSend.query.filter(MessageSend.message_id==useralarmrecordid).filter(MessageSend.if_send==False).all()
+       list=[]
+       for i in messagesend:
+           list.append(i.user_id)
+           i.if_send = True
+           db.session.commit()
+       content=useralarmrecord.content
+       taskid=getui.getTaskId(content)
+       getui.sendList(alias=list,taskid=taskid)
 
-        elif useralarmrecord.type==2:
-            query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
-            query2 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in list1))
-            userrole = UserRole.query.filter(or_( UserRole.role_id == 5, UserRole.role_id == 6)).all()
-            query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
 
-        else:
-            query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
-            query2 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in list1))
-            userrole = UserRole.query.filter(or_(UserRole.role_id == 5, UserRole.role_id!=4,UserRole.role_id == 6)).all()
-            query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
-        list2 = query1.union(query2).union(query3).all()
-        _=[]
-        for i in list2:
-            __={}
-            __['user_id']=i.id
-            _.append(__)
-        result={
-            'data':_
-        }
-        list=[]
-        for i in   result.get('data'):
-            list.append(i.get('user_id'))
-
-        return list,200
+       # result={
+       #     'content':content,
+       #     'list':list
+       # }
+       # return result,200
+@api.route('/<referencealarmid>/type')
+class ReferenceAlarmIdViews(Resource):
+    def get(self,referencealarmid):
+        sensoralarm=SensorAlarm.query.filter(SensorAlarm.id==referencealarmid).first()
+        if sensoralarm!=None:
+            return True
+        else:return False

@@ -37,7 +37,7 @@ def gateway_data(client, userdata, message):
     p = json.loads(message.payload)
     # print(p)
     list=p.get('sensors')
-    time=dateutil.parser.parse(p.get('time'))#datetime.strftime(p.get('time'), '%Y-%m-%d  %H:%M:%S')
+    time=dateutil.parser.parse(p.get('time'))
     with client.app.app_context():
         for i in list :
             sensorhistory=SensorHistory()

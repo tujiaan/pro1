@@ -26,15 +26,15 @@ class InstitutesViews(Resource):
     @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     def get(self):
-        page = request.args.get('page', 1)
-        limit = request.args.get('limit', 10)
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
         list = Ins.query
+        total = list.count()
         if g.role.name in ['propertyuser','stationuser','admin','119user','superadmin']:
            query=list
         else:
             query= list.filter(Ins.admin_user_id == g.user.id)
-        query=query.order_by(Ins.id).offset((int(page) - 1) * int(limit)).limit(int(limit))
-        total=query.count()
+        query=query.order_by(Ins.id).offset((page - 1) * limit).limit(limit)
         _=[]
         for i in query.all():
             __={}
@@ -220,6 +220,7 @@ class InsIns(Resource):
         limit=request.args.get('limit',10)
         ins=Ins.query.get_or_404(insid)
         query=Ins.query.offset((int(page) - 1) * limit).limit(limit)
+        total = query.count()
         _=[]
         for i in query.all():
             __={}
@@ -234,7 +235,7 @@ class InsIns(Resource):
                     and getDistance(i.latitude,i.longitude,ins.latitude,ins.longitude)!=0:
               _.append(__)
             else :continue
-        total=len(_)
+
         result={
             'code':0,
             'msg':'ok',

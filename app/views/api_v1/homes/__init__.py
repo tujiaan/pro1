@@ -35,13 +35,13 @@ class HomesView(Resource):
         page = request.args.get('page', 1)
         limit = request.args.get('limit', 10)
         list=Home.query
+        total = list.count()
         homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id)
         if  g.role.name=='homeuser':
            query= list.filter(g.user.id.in_(homeuser.user_id))
-
         else: query= list
         query1=query.order_by(Home.id).offset((int(page) - 1) * limit).limit(limit)
-        total=query1.count()
+
         _=[]
         for i in query1.all():
             __={}
@@ -275,6 +275,7 @@ class HomeInsView(Resource):
             r = 6371  # 地球平均半径，单位为公里
             return c * r * 1000
         query=Ins.query
+        total = query.count()
         query=query.offset((int(page) - 1) * limit).limit(limit)
         _ = []
         for i in tuple(query.all()):
@@ -287,7 +288,6 @@ class HomeInsView(Resource):
             __['distance'] = round(getDistance(i.latitude,i.longitude,home.latitude,home.longitude))
             if  getDistance(i.latitude,i.longitude,home.latitude,home.longitude)<float(distance):
               _.append(__)
-        total=len(_)
         result = {
             'code': 0,
             'msg': '200',
@@ -312,9 +312,10 @@ class HomeSensorView(Resource):
                 query=Sensor.query.filter(Sensor.home_id==home.id).all()
             else:pass
         else:
-            query=Sensor.query.all()
+            query=Sensor.query
         _=[]
-        for i in query:
+        total=Sensor.query.count()
+        for i in query.all():
             __={}
             __['sensor_id']=i.id
             __['sensor_place']=i.sensor_place
@@ -324,6 +325,9 @@ class HomeSensorView(Resource):
              __['state']=sensorhistory.sensor_state
             _.append(__)
         result={
+            'code':0,
+            'msg':'ok',
+            'total':total,
             'data':_
          }
         return result,200

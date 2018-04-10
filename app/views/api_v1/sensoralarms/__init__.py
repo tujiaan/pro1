@@ -43,7 +43,7 @@ class SensorAlarmsView(Resource):
                 query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
                     .order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
 
-        total=query.count()
+        total=SensorAlarm.query.count()
         _=[]
         for i in query.all():
          __={}
@@ -82,7 +82,7 @@ class SensorAlarmsView(Resource):
 @api.route('/<sensoralarmid>')
 class SensorAlarmView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser', 'admin', 'superadmin'])
+    @role_require(['homeuser','propertyuser','stationuser', 'admin', 'superadmin'])
     @api.doc('根据报id查询详情')
     @api.marshal_with(sensoralarms_model)
     @api.response(200,'ok')
@@ -92,8 +92,11 @@ class SensorAlarmView(Resource):
         sensor=sensoralarm.sensor
         home=sensor.home
         homeuser=HomeUser.query.filter(HomeUser.home_id==home.id)
-        if g.user.id not in[i.user_id for i in homeuser]:
-            return '权限不足',301
+        if g.role.name=='homeuser':
+            if g.user.id not in[i.user_id for i in homeuser]:
+                return '权限不足',301
+
+
         else: return sensoralarm,200
 
     @api.doc('删除报警记录')
