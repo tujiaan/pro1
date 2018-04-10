@@ -24,8 +24,8 @@ class CommunitiesView(Resource):
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     def get(self):
-        page = request.args.get('page', 1)
-        limit = request.args.get('limit', 10)
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
         query = Community.query.order_by(Community.id)
         query=query.order_by(Community.id).offset((int(page) - 1) * limit).limit(limit)
         total = query.count()

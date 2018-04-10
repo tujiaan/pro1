@@ -32,8 +32,8 @@ class HomesView(Resource):
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     def get(self):
-        page = request.args.get('page', 1)
-        limit = request.args.get('limit', 10)
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
         list=Home.query
         total = list.count()
         homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id)
@@ -309,7 +309,7 @@ class HomeSensorView(Resource):
         homeuser=HomeUser.query.filter(HomeUser.home_id==homeid).all()
         if g.role.name=='homeuser':
             if g.user.id in [i.user_id for i in homeuser]:
-                query=Sensor.query.filter(Sensor.home_id==home.id).all()
+                query=Sensor.query.filter(Sensor.home_id==home.id)
             else:pass
         else:
             query=Sensor.query

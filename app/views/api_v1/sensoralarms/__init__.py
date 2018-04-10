@@ -19,8 +19,8 @@ class SensorAlarmsView(Resource):
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量','start':'开始时间见','end':'结束时间','type':'传感器类型'})
     def get(self):
-        page=request.args.get('page',1)
-        limit=request.args.get('limit',10)
+        page=int(request.args.get('page',1))
+        limit=int(request.args.get('limit',10))
         start=request.args.get('star',2018-1-1)
         end=request.args.get('end',datetime.datetime.now())
         type=request.args.get('type',None)
@@ -53,6 +53,7 @@ class SensorAlarmsView(Resource):
          __['sensoralarms_alarm_value']=i.alarm_value
          __['sensoralarms_note'] = i.note
          __['home_name']=Sensor.query.get_or_404(i.sensor_id).home.name
+         __['home_id'] = Sensor.query.get_or_404(i.sensor_id).home.id
          __['home_admin_id']=Sensor.query.get_or_404(i.sensor_id).home.admin_user_id
          __['sensoralarm_is_confirm']=i.is_confirm
          __['sensoralarms_alarm_time']=str(i.alarm_time)
@@ -95,8 +96,7 @@ class SensorAlarmView(Resource):
         if g.role.name=='homeuser':
             if g.user.id not in[i.user_id for i in homeuser]:
                 return '权限不足',301
-
-
+            else: return sensoralarm,200
         else: return sensoralarm,200
 
     @api.doc('删除报警记录')

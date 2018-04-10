@@ -22,10 +22,10 @@ class UserAlarmRecordsView(Resource):
     @api.response(200,'ok')
     @api.doc(params={'page': '页数', 'limit': '数量','start':'开始时间','end':'结束时间','type':'类型'})
     def get(self):
-        page = request.args.get('page', 1)
-        limit = request.args.get('limit', 10)
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
         start = request.args.get('start', 2018-1-1 )
-        end = request.args.get('end', datetime.datetime.now().isoformat())
+        end = request.args.get('end', datetime.datetime.now())
         type = request.args.get('type', None)
         homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
         home=Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
@@ -92,7 +92,7 @@ class UserAlarmRecordsView(Resource):
             __['rference_alarm_id']=i[0].reference_alarm_id
             __['home_id']=i[1].id
             __['community_id']=Home.query.get_or_404(i[1].id).community.id
-            __['community_id'] = Home.query.get_or_404(i[1].id).community.name
+            __['community_name'] = Home.query.get_or_404(i[1].id).community.name
             __['ins_id']=i[0].ins_id
             __['home_name']=i[1].name
             __['detail_address']=i[1].detail_address

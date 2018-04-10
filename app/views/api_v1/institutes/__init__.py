@@ -87,10 +87,6 @@ class InstitutesViews(Resource):
             institute.ins_address = args['ins_address']
             #institute.location_id = args['location_id']
             institute.ins_picture = upload_file(args['ins_picture'])
-            # if args['ins_picture']:
-            #     institute.ins_picture = args['ins_picture'].read()
-            # else:
-            #     pass
             institute.location_id = args['location_id']
             db.session.add(institute)
             institute.user.append(user)

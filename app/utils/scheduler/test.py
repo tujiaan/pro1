@@ -11,24 +11,30 @@ def BuiltSensorSendMessage(app):
     with app.app_context():
         sensoralarm=SensorAlarm.query.all()
         for i in sensoralarm:
-            if i.if_confirm==False:
-                home=Home.query.filter(Home.gateway_id==sensoralarm.gateway_id).first()
+            if i.is_confirm==False:
+                home=Home.query.filter(Home.gateway_id==i.gateway_id).first()
                 homeuser=HomeUser.query.filter(HomeUser.home_id==home.id).all()
                 user=User.query.filter(User.id.in_(i.user_id for i in homeuser)).all()
-                for i in user:
-                    messagesend=MessageSend(message_id=sensoralarm.id,message_type='传感器报警',user_id=i.id)
-                    db.session.add(messagesend)
-                    db.session.commit()
+                for j in user:
+                    messagesend=MessageSend(message_id=i.id,message_type='传感器报警',user_id=j.id)
+                    ms=MessageSend.query.filter(and_(MessageSend.message_id==i.id,MessageSend.user_id==j.id)).first()
+                    if ms==None:
+                        db.session.add(messagesend)
+                        db.session.commit()
+                    else:pass
                 if i.is_timeout==True:
                     community=home.community
-                    ins=[]
-                    for i in community:
-                        ins.extend(i.ins)
-                    for i in ins:
-                        for j in i.user:
-                            messagesend = MessageSend(message_id=sensoralarm.id, message_type='传感器报警', user_id=j.id)
-                            db.session.add(messagesend)
-                            db.session.commit()
+                    ins=community.ins
+                    for j in ins:
+                        for k in j.user:
+                            messagesend = MessageSend(message_id=i.id, message_type='传感器报警', user_id=k.id)
+                            ms = MessageSend.query.filter(
+                                and_(MessageSend.message_id == i.id, MessageSend.user_id == j.id)).first()
+                            if ms == None:
+                                db.session.add(messagesend)
+                                db.session.commit()
+                            else:
+                                pass
                 else:pass
             else:pass
     return None, 200
@@ -69,7 +75,7 @@ def BuiltUserSendMessage(app):
 
 
 def SendMessage(app):
-    with app.app_context:
+    with app.app_context():
         sendmessage=MessageSend.query.filter(MessageSend.if_send==False).order_by(MessageSend.message_id).all()
         for i in sendmessage:
             if i.message_type=='传感器报警':
@@ -83,20 +89,23 @@ def SendMessage(app):
                 elif sensoralarm.sensor_type == '0':
                     content = '智能插座' + sensoralarm.sensor_id + '异常'
                 else: content='电磁阀'+sensoralarm.sensor_id+'异常'
+                print('first step')
                 list=[]
                 for i in sendmessage:
                     list.append(i.user_id)
-                    j=i+1
-                    if j<len(sendmessage):
-                        for j in sendmessage :
-                          if j.message_id==i.message_id:
-                              list.append(j.user_id)
-                          else:pass
-                        else:pass
+                    # j=i
+                    # if j<len(sendmessage):
+                    #     for j in sendmessage :
+                    #       if j.message_id==i.message_id:
+                    #           list.append(j.user_id)
+                    #       else:pass
+                    #     else:pass
                     i.if_send = True
                     db.session.commit()
+                    print('@@@@')
                     taskid=getui.getTaskId(content)
-                    getui.sendList(list,taskid)
+                    rs=getui.sendList(list,taskid)
+                    print(rs.json())
 
 
 

@@ -20,8 +20,8 @@ class SensorsView(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量','sensor_type':'类型'})
     @api.response(200, 'ok')
     def get(self):
-        page=request.args.get('page',1)
-        limit=request.args.get('limit',10)
+        page=int(request.args.get('page',1))
+        limit=int(request.args.get('limit',10))
         sensor_type=request.args.get('sensor_type',None)
         homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
         home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
@@ -208,8 +208,6 @@ class SensorHistoryView(Resource):
     @api.marshal_with(sensorhistory_model)
     @api.response(200,'ok')
     def get(self,sensorid):
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         sensor=Sensor.query.get_or_404(sensorid)
         home=sensor.home
         sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensorid).order_by(SensorHistory.time.desc()).first()
