@@ -18,6 +18,7 @@ class GatewayView1(Resource):
     @api.doc('查询所有的网关')
     @api.marshal_with(gateway_model,as_list=True)
     @api.response(200,'ok')
+    @api.doc(paranms={'page':'页数','limit':'数量'})
     @page_range()
     def get(self):
         list=Gateway.query
