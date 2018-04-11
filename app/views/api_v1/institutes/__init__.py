@@ -375,12 +375,30 @@ class InsUseralarmrecordViews(Resource):
 class InsUseralarmrecordViews1(Resource):
     @api.doc('查询机构的报警')
     @api.response(200, 'ok')
-    @api.marshal_with(useralarmrecord_model,as_list=True)
+    #@api.marshal_with(useralarmrecord_model,as_list=True)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['119user', 'admin', 'superadmin'])
     def get(self):
         useralarmrecord=UserAlarmRecord.query.filter(UserAlarmRecord.ins_id!=None).all()
-        return useralarmrecord,200
+        _=[]
+        for i in useralarmrecord:
+            __={}
+            __['id']=i.id
+            __['type']=i.type
+            __['content']=i.content
+            __['time']=str(i.time)
+            __['home_id']=i.home_id
+            __['ins_id']=i.ins_id
+            __['ins_name']=Ins.query.get_or_404(i.ins_id).name
+            __['user_id']=i.user_id
+            __['note']=i.note
+            __['reference_alarm_id']:i.reference_alarm_id
+            __['if_confirm']=i.if_confirm
+            _.append(__)
+        result={
+            'data':_
+        }
+        return result,200
 
 
 

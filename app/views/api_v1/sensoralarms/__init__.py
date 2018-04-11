@@ -26,7 +26,7 @@ class SensorAlarmsView(Resource):
         type=request.args.get('type',None)
         homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
         home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
-        sensors=Sensor.query.filter(Sensor.home_id.in_(i.id for i in home)).all()
+        sensors=Sensor.query.filter(Sensor.gateway_id.in_(i.gateway_id for i in home)).all()
         if g.role.name=='homeuser':
             if type!=None:
                 query=db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end))\
