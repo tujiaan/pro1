@@ -27,17 +27,17 @@ class SensorsView(Resource):
         home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
         if g.role.name=='homeuser':
             if sensor_type!=None:
-                query = db.session.query(Sensor,Home).join(Home,Home.id==Sensor.home_id).\
-                    filter(Sensor.sensor_type==sensor_type).filter(Sensor.home_id.in_(i.id for i in home)).order_by(Sensor.id)\
+                query = db.session.query(Sensor,Home).join(Home,Home.gateway_id==Sensor.gateway_id).\
+                    filter(Sensor.sensor_type==sensor_type).filter(Sensor.gateway_id.in_(i.gateway_id for i in home)).order_by(Sensor.id)\
                     .offset((int(page) - 1) * limit).limit(limit)
-            else:  query = db.session.query(Sensor,Home).join(Home,Home.id==Sensor.home_id).\
-                  filter(Sensor.home_id.in_(i.id for i in home)).order_by(Sensor.id)\
+            else:  query = db.session.query(Sensor,Home).join(Home,Home.gateway_id==Sensor.gateway_id).\
+                  filter(Sensor.gateway_id.in_(i.gateway_id for i in home)).order_by(Sensor.id)\
                     .offset((int(page) - 1) * limit).limit(limit)
         else:
             if sensor_type!=None:
-                query = db.session.query(Sensor,Home).join(Home,Home.id==Sensor.home_id).\
+                query = db.session.query(Sensor,Home).join(Home,Home.gateway_id==Sensor.gateway_id).\
                     filter(Sensor.sensor_type==sensor_type).order_by(Sensor.id).offset((int(page) - 1) * limit).limit(limit)
-            else:     query = db.session.query(Sensor,Home).join(Home,Home.id==Sensor.home_id).\
+            else:     query = db.session.query(Sensor,Home).join(Home,Home.gateway_id==Sensor.gateway_id).\
                    order_by(Sensor.id).offset((int(page) - 1) * limit).limit(limit)
         total=Sensor.query.count()
         _=[]

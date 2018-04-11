@@ -306,7 +306,7 @@ class HomeSensorView(Resource):
         homeuser=HomeUser.query.filter(HomeUser.home_id==homeid).all()
         if g.role.name=='homeuser':
             if g.user.id in [i.user_id for i in homeuser]:
-                query=Sensor.query.filter(Sensor.home_id==home.id)
+                query=Sensor.query.filter(Sensor.gateway_id==home.gateway_id)
             else:pass
         else:
             query=Sensor.query
