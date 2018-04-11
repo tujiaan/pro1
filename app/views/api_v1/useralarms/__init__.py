@@ -89,11 +89,12 @@ class UserAlarmRecordsView(Resource):
             __['useralarmrecord_time'] = str(i[0].time)
             __['useralarmrecord_note'] = i[0].note
             __['useralarmrecord_is_timeout']= if_timeout(i[0].time)
-            __['rference_alarm_id']=i[0].reference_alarm_id
+            __['reference_alarm_id']=i[0].reference_alarm_id
             __['home_id']=i[1].id
             __['community_id']=Home.query.get_or_404(i[1].id).community.id
             __['community_name'] = Home.query.get_or_404(i[1].id).community.name
             __['ins_id']=i[0].ins_id
+            __['if_confirm']=i[0].if_confirm
             __['home_name']=i[1].name
             __['detail_address']=i[1].detail_address
             __['user_id']=i[2].id
