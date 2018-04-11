@@ -39,7 +39,7 @@ class SensorsView(Resource):
                     filter(Sensor.sensor_type==sensor_type).order_by(Sensor.id).offset((int(page) - 1) * limit).limit(limit)
             else:     query = db.session.query(Sensor,Home).join(Home,Home.id==Sensor.home_id).\
                    order_by(Sensor.id).offset((int(page) - 1) * limit).limit(limit)
-        total=query.count()
+        total=Sensor.query.count()
         _=[]
         for i in query.all():
             __={}
