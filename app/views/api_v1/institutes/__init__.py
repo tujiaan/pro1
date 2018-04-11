@@ -371,15 +371,15 @@ class InsUseralarmrecordViews(Resource):
             }
             return result,200
 
-@api.route('/<insid>/useralarmrecord')
+@api.route('/useralarmrecord/')
 class InsUseralarmrecordViews1(Resource):
     @api.doc('查询机构的报警')
     @api.response(200, 'ok')
     @api.marshal_with(useralarmrecord_model,as_list=True)
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
-    def get(self,insid):
-        useralarmrecord=UserAlarmRecord.query.filter(UserAlarmRecord.ins_id==insid).all()
+    @role_require(['119user', 'admin', 'superadmin'])
+    def get(self):
+        useralarmrecord=UserAlarmRecord.query.filter(UserAlarmRecord.ins_id!=None).all()
         return useralarmrecord,200
 
 

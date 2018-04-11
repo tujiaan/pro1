@@ -229,10 +229,7 @@ class HomeUsersView(Resource):
     def get(self, homeid):
         home = Home.query.get_or_404(homeid)
         homeuser=HomeUser.query.filter(HomeUser.home_id==homeid).all()
-        if g.user.id in [i.user_id for i in homeuser ] or g.role.name in ['admin', 'superadmin']:
-            return User.query.filter(User.id.in_(i.user_id for i in homeuser)), 200
-        else:
-            return User.query.filter(User.id==g.user.id), 401
+        return User.query.filter(User.id.in_(i.user_id for i in homeuser)), 200
 
 
 

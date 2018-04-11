@@ -124,11 +124,16 @@ class UserAlarmRecordView(Resource):
     @api.doc('报警更新')
     @api.expect(useralarmrecord1_parser)
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser','119user','admin','superadmin'])
+    @role_require(['119user','propertyuser','stationuser','admin','superadmin'])
     @api.response(200,'ok')
     def put(self,useralarmrecordid):
         useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
         home=Home.query.get_or_404(useralarmrecord.home_id)
+        community=home.community
+        ins=community.ins
+        insuser=[]
+        for i in ins:
+            insuser.extend(i.user)
         args=useralarmrecord1_parser.parse_args()
         if args['note']:
             useralarmrecord.note= args['note']
@@ -137,15 +142,14 @@ class UserAlarmRecordView(Resource):
             useralarmrecord.reference_alarm_id=args['reference_alarm_id']
         else:pass
         if args['if_confirm']:
-            useralarmrecord.if_confirm = True
+            if g.role.name in ['propertyuser','stationuser' ]:
+                if g.user.id in[i.id for i in insuser]:
+                    useralarmrecord.if_confirm = True
+                else:pass
+            else: useralarmrecord.if_confirm = True
         else:pass
-        if g.role.name=='homeuser':
-            if g.user.id==home.admin_user_id:
-                db.session.commit()
-                return None,200
-            else:return '权限不足',201
-        else:db.session.commit()
-        return None,200
+        db.session.commit()
+        return '修改成功',200
 
 
 
@@ -233,12 +237,6 @@ class UseralarmrecordView2(Resource):
        taskid=getui.getTaskId(content)
        getui.sendList(alias=list,taskid=taskid)
 
-
-       # result={
-       #     'content':content,
-       #     'list':list
-       # }
-       # return result,200
 @api.route('/<referencealarmid>/type')
 class ReferenceAlarmIdViews(Resource):
     def get(self,referencealarmid):
