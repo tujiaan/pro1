@@ -41,76 +41,71 @@ def BuiltSensorSendMessage(app):
 def BuiltUserSendMessage(app):
     with app.app_context():
         useralarmrecord = UserAlarmRecord.query.all()
-        print('1')
         for i in useralarmrecord:
-            homeuser = HomeUser.query.filter(HomeUser.home_id == i.home_id).all()
+            homeuser = HomeUser.query.filter(HomeUser.home_id == useralarmrecord.home_id).all()
             user1 = User.query.filter(User.id.in_(i.user_id for i in homeuser)).all()
-            home = Home.query.get_or_404(i.home_id)
+            home = Home.query.get_or_404(useralarmrecord.home_id)
             ins = home.community.ins
             list1 = []
-            for j in ins:
-                list1.extend(j.user)
-            if i.type == 0 or i.type == 1:
-                ur1 = UserRole.query.filter(or_(UserRole.role_id=='4',UserRole.role_id=='5'))
-                ur2=UserRole.query.filter(UserRole.role_id=='6')
-                userrole=ur1.union(ur2).all()
+            for i in ins:
+                list1.append(i.user)
+            if useralarmrecord.type == 0 or useralarmrecord.type == 1:
+                userrole = UserRole.query.filter(UserRole.role_id.in_['4','5','6']).all()
                 query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
                 query2 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in list1))
                 query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
 
-            elif i.type == 2:
+            elif useralarmrecord.type == 2:
                 query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
                 query2 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in list1))
                 userrole = UserRole.query.filter(or_(UserRole.role_id == '5', UserRole.role_id == '6')).all()
                 query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
 
             else:
-                ur1 = UserRole.query.filter(or_(UserRole.role_id == '4', UserRole.role_id == '5'))
-                ur2 = UserRole.query.filter(UserRole.role_id == '6')
-                userrole = ur1.union(ur2).all()
                 query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
                 query2 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in list1))
+                userrole = UserRole.query.filter(UserRole.role_id.in_['4','5','6']).all()
                 query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
             list2 = query1.union(query2).union(query3).all()
-            print(list2)
-            print('2')
-            for j in list2:
-                   messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id)
-                   ms=MessageSend.query.filter(and_(MessageSend.message_id==i.id,MessageSend.user_id==j.id)).first()
-                   if ms==None:
-                       db.session.add(messagesend)
-                       db.session.commit()
-                   else:pass
+            for i in list2:
+                   messagesend = MessageSend(message_id=useralarmrecord.id, message_type='用户报警', user_id=i.id)
+                   db.session.add(messagesend)
+                   db.session.commit()
             return None,200
 
 
 def SendMessage(app):
     with app.app_context():
-        sensoralarm=SensorAlarm.query.all()
-        for i in sensoralarm:
-            messagesend=MessageSend.query.filter(MessageSend.message_id==i.id).all()
-            list = []
-            for i in messagesend:
-                if i.message_type == '传感器报警':
-                    sensoralarm = SensorAlarm.query.get_or_404(i.message_id)
-                    if sensoralarm.sensor_type == '0':
-                        content = '烟雾传感器' + sensoralarm.sensor_id + '异常'
-                    elif sensoralarm.sensor_type == '1':
-                        content = '温度传感器' + sensoralarm.sensor_id + '异常'
-                    elif sensoralarm.sensor_type == '2':
-                        content = '燃气阀' + sensoralarm.sensor_id + '异常'
-                    elif sensoralarm.sensor_type == '3':
-                        content = '智能插座' + sensoralarm.sensor_id + '异常'
-                    else:content = '电磁阀' + sensoralarm.sensor_id + '异常'
-                if i.if_send==False:
+        sendmessage=MessageSend.query.filter(MessageSend.if_send==False).order_by(MessageSend.message_id).all()
+        for i in sendmessage:
+            if i.message_type=='传感器报警':
+                sensoralarm=SensorAlarm.query.get_or_404(i.message_id)
+                if sensoralarm.sensor_type=='0':
+                    content='烟雾传感器'+sensoralarm.sensor_id+'异常'
+                elif sensoralarm.sensor_type == '0':
+                    content = '温度传感器' + sensoralarm.sensor_id + '异常'
+                elif sensoralarm.sensor_type == '0':
+                     content = '燃气阀' + sensoralarm.sensor_id + '异常'
+                elif sensoralarm.sensor_type == '0':
+                    content = '智能插座' + sensoralarm.sensor_id + '异常'
+                else: content='电磁阀'+sensoralarm.sensor_id+'异常'
+                print('first step')
+                list=[]
+                for i in sendmessage:
                     list.append(i.user_id)
+                    # j=i
+                    # if j<len(sendmessage):
+                    #     for j in sendmessage :
+                    #       if j.message_id==i.message_id:
+                    #           list.append(j.user_id)
+                    #       else:pass
+                    #     else:pass
                     i.if_send = True
                     db.session.commit()
-                else:pass
-            taskid=getui.getTaskId(content)
-            getui.sendList(alias=list,taskid=taskid)
-
-
+                    print('@@@@')
+                    taskid=getui.getTaskId(content)
+                    rs=getui.sendList(list,taskid)
+                    print(rs.json())
 
 
 
