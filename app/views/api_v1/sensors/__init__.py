@@ -84,10 +84,11 @@ class SensorsView(Resource):
     @api.response(200, 'ok')
     def get(self,sensorid):
         sensor=Sensor.query.get_or_404(sensorid)
-        user=User.query.get_or_404(sensor.home.admin_user_id)
+        home=Home.query.filter(Home.gateway_id==sensor.gateway_id).first()
+        user=User.query.get_or_404(home.admin_user_id)
         homeuser= HomeUser.query.filter(HomeUser.home_id==sensor.home_id).all()
         query=db.session.query(Sensor,SensorHistory,Home).join(SensorHistory,Sensor.id==SensorHistory.sensor_id).\
-            join(Home,Sensor.home_id==Home.id).filter(Sensor.id==sensorid)
+            join(Home,Sensor.gateway_id==Home.gateway_id).filter(Sensor.id==sensorid)
         total=query.count()
         _=[]
         for i in [query.first()]:
@@ -96,6 +97,7 @@ class SensorsView(Resource):
             __['sensor_type']=i[0].sensor_type
             __['sensor_place']=i[0].sensor_place
             __['sensor_state']=tuple(SensorHistoryView.get(self,i[0].id))[0].get('sensor_state')
+            __['gateway_id']=i[0].gateway_id
             __['home_id']=i[2].id
             __['home_name']=i[2].name
             _.append(__)
@@ -132,7 +134,7 @@ class SensorsView(Resource):
     @api.expect(sensor_parser1)
     def put(self,sensorid):
         sensor1=Sensor.query.get_or_404(sensorid)
-        home=Home.query.filter(Home.id==sensor1.home_id).first()
+        home=Home.query.filter(Home.gateway_id==sensor1.gateway_id).first()
         args=sensor_parser1.parse_args()
         if args['gateway_id']:
             sensor1.gateway_id=args.get('gateway_id')
@@ -168,7 +170,7 @@ class SensorAlarmsView(Resource):
     @page_range()
     def get(self,sensorid):
         sensor=Sensor.query.get_or_404(sensorid)
-        home=sensor.home
+        home=Home.query.filter(Home.gateway_id==sensor.gateway_id).first()
         homeuser=HomeUser.query.filter(HomeUser.home_id==home.id).all()
         sensoralarm=SensorAlarm.query.filter(SensorAlarm.sensor_id==sensorid)
         if g.role.name=='homeuser':
@@ -190,7 +192,7 @@ class SensorHistoryView(Resource):
     @api.response(200,'ok')
     def get(self,sensorid):
         sensor=Sensor.query.get_or_404(sensorid)
-        home=sensor.home
+        home=Home.query.filter(Home.gateway_id==sensor.gateway_id).first()
         sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensorid).order_by(SensorHistory.time.desc()).first()
         if g.role.name=='homeuser':
             if g.user.id in [i.user_id for i in (HomeUser.query.filter(HomeUser.home_id==home.id))]:

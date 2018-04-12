@@ -46,19 +46,21 @@ class SensorAlarmsView(Resource):
         total=SensorAlarm.query.count()
         _=[]
         for i in query.all():
+         sensor=Sensor.query.get_or_404(i.sensor_id)
+         home=Home.query.filter(Home.gateway_id==sensor.gateway_id).first()
          __={}
          __['sensoralarms_id']=i.id
          __['sensoralarms_sensor_id']=i.sensor_id
          __['sensoralarms_sensor_type']=i.sensor_type
          __['sensoralarms_alarm_value']=i.alarm_value
          __['sensoralarms_note'] = i.note
-         __['home_name']=Sensor.query.get_or_404(i.sensor_id).home.name
-         __['home_id'] = Sensor.query.get_or_404(i.sensor_id).home.id
-         __['home_admin_id']=Sensor.query.get_or_404(i.sensor_id).home.admin_user_id
+         __['home_name']=home.name
+         __['home_id'] =home.id
+         __['home_admin_id']=home.admin_user_id
          __['sensoralarm_is_confirm']=i.is_confirm
          __['sensoralarms_alarm_time']=str(i.alarm_time)
-         __['detail_address']=i.sensor.home.detail_address
-         __['community_name']=i.sensor.home.community.name
+         __['detail_address']=home.detail_address
+         __['community_name']=home.community.name
          _.append(__)
         result={
             'code':0,
@@ -67,6 +69,7 @@ class SensorAlarmsView(Resource):
             'data':_
         }
         return result,200
+
 
 
     @api.doc('新增传感器报警记录')
