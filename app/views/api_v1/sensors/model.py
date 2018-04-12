@@ -11,3 +11,8 @@ sensor_model = api.model('SensorModel', {
     'end_time':fields.DateTime,
     'max_value':fields.Float
 })
+sensortime_model=api.model('SensorTime',{
+    'sensor_id':fields.String,
+    'start_time':fields.DateTime,
+    'end_time':fields.DateTime
+})

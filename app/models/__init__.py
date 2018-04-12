@@ -213,7 +213,7 @@ class Sensor(db.Model):
     max_value=db.Column(db.Float,comment='阈值')
     alarms_history = db.relationship('SensorAlarm', lazy='dynamic')
 
-class SensorTime(Sensor):
+class SensorTime(db.Model):
     __tablename__ = 'sensor_time'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     sensor_id=db.Column(db.String(50),db.ForeignKey('sensor.id'),comment='传感器id')

@@ -109,7 +109,7 @@ class UserAlarmRecordsView(Resource):
         }
         return result,200
 
-    @api.doc('新增用户报警记录(用户提交传感器报警信息)')######################################
+    @api.doc('新增用户报警记录(用户提交传感器报警信息)')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin','homeuser', 'superadmin', 'propertyuser','119user', 'stationuser'])
     @api.expect(useralarmrecord_parser,validate=True)
@@ -119,7 +119,7 @@ class UserAlarmRecordsView(Resource):
         useralarmrecord=UserAlarmRecord(**args)
         db.session.add(useralarmrecord)
         db.session.commit()
-        return None,200
+        return {'useralarmrecord_id':useralarmrecord.id},200
 @api.route('/<useralarmrecordid>')
 class UserAlarmRecordView(Resource):
     @api.doc('报警更新')
@@ -129,12 +129,14 @@ class UserAlarmRecordView(Resource):
     @api.response(200,'ok')
     def put(self,useralarmrecordid):
         useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
-        home=Home.query.get_or_404(useralarmrecord.home_id)
-        community=home.community
-        ins=community.ins
-        insuser=[]
-        for i in ins:
-            insuser.extend(i.user)
+        if useralarmrecord.home_id!=None:
+            home=Home.query.get_or_404(useralarmrecord.home_id)
+            community=home.community
+            ins=community.ins
+            insuser=[]
+            for i in ins:
+                insuser.extend(i.user)
+        else:ins2 = Ins.query.filter(Ins.id == useralarmrecord.ins_id).first()
         args=useralarmrecord1_parser.parse_args()
         if args['note']:
             useralarmrecord.note= args['note']
@@ -144,7 +146,7 @@ class UserAlarmRecordView(Resource):
         else:pass
         if args['if_confirm']:
             if g.role.name in ['propertyuser','stationuser' ]:
-                if g.user.id in[i.id for i in insuser]:
+                if g.user.id in[i.id for i in insuser] or g.user.id in [i.id for i in ins2.user]:
                     useralarmrecord.if_confirm = True
                 else:pass
             else: useralarmrecord.if_confirm = True
@@ -158,57 +160,105 @@ class UserAlarmRecordView(Resource):
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser', 'propertyuser', 'stationuser', '119user', 'admin', 'superadmin'])
-    @api.marshal_with(useralarmrecord_model,as_list=False)
-    def get(self,useralarmrecordid):
-        useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
-        home=Home.query.get_or_404(useralarmrecord.home_id)
-        homeuser=HomeUser.query.filter(HomeUser.home_id==home.id).all()
-        community=home.community
-        ins=community.ins
-        if useralarmrecord.type==0:
-            if g.role.name=='homeuser':
-                if g.user.id==home.admin_user_id:
-                    return useralarmrecord,200
-                else: return '权限不足',201
-            elif g.role.name=='119user':
+    @api.marshal_with(useralarmrecord_model, as_list=False)
+    def get(self, useralarmrecordid):
+        def GetNearHome(homeid):
+            home = Home.query.get_or_404(homeid)
+            community = home.community
+            home1 = Home.query.all()
+            def getDistance(lat0, lng0, lat1, lng1):
+                lat0 = math.radians(lat0)
+                lat1 = math.radians(lat1)
+                lng0 = math.radians(lng0)
+                lng1 = math.radians(lng1)
+                dlng = math.fabs(lng0 - lng1)
+                dlat = math.fabs(lat0 - lat1)
+                a = math.sin(dlat / 2) ** 2 + math.cos(lat0) * math.cos(lat1) * math.sin(dlng / 2) ** 2
+                c = 2 * math.asin(math.sqrt(a))
+                r = 6371  # 地球平均半径，单位为公里
+                return c * r * 1000
+            list = []
+            for i in home1:
+                if getDistance(home.latitude, home.longitude, i.latitude, i.longitude) < community.eva_distance:
+                    list.append(i)
+            for j in list:
+                homeuser2 = HomeUser.query.filter(Home.id == j.id).all()
+                user4 = User.query.filter(User.id.in_(i.user_id for i in homeuser2)).all()
+                return user4
+        useralarmrecord = UserAlarmRecord.query.get_or_404(useralarmrecordid)
+        if useralarmrecord.home_id != None:
+            home = Home.query.get_or_404(useralarmrecord.home_id)
+            homeuser = HomeUser.query.filter(HomeUser.home_id == home.id).all()
+            user1 = User.query.filter(User.id.in_(i.user_id for i in homeuser)).all()  # 报警家庭成员
+        else:
+            ins1 = Ins.query.get_or_404(useralarmrecord.ins_id)
+            community1 = ins1.community
+            home2 = []
+            for i in community1:
+                home2.extend(i.homes)
+            user2 = ins1.user  ##报警机构成员
+        if useralarmrecord.home_id!=None:
+            ins2 = Home.query.get_or_404(useralarmrecord.home_id).community.ins
+            user3 = []
+            for i in ins2:
+             user3.extend(i.user)  # 报警家庭上级机构下的成员
+        else:pass
+        if useralarmrecord.type == '0':
+            if g.role.name == 'homeuser':
+                if g.user.id in [i.id for i in user1]:
+                    return useralarmrecord, 200
+                else:
+                    return '权限不足', 201
+            elif g.role.name in ['propertyuser', 'stationuser']:
+                if g.user.id in [i.id for i in user2] or g.user.id in [i.id for i in user3]:
+                    return useralarmrecord, 200
+                else:
+                    return '权限不足', 201
+            else:
                 return useralarmrecord, 200
-            elif g.role.name in['propertyuser','stationuser']:
-                if g.user.id in[i.admin_user_id for i in ins]:
-                    return useralarmrecord, 200
-                else: return '权限不足', 201
-            else :return useralarmrecord, 200
-        elif useralarmrecord.type==1:
-            if g.role.name=='homeuser':
-                if g.user.id in[i.user_id for i in homeuser]:
-                    return useralarmrecord,200
-                else:return'权限不足',201
-            elif g.role.name in ['propertyuser','stationuser']:
-                if g.user.id in[i.admin_user_id for i in ins]:
-                    return useralarmrecord,200
-                else:return '权限不足', 201
-            else:return useralarmrecord,200
-        elif useralarmrecord.type==2:
-            if g.role.name=='homeuser':
-                if g.user.id in[i.user_id for i in homeuser]:
-                    return useralarmrecord,200
-                else:return'权限不足',201
-            elif g.role.name in ['propertyuser','stationuser','119user']:
-                if g.user.id in [i.admin_user_id for i in ins]:
+        elif useralarmrecord.type == '1':
+            if g.role.name == 'homeuser':
+                homeuser1 = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
+                home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser1)).all()
+                if g.user.id in [i.id for i in user1] or set(home).issubset(set(home2)):
                     return useralarmrecord, 200
                 else:
                     return '权限不足', 201
-            else: return useralarmrecord,200
-        elif useralarmrecord.type==3:
-            if g.user.id==useralarmrecord.user_id:
-                return useralarmrecord,200
-            elif g.role.name in['propertyuser','stationuser']:
-                if g.user.id in [i.admin_user_id for i in ins]:
+            elif g.role.name in ['propertyuser', 'stationuser']:
+                if g.user.id in [i.id for i in user3] or g.user.id in [i.id for i in user2]:
                     return useralarmrecord, 200
                 else:
                     return '权限不足', 201
-            elif g.role.name in['admin','superadmin']:
-                return  useralarmrecord, 200
-            else:return'权限不足',201
+            else:
+                return useralarmrecord, 200
+        elif useralarmrecord.type == '2':
+            if g.role.name == 'homeuser':
+                if g.user.id in [i.id for i in user1]:
+                    return useralarmrecord, 200
+                else:
+                    return '权限不足', 201
+            elif g.role.name in ['propertyuser', 'stationuser']:
+                if g.user.id in [i.id for i in user3]:
+                    return useralarmrecord, 200
+                else:
+                    return '权限不足', 201
+            elif g.role.name == '119user':
+                return '权限不足', 201
+            else:
+                return useralarmrecord, 200
+        else:
+            if g.role.name == 'homeuser':
+                if g.user.id in [i.id for i in user1] or g.user.id in [i.id for i in GetNearHome(useralarmrecord.home_id)]:
+                    return useralarmrecord, 200
+                else:
+                    return '权限不足', 201
+            elif g.role.name in ['propertyuser', 'stationuser']:
+                if g.user.id in [i.id for i in user3]:
+                    return useralarmrecord, 200
+                else:
+                    return '权限不足', 201
+            else:
+                return useralarmrecord, 200
 
 
     @api.doc('删除用户报警记录')

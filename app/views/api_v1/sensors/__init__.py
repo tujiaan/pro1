@@ -155,25 +155,6 @@ class SensorsView(Resource):
             return None,200
         else:return '权限不足',301
 
-    @api.doc('定时设定')
-    @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser'])
-    @api.response(200, 'ok')
-    @api.expect(sensor_parser2)
-    def post(self,sensorid):
-        sensor=SensorTime.query.get_or_404(sensorid)
-        args=sensor_parser2.parse_args()
-        if sensor.sensor_type==3:
-            if args['start_time']:
-                sensor.start_time=['start_time']
-            else:pass
-            if args['end_time']:
-                sensor.end_time= args['end_time']
-            else:pass
-            db.session.commit()
-
-
-
 
 @api.route('/<sensorid>/sensoralarm')
 class SensorAlarmsView(Resource):
@@ -218,6 +199,62 @@ class SensorHistoryView(Resource):
 
         else:
             return sensorhistory, 200
+
+
+@api.route('/<sensorid>/sensortime')
+class SensorTimeView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser'])
+    @api.doc('查询特定传感器定时')
+    @api.marshal_with(sensortime_model,as_list=True)
+    def get(self,sensorid):
+        sensor=Sensor.query.get_or_404(sensorid)
+        home=Home.query.filter(Home.gateway_id==sensor.gateway_id).first()
+        homeuser=HomeUser.query.filter(HomeUser.home_id==home.id).all()
+        sensortime=SensorTime.query.filter(SensorTime.sensor_id==sensorid).all()
+        if g.user.id in [i.user_id for i in homeuser]:
+            return sensortime,200
+        else:return '权限不足',201
+
+
+@api.route('/<sensortimeid>/sensortime')
+class SensorTimeView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser'])
+    @api.doc('删除特定传感器定时')
+    @api.marshal_with(sensortime_model,as_list=True)
+    def delete(self,sensortimeid):
+        sensortime = SensorTime.query.get_or_404(sensortimeid)
+        sensor=Sensor.query.get_or_404(sensortime.sensorid)
+        home=Home.query.filter(Home.gateway_id==sensor.gateway_id).first()
+        db.session.delete(sensortime)
+        if g.user.id==home.admin_user_id:
+            db.session.commit()
+            return '删除成功',200
+        else:return '权限不足',201
+
+
+@api.route('/sensortime/')
+class SensorTimeView(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser'])
+    @api.doc('新增传感器定时')
+    @api.expect(sensor_parser2)
+    def post(self):
+        args = sensor_parser2.parse_args()
+        if args['sensor_id']:
+            sensor = Sensor.query.get_or_404(args['sensor_id'])
+            home = Home.query.filter(Home.gateway_id == sensor.gateway_id).first()
+            sensortime=SensorTime(**args)
+            db.session.add(sensortime)
+            if g.user.id == home.admin_user_id:
+                db.session.commit()
+                return '添加成功', 200
+            else:
+                return '权限不足', 201
+
+
+
 
 
 

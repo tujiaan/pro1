@@ -83,7 +83,7 @@ class SensorAlarmsView(Resource):
 @api.route('/<sensoralarmid>')
 class SensorAlarmView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser','propertyuser','stationuser', 'admin', 'superadmin'])
+    @role_require(['homeuser','propertyuser','stationuser','119user', 'admin', 'superadmin'])
     @api.doc('根据报id查询详情')
     @api.marshal_with(sensoralarms_model)
     @api.response(200,'ok')
@@ -91,7 +91,7 @@ class SensorAlarmView(Resource):
     def get(self,sensoralarmid):
         sensoralarm=SensorAlarm.query.get_or_404(sensoralarmid)
         sensor=sensoralarm.sensor
-        home=sensor.home
+        home=Home.query.filter(Home.gateway_id==sensor.gateway_id).first()
         homeuser=HomeUser.query.filter(HomeUser.home_id==home.id)
         if g.role.name=='homeuser':
             if g.user.id not in[i.user_id for i in homeuser]:
