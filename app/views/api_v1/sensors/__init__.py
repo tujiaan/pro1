@@ -86,7 +86,7 @@ class SensorsView(Resource):
         sensor=Sensor.query.get_or_404(sensorid)
         home=Home.query.filter(Home.gateway_id==sensor.gateway_id).first()
         user=User.query.get_or_404(home.admin_user_id)
-        homeuser= HomeUser.query.filter(HomeUser.home_id==sensor.home_id).all()
+        homeuser= HomeUser.query.filter(HomeUser.home_id==home.id).all()
         query=db.session.query(Sensor,SensorHistory,Home).join(SensorHistory,Sensor.id==SensorHistory.sensor_id).\
             join(Home,Sensor.gateway_id==Home.gateway_id).filter(Sensor.id==sensorid)
         total=query.count()

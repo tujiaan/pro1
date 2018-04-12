@@ -11,7 +11,7 @@ knowledge_parser1.add_argument('content',type=str,help='指示类容',required=F
 knowledge_parser1.add_argument('title',type=str,help='知识标题',required=False,location='form')
 
 upload_parser = RequestParser()
-upload_parser.add_argument('file',
+upload_parser.add_argument('wangEditorH5File',
                            type=FileStorage,
                            help="上传文件",
                            required=True,
