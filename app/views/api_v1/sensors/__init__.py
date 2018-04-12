@@ -224,7 +224,6 @@ class SensorTimeView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser'])
     @api.doc('删除特定传感器定时')
-    @api.marshal_with(sensortime_model,as_list=True)
     def delete(self,sensortimeid):
         sensortime = SensorTime.query.get_or_404(sensortimeid)
         sensor=Sensor.query.get_or_404(sensortime.sensorid)
