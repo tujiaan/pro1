@@ -2,6 +2,8 @@ import dateutil
 from flask import g, request
 from flask_restplus import Namespace
 from flask_restplus import  Resource
+from sqlalchemy import and_
+
 from app.ext import db
 from app.models import Facility, Sensor, Home, SensorAlarm, SensorHistory, HomeUser, UserRole, Role, User, SensorTime
 from app.utils.auth.auth import role_require
@@ -266,7 +268,8 @@ class SensorTimeView(Resource):
                 return '权限不足', 201
         else:
             db.session.commit()
-            return '添加成功', 200
+            # return '添加成功', 200
+            return {'start_time':str(sensortime.start_time),'type':str(type(sensortime.start_time))},200
 
 @api.route('/<start_time>/<end_time>/<sensorid>/maxvalue')
 class SensorTimeViews(Resource):
@@ -275,26 +278,15 @@ class SensorTimeViews(Resource):
     @api.doc('智能电流设定')
     def get(self,start_time,end_time,sensorid):
         datetime1=datetime.date.today().strftime('%Y-%m-%d')
-        start_time1=datetime.datetime.strptime(datetime1 + " " + start_time, "%Y-%m-%d %H:%M")
-        end_time1=datetime.datetime.strptime(datetime1 + " " + end_time, "%Y-%m-%d %H:%M")
-        sensortimes=SensorTime.query.all()
-        for sensortime in sensortimes:
-            if sensortime.start_time.strftime("%H:%M")>start_time and sensortime.end_time.strftime("%H:%M")<end_time:
-                return sensortime
-            else:pass
-        # sensortime=SensorTime.query.filter(SensorTime.start_time.compare(start_time1)).filter(SensorTime.end_time.compare(end_time1)).filter(SensorTime.sensor_id==sensorid).first()
-        # print(SensorTime.query.filter(SensorTime.sensor_id==sensorid).first())
-        # sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensortime.sensor_id).filter(SensorHistory.time.between(start_time1,end_time1)).order_by(SensorHistory.sensor_value.desc()).first()
-        sensorhistorys=SensorHistory.query.filter(SensorHistory.sensor_id==sensortime.sensor_id).order_by(SensorHistory.sensor_value.desc()).all()
-        for sensorhistory in sensorhistorys:
-            if sensorhistory.time.strftime("%H:%M")>start_time and sensorhistory.time.strftime("%H:%M")<end_time:
-                return sensorhistory
-            else:pass
+        start_time1=datetime.datetime.strptime(datetime1 + "\t " + start_time+":00", "%Y-%m-%d %H:%M:%S")
+        end_time1=datetime.datetime.strptime(datetime1 + "\t" + end_time+":00", "%Y-%m-%d %H:%M:%S")
+        sensortime=SensorTime.query.filter(SensorTime.start_time.between(start_time1,end_time1)).filter(SensorTime.end_time.between(start_time1,end_time1)).filter(SensorTime.sensor_id==sensorid).first()
+        sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensortime.sensor_id).filter(SensorHistory.time.between(start_time1,end_time1)).order_by(SensorHistory.sensor_value.desc()).first()
         result={
             'start_time':start_time,
             'end_time':end_time,
             'max_value':sensorhistory.sensor_value
-        }
+            }
         return result,200
 
 
