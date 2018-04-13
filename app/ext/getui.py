@@ -29,6 +29,7 @@ class Getui(object):
             if self._expire_time>now+10000:
 
                 return self.authtoken
+        print(self.appkey,self.mastersecret)
         sign = sha256((self.appkey + str(now) + self.mastersecret).encode())
         url = 'https://restapi.getui.com/v1/'+str(self.appid)+'/auth_sign'
         data = {
