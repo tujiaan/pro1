@@ -100,6 +100,8 @@ class SensorsView(Resource):
             __={}
             __['sensor_id']=i[0].id
             __['sensor_type']=i[0].sensor_type
+            __['max_value']=i[0].max_value
+            __['set_type']=i[0].set_type
             __['sensor_place']=i[0].sensor_place
             __['sensor_state']=tuple(SensorHistoryView.get(self,i[0].id))[0].get('sensor_state')
             __['gateway_id']=i[0].gateway_id
