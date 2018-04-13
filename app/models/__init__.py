@@ -218,6 +218,7 @@ class SensorTime(db.Model):
     sensor_id=db.Column(db.String(50),db.ForeignKey('sensor.id'),comment='传感器id')
     start_time = db.Column(db.DateTime, comment='开始时间')
     end_time = db.Column(db.DateTime, comment='结束时间')
+    switch_on=db.Column(db.Boolean,default=False,comment='定时开关')
 
 
 class MessageSend(db.Model):

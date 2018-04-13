@@ -23,7 +23,6 @@ class Command(Resource):
         },
             'time':datetime.datetime.now()
         }
-        print(data)
         theme=str(gatewayid)+'/cmd'
         mqtt.publish(theme,json.dumps(data))
         return None

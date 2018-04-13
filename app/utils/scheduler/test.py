@@ -1,10 +1,12 @@
+import datetime
 from operator import or_, and_
 
 import requests
-from flask import app
+from flask import app, json
 
-from app.ext import db, getui
-from app.models import Sensor, SensorAlarm, MessageSend, Home, HomeUser, User, Ins, UserAlarmRecord, Role, UserRole
+from app.ext import db, getui,mqtt
+from app.models import Sensor, SensorAlarm, MessageSend, Home, HomeUser, User, Ins, UserAlarmRecord, Role, UserRole, \
+    SensorTime
 
 
 def BuiltSensorSendMessage(app):
@@ -104,7 +106,34 @@ def SendMessage(app):
                     db.session.commit()
                     taskid=getui.getTaskId(content)
                     rs=getui.sendList(list,taskid)
-                    print(rs.json())
+
+def OpenSensor(app):
+    with app.app_context():
+        sensortimes=SensorTime.query.all()
+        for sensortime in sensortimes:
+            sensor=Sensor.query.get_or_404(sensortime.sensor_id)
+            if sensortime.start_time==datetime.datetime.now() and sensortime.switch_on==True:
+
+                data = {'data': {
+                    sensortime.sensor_id: '1'
+                },
+                    'time': datetime.datetime.now()
+                }
+                theme = str(sensor.gateway_id) + '/cmd'
+                mqtt.publish(theme, json.dumps(data))
+            else:pass
+            if sensortime.end_time==datetime.datetime.now() and sensortime.switch_on==True:
+                data = {'data': {
+                    sensortime.sensor_id: '0'
+                },
+                    'time': datetime.datetime.now()
+                }
+                theme = str(sensor.gateway_id) + '/cmd'
+                mqtt.publish(theme, json.dumps(data))
+            else:
+                pass
+
+
 
 
 

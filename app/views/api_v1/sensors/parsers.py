@@ -26,3 +26,5 @@ sensor_parser2.add_argument('start_time',type=str,help='开启时间',required=T
 sensor_parser2.add_argument('end_time',type=str,help='关闭时间',required=True,location='form')
 
 
+sensortime_parser=RequestParser()
+sensortime_parser.add_argument('switch_on',type=str,required=False,location='form')

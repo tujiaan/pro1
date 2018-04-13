@@ -11,7 +11,7 @@ from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms import sensoralarms_model
 from app.views.api_v1.sensorhistory import sensorhistory_model
-from app.views.api_v1.sensors.parsers import sensor_parser, sensor_parser1, sensor_parser2
+from app.views.api_v1.sensors.parsers import sensor_parser, sensor_parser1, sensor_parser2, sensortime_parser
 import datetime
 import time
 
@@ -229,6 +229,8 @@ class SensorTimeView(Resource):
         else:return '权限不足',201
 
 
+
+
 @api.route('/<sensortimeid>/sensortime')
 class SensorTimeView(Resource):
     @api.header('jwt', 'JSON Web Token')
@@ -243,6 +245,25 @@ class SensorTimeView(Resource):
             db.session.commit()
             return '删除成功',200
         else:return '权限不足',201
+
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser'])
+    @api.doc('开启定时传感器')
+    @api.expect(sensortime_parser)
+    def put(self, sensortimeid):
+        sensortime=SensorTime.query.get_or_404(sensortimeid)
+        sensor=Sensor.query.get_or_404(sensortime.sensor_id)
+        home=Home.query.filter(Home.gateway_id==sensor.gateway_id)
+        args=sensortime_parser.parse_args()
+        if args['switch_on']:
+            sensortime.switch_on=args['switch_on']
+        else:pass
+        if g.user.id==home.admin_user_id:
+            db.session.commit()
+            return '开启成功',200
+        else: return '权限不足',201
+
+
 
 
 @api.route('/sensortime/')
