@@ -155,6 +155,7 @@ class Upload(Resource):
             os.makedirs(path)
         file.save(path + '/' + filename)
         result={
+            'errno':0,
             'code':0,
             'message':'ok',
             'data':[pre_fix+src]
