@@ -25,6 +25,15 @@ def gateway_info(client, userdata, message):
                 if s is None:
                     s=Sensor(id=sid)
                     s.online = sensor.get('online', False)
+                    if sid>'S1001'and sid<'S1999':
+                        s.type=0
+                    elif sid>'S2001'and sid<'S299':
+                        s.type=1
+                    elif sid>'S3001'and sid<'S3999':
+                        s.type=3
+                        s.max_value=100
+                        s.set_type=0
+                    else: s.type=4
                     db.session.add(s)
                     db.session.commit()
                     if s not in g.sensors:

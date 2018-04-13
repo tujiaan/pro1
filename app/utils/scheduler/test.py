@@ -102,7 +102,6 @@ def SendMessage(app):
                     #     else:pass
                     i.if_send = True
                     db.session.commit()
-                    print('@@@@')
                     taskid=getui.getTaskId(content)
                     rs=getui.sendList(list,taskid)
                     print(rs.json())

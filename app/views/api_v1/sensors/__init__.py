@@ -156,6 +156,9 @@ class SensorsView(Resource):
             pass
         if args['max_value']:
             sensor1.max_value=args.get('max_value')
+            if sensor1.type=='3':
+                sensor1.set_type=1
+            else:pass
         else:pass
         if g.user.id==home.admin_user_id:
             db.session.commit()
@@ -282,6 +285,10 @@ class SensorTimeViews(Resource):
         end_time1=datetime.datetime.strptime(datetime1 + "\t" + end_time+":00", "%Y-%m-%d %H:%M:%S")
         sensortime=SensorTime.query.filter(SensorTime.start_time.between(start_time1,end_time1)).filter(SensorTime.end_time.between(start_time1,end_time1)).filter(SensorTime.sensor_id==sensorid).first()
         sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensortime.sensor_id).filter(SensorHistory.time.between(start_time1,end_time1)).order_by(SensorHistory.sensor_value.desc()).first()
+        sensor=Sensor.query.get_or_404(sensorid)
+        sensor.max_value=sensorhistory.sensor_value
+        sensor.set_type='2'
+        db.session.commit()
         result={
             'start_time':start_time,
             'end_time':end_time,
