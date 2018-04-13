@@ -1,3 +1,4 @@
+import dateutil
 from flask import g, request
 from flask_restplus import Namespace
 from flask_restplus import  Resource
@@ -9,6 +10,8 @@ from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.sensoralarms import sensoralarms_model
 from app.views.api_v1.sensorhistory import sensorhistory_model
 from app.views.api_v1.sensors.parsers import sensor_parser, sensor_parser1, sensor_parser2
+import datetime
+import time
 
 api = Namespace('Sensors', description='传感器相关接口')
 from .model import *
@@ -238,21 +241,61 @@ class SensorTimeView(Resource):
 @api.route('/sensortime/')
 class SensorTimeView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser'])
+    @role_require(['homeuser','superadmin'])
     @api.doc('新增传感器定时')
     @api.expect(sensor_parser2)
     def post(self):
         args = sensor_parser2.parse_args()
+        sensortime = SensorTime()
         if args['sensor_id']:
             sensor = Sensor.query.get_or_404(args['sensor_id'])
             home = Home.query.filter(Home.gateway_id == sensor.gateway_id).first()
-            sensortime=SensorTime(**args)
-            db.session.add(sensortime)
+            sensortime.sensor_id=args['sensor_id']
+        if args['start_time']:
+            sensortime.start_time=datetime.datetime.strptime(datetime.date.today().strftime('%Y-%m-%d')+ " " +args['start_time']+':00','%Y-%m-%d %H:%M:%S')
+        else:pass
+        if args['end_time']:
+            sensortime.end_time=datetime.datetime.strptime(datetime.date.today().strftime('%Y-%m-%d')+ " " +args['end_time']+':00','%Y-%m-%d %H:%M:%S')
+        else:pass
+        db.session.add(sensortime)
+        if g.role.name=='homeuser':
             if g.user.id == home.admin_user_id:
                 db.session.commit()
                 return '添加成功', 200
             else:
                 return '权限不足', 201
+        else:
+            db.session.commit()
+            return '添加成功', 200
+
+@api.route('/<start_time>/<end_time>/<sensorid>/maxvalue')
+class SensorTimeViews(Resource):
+    @api.header('jwt', 'JSON Web Token')
+    @role_require(['homeuser','superadmin'])
+    @api.doc('智能电流设定')
+    def get(self,start_time,end_time,sensorid):
+        datetime1=datetime.date.today().strftime('%Y-%m-%d')
+        start_time1=datetime.datetime.strptime(datetime1 + " " + start_time, "%Y-%m-%d %H:%M")
+        end_time1=datetime.datetime.strptime(datetime1 + " " + end_time, "%Y-%m-%d %H:%M")
+        sensortimes=SensorTime.query.all()
+        for sensortime in sensortimes:
+            if sensortime.start_time.strftime("%H:%M")>start_time and sensortime.end_time.strftime("%H:%M")<end_time:
+                return sensortime
+            else:pass
+        # sensortime=SensorTime.query.filter(SensorTime.start_time.compare(start_time1)).filter(SensorTime.end_time.compare(end_time1)).filter(SensorTime.sensor_id==sensorid).first()
+        # print(SensorTime.query.filter(SensorTime.sensor_id==sensorid).first())
+        # sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensortime.sensor_id).filter(SensorHistory.time.between(start_time1,end_time1)).order_by(SensorHistory.sensor_value.desc()).first()
+        sensorhistorys=SensorHistory.query.filter(SensorHistory.sensor_id==sensortime.sensor_id).order_by(SensorHistory.sensor_value.desc()).all()
+        for sensorhistory in sensorhistorys:
+            if sensorhistory.time.strftime("%H:%M")>start_time and sensorhistory.time.strftime("%H:%M")<end_time:
+                return sensorhistory
+            else:pass
+        result={
+            'start_time':start_time,
+            'end_time':end_time,
+            'max_value':sensorhistory.sensor_value
+        }
+        return result,200
 
 
 
