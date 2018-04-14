@@ -38,15 +38,15 @@ class Getui(object):
             "appkey": self.appkey
         }
         res = requests.post(url=url, json=data).json()
-        if res.get('result')=='ok':
-            self._expire_time=int(res.get('expire_time','0'))
-            self.authtoken=res.get('auth_token')
+        if res.get('result') == 'ok':
+            self._expire_time = int(res.get('expire_time','0'))
+            self.authtoken = res.get('auth_token')
 
         return self.authtoken
 
     def getAuth(self):
         pprint(self.sign)
-        now=int(time.time() * 1000)
+        now = int(time.time() * 1000)
         url = 'https://restapi.getui.com/v1/'+str(self.appid)+'/auth_sign'
         data = {
             "sign": self.sign,
@@ -54,12 +54,13 @@ class Getui(object):
             "appkey": self.appkey
         }
         res = requests.post(url=url, json=data)
-        result=(res.json()).get('auth_token')
+        result = (res.json()).get('auth_token')
         return result,200
-    def bind(self,userid,cid):
+
+    def bind(self, userid, cid):
         headers={
-            'Content-Type':'application/json',
-            'authtoken':self.sign
+            'Content-Type': 'application/json',
+            'authtoken': self.sign
         }
         url='https://restapi.getui.com/v1/'+str(self.appid)+'/bind_alias'
         data={
@@ -67,9 +68,9 @@ class Getui(object):
         }
         res = requests.post(url=url,headers=headers, json=data)
         result=res.json()
-
         return result
-    def getTaskId(self,content):
+
+    def getTaskId(self,message_id,message_type,content):
         headers = {
             'Content-Type': 'application/json',
             'authtoken': self.sign
@@ -79,7 +80,7 @@ class Getui(object):
             "message": {
                    "appkey": self.appkey,
                    "is_offline": True,
-                   "offline_expire_time":10000000,
+                   "offline_expire_time": 10000000,
                    "msgtype": "notification"
                 },
                 "notification": {
@@ -89,23 +90,30 @@ class Getui(object):
                         "title": "消息推送"
                     },
                     "transmission_type": True,
-                    "transmission_content": content
+                    "transmission_content": {
+                        "message_id": message_id,
+                        "message_type": message_type,
+                        "content": content
+                    }
                 }
         }
         res=requests.post(url=url,headers=headers,json=data)
         return res.json().get('taskid')
-    def sendList(self,alias,taskid):
+
+    def sendList(self, alias, taskid):
         headers = {
             'Content-Type': 'application/json',
             'authtoken': str(self.sign)
         }
-        url=str( 'https://restapi.getui.com/v1/'+str(self.appid)+'/push_list ')
-        data={
-            #"alias":['1111'],
-            "alias":alias ,
+        url = str( 'https://restapi.getui.com/v1/'+str(self.appid)+'/push_list ')
+        data = {
+
+            "alias":alias,
             "taskid": str(taskid),
             "need_detail": True
         }
-        res=requests.post(url=url,headers=headers,json=data)
+        res = requests.post(url=url, headers=headers, json=data)
         return res.json()
+
+
 getui=Getui()

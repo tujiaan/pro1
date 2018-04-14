@@ -295,7 +295,7 @@ class SensorTimeView(Resource):
         else:
             db.session.commit()
             # return '添加成功', 200
-            return {'start_time':str(sensortime.start_time),'type':str(type(sensortime.start_time))}, 200
+            return {'start_time': str(sensortime.start_time),'type':str(type(sensortime.start_time))}, 200
 
 
 @api.route('/<start_time>/<end_time>/<sensorid>/maxvalue')

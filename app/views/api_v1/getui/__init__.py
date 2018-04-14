@@ -1,16 +1,11 @@
 # import jpush
 from flask_restplus import Namespace, Resource
-#
 # from app.ext import Jpush
-#
+from app.models import  UserAlarmRecord
 from app.views.api_v1.getui.parser import test_parser, test_parser1
 api = Namespace('Test', description='测试接口')
 from .parser import *
-from app.ext import *
 from app.ext.getui import getui
-#from app.utils.myutil.bind import utils
-#from app.views.api_v1 import api
-
 
 @api.route('/getuibind/')
 class test(Resource):
@@ -24,7 +19,8 @@ class test(Resource):
         return getui.bind(userid,cid )
             # return
             # getui.sendList('你好guitui',['123456789'])
-    #utils.getAuth(self=utils)
+
+
 @api.route('/getuisend/')
 class test(Resource):
     @api.expect(test_parser1)
@@ -37,14 +33,16 @@ class test(Resource):
         alias=list
         taskid = args['taskid']
         return getui.sendList(alias,taskid)
+
+
 @api.route('/gettaskid/')
 class test(Resource):
     @api.expect(test_parser2)
     def post(self):
-        args=test_parser2.parse_args()
-        content=args['content']
-        taskid=getui.getTaskId(content)
-        return taskid,200
+        args = test_parser2.parse_args()
+        useralarmrecord = UserAlarmRecord.query.get(args['useralarmrecord_id'])
+        taskid = getui.getTaskId(useralarmrecord.id, useralarmrecord.type, useralarmrecord.content)
+        return taskid, 200
 #
 # @api.route('/jpush/')
 # class JPush(Resource):
