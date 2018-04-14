@@ -53,14 +53,16 @@ class LoginView(Resource):
     @api.response(409, '用户不存在')
     def post(self):
         args = login_parser.parse_args()
-        u = User.query.filter(and_(User.username == args.get('username'), User.password == args.get('password'),User.disabled == False)).first()
-        r=Role.query.filter(Role.id==args.get('role_id')).first()
+        u = User.query.filter(and_(User.username == args.get('username'), User.password == args.get('password'), User.disabled == False)).first()
+        r = Role.query.filter(Role.id == args.get('role_id')).first()
         user_role = UserRole.query.filter(UserRole.user_id == u.id).filter(UserRole.if_usable == True).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         if u is not None and args.get('role_id', None) in [i.id for i in roles]:
-            jwt = encode_jwt(user_id=u.id,role_id=r.id)
+            jwt = encode_jwt(user_id=u.id , role_id=r.id)
             return {'jwt': jwt}, 200
         else:return None, 409
+
+
 @api.route('/app/login/')
 class LoginView(Resource):
     @api.doc('登陆')
@@ -78,6 +80,7 @@ class LoginView(Resource):
             jwt=encode_jwt(user_id=user_id ,role_id=args.get('role_id'))
             return {'jwt':jwt},200
         else:return None, 409
+
 
 @api.route('/roles/')
 class RolesView(Resource):
@@ -153,6 +156,8 @@ class ProfileView(Resource):
     @user_require
     def get(self):
         return g.user
+
+
 @api.route('/<userid>/profile')
 class UserProfile(Resource):
     @api.doc('修改用户个人信息')
@@ -203,6 +208,7 @@ class UserProfile(Resource):
             db.session.commit()
             return '修改成功', 200
 
+
 @api.route('/<userid>/password')
 class UserPassword(Resource):
     @api.doc('修改用户个人信息')
@@ -216,11 +222,6 @@ class UserPassword(Resource):
         user.password=args['password']
         db.session.commit()
         return '修改成功',200
-
-
-
-
-
 
 
 @api.route('/telephone/')
@@ -314,7 +315,7 @@ class UserFindView(Resource):
 
 
 @api.route('/<userid>')
-class user(Resource):
+class User(Resource):
     @api.doc('根据id查询用户信息')
     @api.marshal_with(user_model)
     @api.response(200, 'ok')
@@ -402,7 +403,6 @@ class UserRolesVsiew(Resource):
             else:pass
         else: return roles, 200
 
-
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     @api.doc('授权')
@@ -440,6 +440,7 @@ class UserRolesVsiew(Resource):
         else:pass
         db.session.commit()
         return '授权成功',200
+
 
 @api.route('/<userid>/roles/<roleid>')
 class UserRoleView(Resource):

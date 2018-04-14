@@ -41,6 +41,7 @@ api.add_namespace(sensorhistory_ns,path='/sensorhistory')
 api.add_namespace(getui_ns, path='/getui')
 api.add_namespace(mqtt_ns,path='/mqtt')
 
+
 @api_bp.before_request
 def before_request():
     # g.user = current_user

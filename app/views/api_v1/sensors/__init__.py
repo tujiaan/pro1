@@ -196,6 +196,7 @@ class SensorAlarmsView(Resource):
         else:
             return sensoralarm,200
 
+
 @api.route('/<sensorid>/sensorhistory')
 class SensorHistoryView(Resource):
     @api.header('jwt', 'JSON Web Token')
@@ -232,8 +233,6 @@ class SensorTimeView(Resource):
         else:return '权限不足',201
 
 
-
-
 @api.route('/<sensortimeid>/sensortime')
 class SensorTimeView(Resource):
     @api.header('jwt', 'JSON Web Token')
@@ -267,8 +266,6 @@ class SensorTimeView(Resource):
         else: return '权限不足',201
 
 
-
-
 @api.route('/sensortime/')
 class SensorTimeView(Resource):
     @api.header('jwt', 'JSON Web Token')
@@ -283,13 +280,13 @@ class SensorTimeView(Resource):
             home = Home.query.filter(Home.gateway_id == sensor.gateway_id).first()
             sensortime.sensor_id=args['sensor_id']
         if args['start_time']:
-            sensortime.start_time=datetime.datetime.strptime(datetime.date.today().strftime('%Y-%m-%d')+ " " +args['start_time']+':00','%Y-%m-%d %H:%M:%S')
+            sensortime.start_time = args['start_time']
         else:pass
         if args['end_time']:
-            sensortime.end_time=datetime.datetime.strptime(datetime.date.today().strftime('%Y-%m-%d')+ " " +args['end_time']+':00','%Y-%m-%d %H:%M:%S')
+            sensortime.end_time = args['end_time']
         else:pass
         db.session.add(sensortime)
-        if g.role.name=='homeuser':
+        if g.role.name == 'homeuser':
             if g.user.id == home.admin_user_id:
                 db.session.commit()
                 return '添加成功', 200
@@ -298,29 +295,31 @@ class SensorTimeView(Resource):
         else:
             db.session.commit()
             # return '添加成功', 200
-            return {'start_time':str(sensortime.start_time),'type':str(type(sensortime.start_time))},200
+            return {'start_time':str(sensortime.start_time),'type':str(type(sensortime.start_time))}, 200
+
 
 @api.route('/<start_time>/<end_time>/<sensorid>/maxvalue')
 class SensorTimeViews(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser','superadmin'])
     @api.doc('智能电流设定')
-    def get(self,start_time,end_time,sensorid):
-        datetime1=datetime.date.today().strftime('%Y-%m-%d')
-        start_time1=datetime.datetime.strptime(datetime1 + "\t " + start_time+":00", "%Y-%m-%d %H:%M:%S")
-        end_time1=datetime.datetime.strptime(datetime1 + "\t" + end_time+":00", "%Y-%m-%d %H:%M:%S")
-        sensortime=SensorTime.query.filter(SensorTime.start_time.between(start_time1,end_time1)).filter(SensorTime.end_time.between(start_time1,end_time1)).filter(SensorTime.sensor_id==sensorid).first()
-        sensorhistory=SensorHistory.query.filter(SensorHistory.sensor_id==sensortime.sensor_id).filter(SensorHistory.time.between(start_time1,end_time1)).order_by(SensorHistory.sensor_value.desc()).first()
-        sensor=Sensor.query.get_or_404(sensorid)
-        sensor.max_value=sensorhistory.sensor_value
-        sensor.set_type='2'
+    def get(self, start_time, end_time, sensorid):
+        sensor = Sensor.query.get_or_404(sensorid)
+        datetime1 = datetime.date.today().strftime('%Y-%m-%d')
+        start_time1 = datetime.datetime.strptime(datetime1 + "\t " + start_time+":00", "%Y-%m-%d %H:%M:%S")
+        end_time1 = datetime.datetime.strptime(datetime1 + "\t" + end_time+":00", "%Y-%m-%d %H:%M:%S")
+        sensorhistory = SensorHistory.query.filter(SensorHistory.sensor_id == sensor.sensor_id).\
+            filter(SensorHistory.time.between(start_time1, end_time1)).order_by(SensorHistory.sensor_value.desc()).\
+            first()
+        sensor.max_value = sensorhistory.sensor_value
+        sensor.set_type = '2'
         db.session.commit()
-        result={
-            'start_time':start_time,
-            'end_time':end_time,
-            'max_value':sensorhistory.sensor_value
+        result = {
+            'start_time': start_time,
+            'end_time': end_time,
+            'max_value': sensorhistory.sensor_value
             }
-        return result,200
+        return result, 200
 
 
 

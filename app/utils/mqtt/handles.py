@@ -9,31 +9,31 @@ from app.models import Gateway, Sensor, SensorHistory, SensorAlarm
 
 def gateway_info(client, userdata, message):
     p=json.loads(message.payload)
-    gateway_id=p.get('gateway_id')
-    sensors=p.get('sensors')
+    gateway_id = p.get('gateway_id')
+    sensors = p.get('sensors')
     with client.app.app_context():
-        g=Gateway.query.get(gateway_id)
+        g = Gateway.query.get(gateway_id)
         if g is None:
-            g=Gateway(id=gateway_id)
+            g = Gateway(id=gateway_id)
             db.session.add(g)
             db.session.commit()
         for sensor in sensors:
-                sid=sensor.get('id',None)
+                sid = sensor.get('id',None)
                 if sid is None:
                     continue
-                s=Sensor.query.get(sid)
+                s = Sensor.query.get(sid)
                 if s is None:
-                    s=Sensor(id=sid)
+                    s = Sensor(id=sid)
                     s.online = sensor.get('online', False)
                     if sid>'S1001'and sid<'S1999':
-                        s.type=0
+                        s.type = 0
                     elif sid>'S2001'and sid<'S299':
-                        s.type=1
+                        s.type = 1
                     elif sid>'S3001'and sid<'S3999':
-                        s.type=3
-                        s.max_value=100
-                        s.set_type=0
-                    else: s.type=4
+                        s.type = 3
+                        s.max_value = 100
+                        s.set_type = 0
+                    else: s.type = 4
                     db.session.add(s)
                     db.session.commit()
                     if s not in g.sensors:
@@ -42,6 +42,8 @@ def gateway_info(client, userdata, message):
                     db.session.commit()
     mqtt.subscribe(f'{gateway_id}/data')
     mqtt.client.message_callback_add(f'{gateway_id}/data',gateway_data)
+
+
 def gateway_data(client, userdata, message):
     p = json.loads(message.payload)
     # print(p)
@@ -64,18 +66,20 @@ def gateway_data(client, userdata, message):
                 sensorhistory.sensor_id = i['id']
                 sensorhistory.time =time
                 sensorhistory.sensor_value = i.get('value')
-                if  int(sensorhistory.sensor_value) >50:
+                if  int(sensorhistory.sensor_value) > 50:
                     sensoralarm=SensorAlarm(sensor_id=i['id'],sensor_type=1,var_type='温度',alarm_value=i.get('value'),unit='℃',alarm_time=time,gateway_id=Sensor.query.get(i['id']).gateway_id )
                     db.session.add(sensoralarm)
                     sm=SensorHistory.query.filter(SensorHistory.sensor_id==i['id']).filter(SensorHistory.time.between(time,time-timedelta(minutes=10)))
                     count=1
                     for i in sm:
-                        if int(i.sensor_value)>50:
-                            count+=1
+                        if int(i.sensor_value) > 50:
+                            count += 1
                     if count>9:
                         db.session.commit()
-                    else:pass
-                else: pass
+                    else:
+                        pass
+                else:
+                    pass
             elif i['id']>'S2001'and i['id']<'S2999':
                 sensorhistory.sensor_id = i
                 sensorhistory.time =time
@@ -92,7 +96,7 @@ def gateway_data(client, userdata, message):
                 sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
                 if float(sensorhistory.sensor_value)>Sensor.query.get(i).max_value:
-                  sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=3,alarm_value=i.get('value'),var_type='电流', unit='A', alarm_time=time, gateway_id=Sensor.query.get(i['id']).gateway_id)
+                  sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=3, alarm_value=i.get('value'), var_type='电流', unit='A', alarm_time=time, gateway_id=Sensor.query.get(i['id']).gateway_id)
                   db.session.add(sensoralarm)
                   sm = SensorHistory.query.filter(SensorHistory.sensor_id == i['id']).filter(
                       SensorHistory.time.between(time, time - timedelta(seconds=40)))
@@ -120,7 +124,7 @@ def gateway_data(client, userdata, message):
                     pass
             db.session.add(sensorhistory)
             db.session.commit()
-    return None,200
+    return None, 200
 
 
 
