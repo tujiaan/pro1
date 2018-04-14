@@ -162,6 +162,9 @@ class SensorsView(Resource):
                 sensor1.set_type=1
             else:pass
         else:pass
+        if args['set_type']:
+            sensor1.set_type=args['set_type']
+        else:pass
         if g.user.id==home.admin_user_id:
             db.session.commit()
             return None,200
