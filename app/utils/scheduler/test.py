@@ -104,8 +104,8 @@ def SendMessage(app):
                     #     else:pass
                     i.if_send = True
                     db.session.commit()
-                    taskid=getui.getTaskId(content)
-                    rs=getui.sendList(list,taskid)
+                    taskid=getui.getTaskId(sendmessage.message_id,content)
+                    rs=getui.sendList(list, taskid)
 
 def OpenSensor(app):
     with app.app_context():

@@ -2,7 +2,7 @@ import dateutil
 from flask import g, request
 from flask_restplus import Namespace
 from flask_restplus import  Resource
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 
 from app.ext import db
 from app.models import Facility, Sensor, Home, SensorAlarm, SensorHistory, HomeUser, UserRole, Role, User, SensorTime
@@ -305,12 +305,21 @@ class SensorTimeViews(Resource):
     @api.doc('智能电流设定')
     def get(self, start_time, end_time, sensorid):
         sensor = Sensor.query.get_or_404(sensorid)
-        datetime1 = datetime.date.today().strftime('%Y-%m-%d')
-        start_time1 = datetime.datetime.strptime(datetime1 + "\t " + start_time+":00", "%Y-%m-%d %H:%M:%S")
-        end_time1 = datetime.datetime.strptime(datetime1 + "\t" + end_time+":00", "%Y-%m-%d %H:%M:%S")
-        sensorhistory = SensorHistory.query.filter(SensorHistory.sensor_id == sensor.sensor_id).\
-            filter(SensorHistory.time.between(start_time1, end_time1)).order_by(SensorHistory.sensor_value.desc()).\
-            first()
+        # start_time = datetime.datetime.strptime(start_time, '%H:%M')
+        # end_time = datetime.datetime.strptime(end_time, '%H:%M')
+
+        sensorhistorys = SensorHistory.query.filter(SensorHistory.sensor_id == sensorid). \
+            order_by(SensorHistory.sensor_value.desc()).all()
+        sensorhistory = None
+        for i in sensorhistorys:
+            time = str(i.time.hour) + ":"+str(i.time.minute)
+            if start_time < time < end_time:
+                sensorhistory = i
+                break
+            else:
+                pass
+        # sensorhistory=SensorHistory.query.filter(func.time(SensorHistory.time).between(start_time , end_time)).\
+        #     filter(SensorHistory.sensor_id==sensorid).order_by(SensorHistory.sensor_value.desc()).first()
         sensor.max_value = sensorhistory.sensor_value
         sensor.set_type = '2'
         db.session.commit()

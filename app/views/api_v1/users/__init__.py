@@ -1,6 +1,6 @@
 from flask import g, flash, request
 from flask_restplus import Namespace, Resource
-from sqlalchemy import select, text, and_, Boolean
+from sqlalchemy import select, text, and_, Boolean, false, true
 from app.ext import db
 from app.models import User, Role, Ins, Home, HomeUser, UserRole
 from app.utils.auth import user_require
@@ -115,7 +115,7 @@ class UserHomeView1(Resource):
 @api.route('/ins/')
 class UserHomeView1(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['stationuser','propertyuser'])
+    @role_require(['stationuser', 'propertyuser'])
     @page_format(code='0', msg='success')
     @api.doc('查询自己关联的机构')
     @api.marshal_with(institute_model, as_list=True)
@@ -315,7 +315,7 @@ class UserFindView(Resource):
 
 
 @api.route('/<userid>')
-class User(Resource):
+class user(Resource):
     @api.doc('根据id查询用户信息')
     @api.marshal_with(user_model)
     @api.response(200, 'ok')
@@ -411,17 +411,17 @@ class UserRolesVsiew(Resource):
     def post(self,userid):
         user=User.query.get_or_404(userid)
         args=role_parser.parse_args()
-        user_role2=UserRole.query.filter(UserRole.user_id).filter(UserRole.role_id==2).first()
-        user_role3= UserRole.query.filter(UserRole.user_id).filter(UserRole.role_id == 3).first()
-        user_role4 = UserRole.query.filter(UserRole.user_id).filter(UserRole.role_id == 4).first()
-        user_role5 = UserRole.query.filter(UserRole.user_id).filter(UserRole.role_id == 5).first()
-        user_role7 = UserRole.query.filter(UserRole.user_id).filter(UserRole.role_id == 7).first()
+        user_role2=UserRole.query.filter(UserRole.user_id == userid).filter(UserRole.role_id=='2').first()
+        user_role3= UserRole.query.filter(UserRole.user_id==userid).filter(UserRole.role_id == '3').first()
+        user_role4 = UserRole.query.filter(UserRole.user_id==userid).filter(UserRole.role_id == '4').first()
+        user_role5 = UserRole.query.filter(UserRole.user_id==userid).filter(UserRole.role_id == '5').first()
+        user_role7 = UserRole.query.filter(UserRole.user_id==userid).filter(UserRole.role_id == '7').first()
+        print(user_role2)
         def use(x):
             if int(x)==0:
                 return False
             else:return True
         if args['propertyuser']:
-                print(args['propertyuser'])
                 user_role2.if_usable=use(args['propertyuser'])
         else:pass
         if args['stationuser']:

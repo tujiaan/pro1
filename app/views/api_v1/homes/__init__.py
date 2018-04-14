@@ -1,27 +1,19 @@
 import datetime
-
 from flask import request, g
 from flask_restplus import Namespace, Resource
 from sqlalchemy import and_
-
 from app.ext import db
 from app.models import Home, Ins, User, HomeUser, Sensor, SensorHistory, UserRole, Role, Community
 from app.utils.auth import decode_jwt, user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
-from app.views.api_v1 import homeuser
 from app.views.api_v1.gateways import gateway_model
 from app.views.api_v1.homes.parser import home_parser, home_parser1
-from app.views.api_v1.homeuser import HomeUserView1
-from app.views.api_v1.institutes import institute_model
-from app.views.api_v1.sensors import sensor_model
-from app.views.api_v1.tools.database import Utills
 from app.views.api_v1.users import user_model
 import math
 
 api = Namespace('Home', description='家庭相关接口')
 from.model import *
-
 
 
 @api.route('/')
@@ -67,10 +59,6 @@ class HomesView(Resource):
         }
         return result,200
 
-
-
-
-
     @api.doc('新增家庭')
     @api.expect(home_parser)
     @api.response(200, 'ok')
@@ -94,6 +82,7 @@ class HomesView(Resource):
             db.session.add(homeuser)
             db.session.commit()
             return '创建成功', 201
+
 
 @api.route('/<homeid>')
 class HomeView(Resource):

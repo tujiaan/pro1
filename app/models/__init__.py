@@ -7,11 +7,9 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 from app.ext import db
 
+
 def objectid():
     return str(ObjectId())
-
-
-
 
 t_role_menu = db.Table(
     'role_menu',
@@ -40,42 +38,41 @@ t_community_ins = db.Table(
     db.Column('ins_id', db.String(24), db.ForeignKey('ins.id')),
     db.UniqueConstraint('community_id', 'ins_id', name='uix_ins_community')
 )
+
+
 class UserRole(db.Model):
-    __tablename__='user_role'
+    __tablename__ = 'user_role'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    user_id=db.Column('user_id', db.String(24), db.ForeignKey('user.id'), primary_key=True)
-    if_usable=db.Column('if_usable',db.Boolean,comment='是否可用')
-    role_id=db.Column('role_id', db.String(24), db.ForeignKey('role.id'), primary_key=True)
+    user_id = db.Column('user_id', db.String(24), db.ForeignKey('user.id'), primary_key=True)
+    if_usable = db.Column('if_usable', db.Boolean,comment='是否可用')
+    role_id = db.Column('role_id', db.String(24), db.ForeignKey('role.id'), primary_key=True)
 
 
 class HomeUser(db.Model):
-    __tablename__='homeuser'
+    __tablename__ = 'homeuser'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    user_id=db.Column('user_id', db.String(24), db.ForeignKey('user.id'))
-    home_id=db.Column('home_id', db.String(24), db.ForeignKey('home.id'))
+    user_id = db.Column('user_id', db.String(24), db.ForeignKey('user.id'))
+    home_id = db.Column('home_id', db.String(24), db.ForeignKey('home.id'))
     db.UniqueConstraint('user_id', 'home_id', name='uix_home_user')
-    apply_time=db.Column('apply_time',db.DateTime,default=datetime.datetime.now, comment='申请时间')
-    if_confirm=db.Column('if_confirm',db.Boolean,default=False,comment='是否批准')
-    confirm_time=db.Column('confirm_time',db.DateTime, comment='批准时间')
-
+    apply_time = db.Column('apply_time', db.DateTime,default=datetime.datetime.now, comment='申请时间')
+    if_confirm = db.Column('if_confirm', db.Boolean,default=False,comment='是否批准')
+    confirm_time = db.Column('confirm_time',db.DateTime, comment='批准时间')
 
 
 class Ins(db.Model):
     __tablename__ = 'ins'
-
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     type = db.Column(db.String(255), comment='机构类型')
     name = db.Column(db.String(50), comment='机构名称')
-    # ins_picture = db.Column(db.LargeBinary, comment='机构图片')
     ins_picture = db.Column(db.String(255), comment='机构图片')
-    location_id=db.Column(db.String(50),db.ForeignKey('location.id'),comment='位置')
+    location_id = db.Column(db.String(50),db.ForeignKey('location.id'),comment='位置')
     ins_address = db.Column(db.String(255), comment='机构地址')
     note = db.Column(db.Text, comment='备注')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     admin_user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='管理员id')
-    community = db.relationship('Community', secondary=t_community_ins, backref=db.backref('f1_community', lazy='dynamic'),
-                          lazy='dynamic')
+    community = db.relationship('Community', secondary=t_community_ins, backref=db.
+                                backref('f1_community', lazy='dynamic'), lazy='dynamic')
     user = db.relationship('User', secondary=t_user_ins,
                           backref=db.backref('f_user', lazy='dynamic') , lazy='dynamic' )
 
@@ -106,8 +103,8 @@ class Community(db.Model):
     location_id = db.Column(db.String(50), db.ForeignKey('location.id'), comment='位置')
 
 
-
 class FacilityIns(db.Model):
+
     __tablename__ = 'facility_ins'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     facility_id = db.Column(db.String(24), db.ForeignKey('facility.id'), comment='设施id')
@@ -118,6 +115,7 @@ class FacilityIns(db.Model):
     count = db.Column(db.Integer, comment='设施数量')
     expire_time = db.Column(db.DateTime, comment='过期时间')
 
+
 class Facility(db.Model):
     __tablename__ = 'facility'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
@@ -127,7 +125,6 @@ class Facility(db.Model):
     knowledge = db.relationship('Knowledge', secondary=t_facility_knowledge,
                                  backref=db.backref('f_knowledge', lazy='dynamic'),
                                 lazy='dynamic')
-
 class Gateway(db.Model):
     __tablename__ = 'gateway'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
@@ -163,9 +160,7 @@ class Knowledge(db.Model):
     type = db.Column(db.String(50), comment='知识类型   (0.自救 1.逃生 2.灭火 3.新闻 4.其他)')
     content = db.Column(db.Text, comment='知识正文')
     title = db.Column(db.String(50), comment='知识标题')
-    facility= db.relationship('Facility', secondary=t_facility_knowledge,
-                                 backref=db.backref('f_facility', lazy='dynamic'), lazy='dynamic')
-
+    facility= db.relationship('Facility', secondary=t_facility_knowledge, backref=db.backref('f_facility', lazy='dynamic'), lazy='dynamic')
 
 
 class Menu(db.Model):
@@ -263,7 +258,9 @@ class SensorAlarm(db.Model):
    # user = db.relationship('User')
     is_confirm = db.Column(db.Boolean, default=False, comment='是否确认')
 
+
 class User(db.Model):
+
     __tablename__ = 'user'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     disabled = db.Column(db.Boolean, default=False, comment='是否停用   (1、禁用 0、正常)')
@@ -277,12 +274,12 @@ class User(db.Model):
     user_role = db.relationship('UserRole',foreign_keys=[UserRole.user_id], backref=db.backref('f_user_role', lazy='joined'), lazy='dynamic')
     real_name = db.Column(db.String(50), comment='姓名')
     sensor_visable=db.Column(db.Boolean,default=True,comment='传感器是否可见')
-    ins = db.relationship('Ins', secondary=t_user_ins,
-                          backref=db.backref('f_ins', lazy='dynamic'), lazy='dynamic')
-
+    ins = db.relationship('Ins', secondary=t_user_ins, backref=db.backref('f_ins', lazy='dynamic'), lazy='dynamic')
 
 
 class UserAlarmRecord(db.Model):
+
+
     __tablename__ = 'user_alarm_record'
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)

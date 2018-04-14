@@ -41,7 +41,7 @@ class test(Resource):
     def post(self):
         args = test_parser2.parse_args()
         useralarmrecord = UserAlarmRecord.query.get(args['useralarmrecord_id'])
-        taskid = getui.getTaskId(useralarmrecord.id, useralarmrecord.type, useralarmrecord.content)
+        taskid = getui.getTaskId(useralarmrecord.id, useralarmrecord.content)
         return taskid, 200
 #
 # @api.route('/jpush/')

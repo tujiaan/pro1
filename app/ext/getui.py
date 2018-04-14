@@ -5,12 +5,15 @@ from pprint import pprint
 import requests
 
 from instance import config
+
+
 class Getui(object):
     appkey = None
     mastersecret = None
-    appid=None
-    authtoken=None
-    _expire_time=None
+    appid = None
+    authtoken = None
+    _expire_time = None
+
     def __init__(self, app=None):
         self.app = app
         if app is not None:
@@ -22,14 +25,15 @@ class Getui(object):
         self.appkey = config.get('APP_KEY')
         self.mastersecret = config.get('MASTER_SECRET')
         self.appid = config.get('APP_ID')
+
     @property
     def sign(self):
         now=int(time.time() * 1000)
-        if self.authtoken is not None :
-            if self._expire_time>now+10000:
+        if self.authtoken is not None:
+            if self._expire_time > now+10000:
 
                 return self.authtoken
-        print(self.appkey,self.mastersecret)
+        print(self.appkey, self.mastersecret)
         sign = sha256((self.appkey + str(now) + self.mastersecret).encode())
         url = 'https://restapi.getui.com/v1/'+str(self.appid)+'/auth_sign'
         data = {
@@ -55,28 +59,28 @@ class Getui(object):
         }
         res = requests.post(url=url, json=data)
         result = (res.json()).get('auth_token')
-        return result,200
+        return result, 200
 
     def bind(self, userid, cid):
-        headers={
-            'Content-Type': 'application/json',
-            'authtoken': self.sign
-        }
-        url='https://restapi.getui.com/v1/'+str(self.appid)+'/bind_alias'
-        data={
-            "alias_list": [{"cid": cid, "alias": userid}]
-        }
-        res = requests.post(url=url,headers=headers, json=data)
-        result=res.json()
-        return result
-
-    def getTaskId(self,message_id,message_type,content):
         headers = {
             'Content-Type': 'application/json',
             'authtoken': self.sign
         }
-        url=str('https://restapi.getui.com/v1/'+str(self.appid)+'/save_list_body')
-        data={
+        url = 'https://restapi.getui.com/v1/'+str(self.appid)+'/bind_alias'
+        data = {
+            "alias_list": [{"cid": cid, "alias": userid}]
+        }
+        res = requests.post(url=url, headers=headers, json=data)
+        result = res.json()
+        return result
+
+    def getTaskId(self, message_id,  content):
+        headers = {
+            'Content-Type': 'application/json',
+            'authtoken': self.sign
+        }
+        url = str('https://restapi.getui.com/v1/'+str(self.appid)+'/save_list_body')
+        data = {
             "message": {
                    "appkey": self.appkey,
                    "is_offline": True,
@@ -90,14 +94,10 @@ class Getui(object):
                         "title": "消息推送"
                     },
                     "transmission_type": True,
-                    "transmission_content": {
-                        "message_id": message_id,
-                        "message_type": message_type,
-                        "content": content
-                    }
+                    "transmission_content": message_id
                 }
         }
-        res=requests.post(url=url,headers=headers,json=data)
+        res = requests.post(url=url,headers=headers,json=data)
         return res.json().get('taskid')
 
     def sendList(self, alias, taskid):
@@ -105,10 +105,10 @@ class Getui(object):
             'Content-Type': 'application/json',
             'authtoken': str(self.sign)
         }
-        url = str( 'https://restapi.getui.com/v1/'+str(self.appid)+'/push_list ')
+        url = str('https://restapi.getui.com/v1/'+str(self.appid)+'/push_list ')
         data = {
 
-            "alias":alias,
+            "alias": alias,
             "taskid": str(taskid),
             "need_detail": True
         }
@@ -116,4 +116,4 @@ class Getui(object):
         return res.json()
 
 
-getui=Getui()
+getui = Getui()

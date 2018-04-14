@@ -46,7 +46,6 @@ def gateway_info(client, userdata, message):
 
 def gateway_data(client, userdata, message):
     p = json.loads(message.payload)
-    # print(p)
     list=p.get('sensors')
     time=dateutil.parser.parse(p.get('time'))
     with client.app.app_context():
