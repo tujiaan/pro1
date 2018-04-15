@@ -232,10 +232,7 @@ class CommunityInsViews(Resource):
     @role_require(['admin',  'superadmin'])
     def post(self,communityid,insid):
         community=Community.query.get_or_404(communityid)
-        print(community ,'@@@@')
         ins=Ins.query.get_or_404(insid)
-        print("$$$$$$$",ins)
-        print(ins,community)
         community.ins.append(ins)
         db.session.commit()
         return '绑定成功',200
