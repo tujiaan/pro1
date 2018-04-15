@@ -71,10 +71,8 @@ class Ins(db.Model):
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     admin_user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='管理员id')
-    community = db.relationship('Community', secondary=t_community_ins, backref=db.
-                                backref('f1_community', lazy='dynamic'), lazy='dynamic')
-    user = db.relationship('User', secondary=t_user_ins,
-                          backref=db.backref('f_user', lazy='dynamic') , lazy='dynamic' )
+    community = db.relationship('Community', secondary=t_community_ins, backref=db. backref('f1_community', lazy='dynamic'), lazy='dynamic')
+    user = db.relationship('User', secondary=t_user_ins,backref=db.backref('f_user', lazy='dynamic') , lazy='dynamic' )
 
 
 class Location (db.Model):

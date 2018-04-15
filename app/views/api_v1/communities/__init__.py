@@ -223,6 +223,7 @@ class CommunityHome(Resource):
         community=Community.query.get_or_404(communityid)
         return community.homes,200
 
+
 @api.route('/<communityid>/ins/<insid>')
 class CommunityInsViews(Resource):
     @api.doc('增加机构和社区绑定')
@@ -231,18 +232,23 @@ class CommunityInsViews(Resource):
     @role_require(['admin',  'superadmin'])
     def post(self,communityid,insid):
         community=Community.query.get_or_404(communityid)
+        print(community ,'@@@@')
         ins=Ins.query.get_or_404(insid)
+        print("$$$$$$$",ins)
+        print(ins,community)
         community.ins.append(ins)
-        return None,200
+        db.session.commit()
+        return '绑定成功',200
 
     @api.doc('解除机构和社区绑定')
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
-    def post(self, communityid, insid):
+    def delete(self, communityid, insid):
         community = Community.query.get_or_404(communityid)
         ins = Ins.query.get_or_404(insid)
         community.ins.remove(ins)
+        db.session.commit()
         return None, 200
 
 
