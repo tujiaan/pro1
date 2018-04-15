@@ -37,6 +37,7 @@ class FacilitiesInsView(Resource):
         facility_data.facility_name=args['facility_name']
         p=args['facility_picture']
         facility_data.facility_picture=upload_file(p)
+        facility_data.note=args['note']
         db.session.add(facility_data)
         db.session.commit()
         return None,200
