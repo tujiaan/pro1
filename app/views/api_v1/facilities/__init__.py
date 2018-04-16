@@ -229,13 +229,13 @@ class FacilityKnowledgeView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     @api.doc('给设施绑定知识')
-    @api.response(200,'ok')
-    @api.response(404,'Not Found')
-    def post(self,facilityid,knowledgeid):
+    @api.response(200, 'ok')
+    @api.response(404, 'Not Found')
+    def post(self,facilityid, knowledgeid):
         try:
             facility = Facility.query.get_or_404(facilityid)
             knowledge = Knowledge.query.get_or_404(knowledgeid)
-            facility.knowledges.append(knowledge)
+            facility.knowledge.append(knowledge)
             db.session.commit()
             return '绑定成功', 200
         except: return '已经绑定'

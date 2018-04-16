@@ -118,7 +118,7 @@ class Facility(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     facility_name = db.Column(db.String(50), comment='设施名')
     facility_picture = db.Column(db.String(200), comment='设施图片')
-    note=db.Column(db.String(200),comment='备注')
+    note = db.Column(db.String(200),comment='备注')
     knowledge = db.relationship('Knowledge', secondary=t_facility_knowledge,
                                  backref=db.backref('f_knowledge', lazy='dynamic'),lazy='dynamic')
 
