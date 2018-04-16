@@ -11,18 +11,20 @@ from app.ext import db
 from app.models import Knowledge, Facility
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
-from app.views.api_v1.facilities import facility_model, FacilitesView
+from app.views.api_v1.facilities import facility_model, FacilitesView, facility_data_model
 from app.views.api_v1.knowledges.parser import knowledge_parser, knowledge_parser1, upload_parser, allowed_file
 
 api = Namespace('Knowledges', description='知识相关接口')
 from .models import *
+
+
 @api.route('/')
 class Knowledges(Resource):
     @page_format(code=0,msg='ok')
     @api.doc('查询知识列表')
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @api.marshal_with(knowledges_model,as_list=True)
-    @api.response(200,'ok')
+    @api.marshal_with(knowledges_model, as_list=True)
+    @api.response(200, 'ok')
     @page_range()
     def get(self):
             list=Knowledge.query
@@ -32,13 +34,15 @@ class Knowledges(Resource):
     @role_require(['admin', 'superadmin', 'knowledgeadmin'])
     @api.doc('添加知识')
     @api.expect(knowledge_parser)
-    @api.response(200,'ok')
+    @api.response(200, 'ok')
     def post(self):
         args=knowledge_parser.parse_args()
         knowledge=Knowledge(**args)
         db.session.add(knowledge)
         db.session.commit()
         return None,200
+
+
 @api.route('/<knowledgetype>')
 class KnowledgeView(Resource):
     @page_format(code=0,msg='ok')
@@ -49,6 +53,8 @@ class KnowledgeView(Resource):
     def get(self,knowledgetype):
      list=Knowledge.query.filter(Knowledge.type==knowledgetype)
      return list,200
+
+
 @api.route('/<knowledgeid>/')
 class KnowledgeView(Resource):
     @api.doc('根据id查询知识详情')
@@ -59,7 +65,7 @@ class KnowledgeView(Resource):
         return knowledge,200
 
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin','knowledgeadmin'])
+    @role_require(['admin', 'superadmin', 'knowledgeadmin'])
     @api.doc('根据id更新知识')
     @api.expect(knowledge_parser1)
     @api.response(200,'ok')
@@ -77,12 +83,13 @@ class KnowledgeView(Resource):
         else:pass
         db.session.commit()
         return None,200
+
     @api.doc('根据id删除知识')
     @api.response(200,'ok')
     @api.response(404, 'Not Found')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin', 'knowledgeadmin'])
-    def delete(self,knowledgeid):
+    def delete(self, knowledgeid):
         knowledge = Knowledge.query.get_or_404(knowledgeid)
         facility=knowledge.facility.all()
         for i in facility:
@@ -90,25 +97,29 @@ class KnowledgeView(Resource):
         db.session.delete(knowledge)
         db.session.commit()
         return None,200
+
+
 @api.route('/<knowledgeid>/facility')
 class KnowledgeFacilityView(Resource):
     @page_format(code='200', msg='successs')
     @api.doc('根据知识查找对应的设施')
-    @api.marshal_with(facility_model,as_list=True)
-    @api.response(200,'ok')
+    @api.marshal_with(facility_data_model, as_list=True)
+    @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
-    def get(self,knowledgeid) :
-        knowledge=Knowledge.query.get_or_404(knowledgeid)
-        return knowledge.facility,200
+    def get(self, knowledgeid):
+        knowledge = Knowledge.query.get_or_404(knowledgeid)
+        return knowledge.facility, 200
+
+
 @api.route('/<knowledgeid>/facility/<facilityid>')
 class KnowledgeFacilityView1(Resource):
-    @api.doc('解除设施绑定知识')
+    @api.doc('设施绑定知识')
     @api.response(200, 'ok')
     @api.response(404, 'Not Found')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
-    def post(self,knowledgeid,facilityid):
+    def post(self, knowledgeid, facilityid):
             try:
                 facility = Facility.query.get_or_404(facilityid)
                 knowledge = Knowledge.query.get_or_404(knowledgeid)
@@ -122,7 +133,7 @@ class KnowledgeFacilityView1(Resource):
     @api.response(404, 'Not Found')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
-    def delete(self,knowledgeid,facilityid):
+    def delete(self, knowledgeid, facilityid):
         try:
             facility = Facility.query.get_or_404(facilityid)
             knowledge = Knowledge.query.get_or_404(knowledgeid)
@@ -131,6 +142,8 @@ class KnowledgeFacilityView1(Resource):
             return None,200
         except:
           return'已经解除'
+
+
 @api.route('/picture')
 class Upload(Resource):
     @api.doc('上传文件')
