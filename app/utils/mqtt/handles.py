@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import dateutil
 from flask import json
 from app.ext import mqtt,db
-from app.models import Gateway, Sensor, SensorHistory, SensorAlarm
+from app.models import Gateway, Sensor, SensorHistory, SensorAlarm, AlarmHandle
 
 
 def gateway_info(client, userdata, message):
@@ -123,6 +123,7 @@ def gateway_data(client, userdata, message):
                     pass
             db.session.add(sensorhistory)
             db.session.commit()
+    alarmhandler=AlarmHandle(type='0', handle_type='100', reference_message_id=sensoralarm.id,handle_time=datetime.datetime.now())
     return None, 200
 
 

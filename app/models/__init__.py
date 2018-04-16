@@ -184,9 +184,9 @@ class Role(db.Model):
     name = db.Column(db.String(30), nullable=False)
     disabled = db.Column(db.Boolean, default=True, comment='是否可用')
     description = db.Column(db.String(60), comment='权限描述')
-    user_role=db.relationship('UserRole', foreign_keys=[UserRole.role_id],backref=db.backref('F_user_role',lazy='joined'),lazy='dynamic')
+    user_role=db.relationship('UserRole', foreign_keys=[UserRole.role_id],backref=db.backref('F_user_role', lazy='joined'),lazy='dynamic')
     menus = db.relationship('Menu', secondary=t_role_menu,
-                            backref=db.backref('role_menus', lazy='dynamic') , lazy='dynamic')
+                            backref=db.backref('role_menus', lazy='dynamic'), lazy='dynamic')
 
 
 class Sensor(db.Model):
@@ -298,7 +298,7 @@ class AlarmHandle(db.Model):
         '103,系统修改 104,系统超时关闭 200,用户新创建 201,用户参考传感器报警创建 202,用户参考用户报警创建 203,用户修改 204,用户超时关闭 205，用户关闭)')
     reference_message_id = db.Column(db.String(24), comment='参考信息id')
     user_id = db.Column(db.String(24), comment='处理人员id')#  不关联用户，可以写入系统操作
-    handle_time = db.Column(db.DateTime, comment='操作时间')
+    handle_time = db.Column(db.DateTime, default=datetime.datetime.now, comment='操作时间')
     note = db.Column(db.String(255), comment='操作备注')
 
 

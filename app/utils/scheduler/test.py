@@ -21,7 +21,7 @@ def BuiltSensorSendMessage(app):
                     user = User.query.filter(User.id.in_(i.user_id for i in homeuser)).all()
                     for j in user:
                         messagesend = MessageSend(message_id=i.id, message_type='传感器报警', user_id=j.id)
-                        ms = MessageSend.query.filter(and_(MessageSend.message_id == i.id,MessageSend.user_id == j.id)).first()
+                        ms = MessageSend.query.filter(and_(MessageSend.message_id == i.id, MessageSend.user_id == j.id)).first()
                         if ms==None:
                             db.session.add(messagesend)
                             db.session.commit()

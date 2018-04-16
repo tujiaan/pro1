@@ -75,10 +75,9 @@ class InstitutesViews(Resource):
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
         if Ins.query.filter(Ins.latitude!=args['latitude']or Ins.longitude!=args['longitude']):
             institute.name = args['name']
-            if 'insuser' in [i.name for i in roles]:
+            if 'propeertyuser' in [i.name for i in roles] or 'stationuser'in [i.name for i in roles]:
                 institute.admin_user_id = args['admin_user_id']
-            else:
-                institute.admin_user_id = g.user.id
+            else:institute.admin_user_id = g.user.id
             institute.type = args['type']
             institute.ins_address = args['ins_address']
             institute.note = args['note']
