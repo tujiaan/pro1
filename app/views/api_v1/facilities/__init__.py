@@ -58,8 +58,6 @@ class FacilityDataView(Resource):
     @role_require(['admin', 'superadmin','propertyuser','stationuser'])
     def put(self,facilityid):
         facility = Facility.query.get_or_404(facilityid)
-        facilityins=FacilityIns.query.filter(FacilityIns.facility_id==facilityid).first()
-        ins=Ins.query.filter(Ins.id==facilityins.ins_id).first()
         args = f1_parser.parse_args()
         if args['facility_name']:
             facility.facility_name=args['facility_name']
@@ -68,12 +66,15 @@ class FacilityDataView(Resource):
             facility.facility_picture=upload_file(args['facility_picture'])
         else:pass
         if args['note']:
-            facility.facility_picture=args['note']
+            facility.note=args['note']
         else:pass
-        if g.role.name not in['propertyuser','stationuser']:
+        if g.role.name  in['admin','superadmin']:
            db.session.commit()
            return'修改成功',200
-        elif g.user.id==ins.admin_user_id:
+        elif  g.role.name in ['stationuser','propertyuser']:
+            facilityins = FacilityIns.query.filter(FacilityIns.facility_id == facilityid).first()
+            ins = Ins.query.filter(Ins.id == facilityins.ins_id).first()
+            if g.user.id==ins.admin_user_id:
                 db.session.commit()
                 return '修改成功', 200
         else: return'权限不足',201
@@ -100,9 +101,6 @@ class FacilityDataView(Resource):
         return None,200
 
 
-
-
-
 @api.route('/facility-ins/')
 class FacilitesInsView(Resource):
     @page_format(code=0,msg='ok')
@@ -114,7 +112,6 @@ class FacilitesInsView(Resource):
     def get(self):
        list=FacilityIns.query
        return list,200
-
 
     @api.doc('新增设施机构关联')
     @api.response(200,'ok')
@@ -128,9 +125,11 @@ class FacilitesInsView(Resource):
             ins=Ins.query.get_or_404(facilityins.ins_id)
             facility=Facility.query.get_or_404(facilityins.facility_id)
             db.session.add(facilityins)
-            db.session.commit()################################################可能有问题###################
+            db.session.commit()
             return  None,200
         except:return '信息有误',201
+
+
 @api.route('/facility-ins/<insid>')
 class FacilitesInsView(Resource):
     @api.doc("查询设施机构关联设施列表")
