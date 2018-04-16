@@ -66,15 +66,15 @@ class FacilityDataView(Resource):
             facility.facility_picture=upload_file(args['facility_picture'])
         else:pass
         if args['note']:
-            facility.note=args['note']
+            facility.note = args['note']
         else:pass
-        if g.role.name  in['admin','superadmin']:
-           db.session.commit()
-           return'修改成功',200
-        elif  g.role.name in ['stationuser','propertyuser']:
+        if g.role.name  in['admin', 'superadmin']:
+            db.session.commit()
+            return'修改成功',200
+        elif g.role.name in ['stationuser', 'propertyuser']:
             facilityins = FacilityIns.query.filter(FacilityIns.facility_id == facilityid).first()
             ins = Ins.query.filter(Ins.id == facilityins.ins_id).first()
-            if g.user.id==ins.admin_user_id:
+            if g.user.id == ins.admin_user_id:
                 db.session.commit()
                 return '修改成功', 200
         else: return'权限不足',201
