@@ -14,6 +14,8 @@ from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.useralarms.parser import useralarmrecord_parser, useralarmrecord1_parser, useralarmrecord2_parser
 api=Namespace('UserAlarmsRecords',description='用户报警记录相关操作')
 from .models import *
+
+
 @api.route('/')
 class UserAlarmRecordsView(Resource):
     @api.header('jwt', 'JSON Web Token')
@@ -120,6 +122,8 @@ class UserAlarmRecordsView(Resource):
         db.session.add(useralarmrecord)
         db.session.commit()
         return {'useralarmrecord_id':useralarmrecord.id},200
+
+
 @api.route('/<useralarmrecordid>')
 class UserAlarmRecordView(Resource):
     @api.doc('报警更新')
@@ -127,7 +131,7 @@ class UserAlarmRecordView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['119user','propertyuser','stationuser','admin','superadmin'])
     @api.response(200,'ok')
-    def put(self,useralarmrecordid):
+    def put(self, useralarmrecordid):
         useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
         if useralarmrecord.home_id!=None:
             home=Home.query.get_or_404(useralarmrecord.home_id)
@@ -154,8 +158,6 @@ class UserAlarmRecordView(Resource):
         db.session.commit()
         return '修改成功',200
 
-
-
     @api.doc('查询单条用户报警记录')
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
@@ -166,6 +168,7 @@ class UserAlarmRecordView(Resource):
             home = Home.query.get_or_404(homeid)
             community = home.community
             home1 = Home.query.all()
+
             def getDistance(lat0, lng0, lat1, lng1):
                 lat0 = math.radians(lat0)
                 lat1 = math.radians(lat1)
@@ -264,11 +267,13 @@ class UserAlarmRecordView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require([ ])
     @api.response(200, 'ok')
-    def delete(self,useralarmrecordid):
+    def delete(self, useralarmrecordid):
         useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
         db.session.delete(useralarmrecord)
         db.session.commit()
         return None,200
+
+
 @api.route('/<useralarmrecordid>/users/')
 class UseralarmrecordView2(Resource):
     @api.header('jwt', 'JSON Web Token')
@@ -277,21 +282,21 @@ class UseralarmrecordView2(Resource):
     @api.response(200, 'ok')
     def get(self, useralarmrecordid):
        useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
-       messagesend=MessageSend.query.filter(MessageSend.message_id==useralarmrecordid).filter(MessageSend.if_send==False).all()
+       messagesend=MessageSend.query.filter(MessageSend.message_id == useralarmrecordid).filter(MessageSend.if_send==False).all()
        list=[]
        for i in messagesend:
            list.append(i.user_id)
            i.if_send = True
            db.session.commit()
        content=useralarmrecord.content
-       taskid=getui.getTaskId(content)
-       getui.sendList(alias=list,taskid=taskid)
+       taskid=getui.getTaskId(useralarmrecordid, content)
+       getui.sendList(alias=list, taskid=taskid)
 
 
 @api.route('/<referencealarmid>/type')
 class ReferenceAlarmIdViews(Resource):
     def get(self, referencealarmid):
-        sensoralarm = SensorAlarm.query.filter(SensorAlarm.id==referencealarmid).first()
+        sensoralarm = SensorAlarm.query.filter(SensorAlarm.id == referencealarmid).first()
         if sensoralarm!=None:
             return True
         else:return False

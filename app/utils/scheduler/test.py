@@ -40,6 +40,7 @@ def BuiltSensorSendMessage(app):
                 else:pass
             else:pass
     return None, 200
+
 def BuiltUserSendMessage(app):
     with app.app_context():
         useralarmrecord = UserAlarmRecord.query.all()
@@ -74,7 +75,6 @@ def BuiltUserSendMessage(app):
                    db.session.add(messagesend)
                    db.session.commit()
             return None,200
-
 
 def SendMessage(app):
     with app.app_context():

@@ -26,13 +26,13 @@ class test(Resource):
     @api.expect(test_parser1)
     def post(self):
         args = test_parser1.parse_args()
-        list=[]
-        id=args['cid'].split(',')
+        list = []
+        id = args['cid'].split(',')
         for i in id:
             list.append(str(i))
-        alias=list
+        alias = list
         taskid = args['taskid']
-        return getui.sendList(alias,taskid)
+        return getui.sendList(alias, taskid)
 
 
 @api.route('/gettaskid/')
