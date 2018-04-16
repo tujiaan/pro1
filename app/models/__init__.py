@@ -171,7 +171,7 @@ class Menu(db.Model):
     style = db.Column(db.String(50), comment='样式')
     disabled = db.Column(db.Boolean, default=False, comment='是否可用')
     roles = db.relationship('Role', secondary=t_role_menu,
-                            backref=db.backref('menu_roles', lazy='dynamic') , lazy='dynamic')
+                            backref=db.backref('menu_roles', lazy='dynamic'), lazy='dynamic')
     path = db.Column(db.String(200), comment='和url什么区别???')
     order = db.Column(db.SmallInteger, comment='?????')
     url = db.Column(db.String(200), comment='和path什么区别???')
