@@ -260,7 +260,6 @@ class UserAlarmRecordView(Resource):
             else:
                 return useralarmrecord, 200
 
-
     @api.doc('删除用户报警记录')
     @api.header('jwt', 'JSON Web Token')
     @role_require([ ])
@@ -276,7 +275,7 @@ class UseralarmrecordView2(Resource):
     @role_require(['homeuser','propertyuser','stationuser', '119user', 'admin', 'superadmin'])
     @api.doc('推送')
     @api.response(200, 'ok')
-    def get(self,useralarmrecordid):
+    def get(self, useralarmrecordid):
        useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
        messagesend=MessageSend.query.filter(MessageSend.message_id==useralarmrecordid).filter(MessageSend.if_send==False).all()
        list=[]
@@ -288,10 +287,20 @@ class UseralarmrecordView2(Resource):
        taskid=getui.getTaskId(content)
        getui.sendList(alias=list,taskid=taskid)
 
+
 @api.route('/<referencealarmid>/type')
 class ReferenceAlarmIdViews(Resource):
-    def get(self,referencealarmid):
-        sensoralarm=SensorAlarm.query.filter(SensorAlarm.id==referencealarmid).first()
+    def get(self, referencealarmid):
+        sensoralarm = SensorAlarm.query.filter(SensorAlarm.id==referencealarmid).first()
         if sensoralarm!=None:
+            return True
+        else:return False
+
+
+@api.route('/<messageid>/type')
+class ReferenceAlarmIdViews(Resource):
+    def get(self, messageid):
+        sensoralarm = SensorAlarm.query.filter(SensorAlarm.id == messageid).first()
+        if sensoralarm != None:
             return True
         else:return False
