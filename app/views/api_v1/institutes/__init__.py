@@ -21,7 +21,7 @@ from .model import *
 @api.route('/')
 class InstitutesViews(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser','admin', 'superadmin','propertyuser','stationuser', '119user'])
+    @role_require(['homeuser','admin', 'superadmin', 'propertyuser', 'stationuser', '119user'])
     @api.doc('查询所有机构列表')
     @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
@@ -30,7 +30,7 @@ class InstitutesViews(Resource):
         limit = int(request.args.get('limit', 10))
         list = Ins.query
         total = list.count()
-        if g.role.name in ['propertyuser','stationuser','admin','119user','superadmin']:
+        if g.role.name in ['propertyuser', 'stationuser', 'admin', '119user', 'superadmin']:
            query=list
         else:
             query= list.filter(Ins.admin_user_id == g.user.id)
@@ -38,28 +38,26 @@ class InstitutesViews(Resource):
         _=[]
         for i in query.all():
             __={}
-            __['ins_id']=i.id
-            __['ins_type']=i.type
-            __['ins_name']=i.name
-            __['ins_picture']=i.ins_picture
-            __['location_id']=i.location_id
-            __['location_district']=Location.query.get_or_404(i.location_id).district
-            __['ins_address']=i.ins_address
-            __['ins_note']=i.note
-            __['longitude']=str(i.longitude)
-            __['latitude']=str(i.latitude)
-            __['admin_user_id']=i.admin_user_id
-            __['admin_name']=User.query.get_or_404(i.admin_user_id).username
+            __['ins_id'] = i.id
+            __['ins_type'] = i.type
+            __['ins_name'] = i.name
+            __['ins_picture'] = i.ins_picture
+            __['location_id'] = i.location_id
+            __['location_district'] = Location.query.get_or_404(i.location_id).district
+            __['ins_address'] = i.ins_address
+            __['ins_note'] = i.note
+            __['longitude'] = str(i.longitude)
+            __['latitude'] = str(i.latitude)
+            __['admin_user_id'] = i.admin_user_id
+            __['admin_name'] = User.query.get_or_404(i.admin_user_id).username
             _.append(__)
-        result={
-            'code':0,
-            'msg':'ok',
-            'count':total,
-            'data':_
+        result = {
+            'code': 0,
+            'msg': 'ok',
+            'count': total,
+            'data': _
         }
-        return result,200
-
-
+        return result, 200
 
     @api.doc('新增机构')
     @api.expect(institutes_parser, validate=True)
@@ -93,29 +91,30 @@ class InstitutesViews(Resource):
             return 'success', 200
         else:return '机构位置已被占用',201
 
+
 @api.route('/<insid>')
 class InstituteView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser','propertyuser','119user', 'stationuser','admin', 'superadmin'])
     @api.doc('根据机构id查询机构')
   #  @api.marshal_with(institute_model)
-    @api.response(200,'ok')
-    def get(self,insid):
-        ins=Ins.query.get_or_404(insid)
-        instute={
-            'ins_id':ins.id,
-            'ins_admin':ins.admin_user_id,
-            'admin_name':User.query.get_or_404(ins.admin_user_id).username,
-            'admin_tel':User.query.get_or_404(ins.admin_user_id).contract_tel,
-            'type':ins.type,
-            'ins_name':ins.name,
-            'ins_picture':ins.ins_picture,
-            'ins_address':ins.ins_address,
-            'location_id':ins.location_id,
-            'location_district':Location.query.get_or_404(ins.location_id).district,
-            'longitude':str(ins.longitude),
-            'latitude':str(ins.latitude),
-            'note':ins.note
+    @api.response(200, 'ok')
+    def get(self, insid):
+        ins = Ins.query.get_or_404(insid)
+        instute = {
+            'ins_id': ins.id,
+            'ins_admin': ins.admin_user_id,
+            'admin_name': User.query.get_or_404(ins.admin_user_id).username,
+            'admin_tel': User.query.get_or_404(ins.admin_user_id).contract_tel,
+            'type': ins.type,
+            'ins_name': ins.name,
+            'ins_picture': ins.ins_picture,
+            'ins_address': ins.ins_address,
+            'location_id': ins.location_id,
+            'location_district': Location.query.get_or_404(ins.location_id).district,
+            'longitude': str(ins.longitude),
+            'latitude': str(ins.latitude),
+            'note': ins.note
         }
         # if g.role.name in ['propertyuser','stationuser']:
         #     if ins.admin_user_id!=g.user.id:
@@ -124,61 +123,60 @@ class InstituteView(Resource):
         # else:
         return instute,200
 
-
     @api.doc('根据id更新机构信息')
     @api.expect(institutes_parser1)
-    @api.response(200,'ok')
+    @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['propertyuser','stationuser', 'admin', 'superadmin'])
-    def put(self,insid):
+    @role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
+    def put(self, insid):
         institute = Ins.query.get_or_404(insid)
         args = institutes_parser1.parse_args()
         if 'name'in args and args['name'] :
-            institute.name=args['name']
+            institute.name = args['name']
         else:pass
         if 'admin_user_id'in args and args['admin_user_id']:
-            if g.role.name in ['admin','superadmin']:
-                institute.admin_user_id=args['admin_user_id']
+            if g.role.name in ['admin', 'superadmin']:
+                institute.admin_user_id = args['admin_user_id']
             else: pass
         else:pass
         if 'type'in args and args['type']:
-            institute.type=args['type']
+            institute.type = args['type']
         else:pass
         if 'ins_address'in args and args['ins_address']:
-            institute.ins_address=args['ins_address']
+            institute.ins_address = args['ins_address']
         else:pass
         if 'note'in args and args['note']:
-            institute.note=args['note']
+            institute.note = args['note']
         else:pass
         if 'longitude'in args and args['longitude']:
-            institute.longitude=args['longitude']
+            institute.longitude = args['longitude']
         else:pass
         if args['location_id']:
-            institute.location_id=args['location_id']
+            institute.location_id = args['location_id']
         else:pass
         if 'latitude'in args and args['latitude']:
-            institute.latitude=args['latitude']
+            institute.latitude = args['latitude']
         else:pass
         try:
             if args['ins_picture']:
                 institute.ins_picture =upload_file( args['ins_picture'])
             else:pass
         except:pass
-        if g.role.name in ['propertyuser','stationuser']:
+        if g.role.name in ['propertyuser', 'stationuser']:
             if institute.admin_user_id == g.user.id:
                 db.session.commit()
-                return  '修改成功',200
+                return  '修改成功', 200
             else:return '权限不足', 301
-        elif g.role.name in ['admin','superadmin']:
+        elif g.role.name in ['admin', 'superadmin']:
             db.session.commit()
             return '修改成功', 200
-        else:return'权限不足',301
+        else:return'权限不足', 301
 
     @api.doc('根据id删除机构')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
-    @api.response(200,'ok')
-    def delete(self,insid):
+    @api.response(200, 'ok')
+    def delete(self, insid):
         institute = Ins.query.get_or_404(insid)
         facilityins=FacilityIns.query.filter(FacilityIns.ins_id==insid).all()
         for i in facilityins:
@@ -191,14 +189,16 @@ class InstituteView(Resource):
         db.session.delete(institute)
         db.session.commit()
         return '删除成功',200
+
+
 @api.route('/<insid>/<distance>/ins')
 class InsIns(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['propertyuser','stationuser','admin', 'superadmin'])
+    @role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
     @api.doc('查询机构附近的机构')
-    @api.doc(params={'page':'页数','limit':'数量'})
-    @api.response(200,'ok')
-    def get(self,insid,distance):
+    @api.doc(params={'page': '页数', 'limit': '数量'})
+    @api.response(200, 'ok')
+    def get(self, insid, distance):
         def getDistance(lat0, lng0, lat1, lng1):
             lat0 = math.radians(lat0)
             lat1 = math.radians(lat1)
@@ -210,11 +210,11 @@ class InsIns(Resource):
             c = 2 * math.asin(math.sqrt(a))
             r = 6371  # 地球平均半径，单位为公里
             return c * r * 1000
-        distance=request.args.get('distance',distance)
-        page=request.args.get('page',1)
-        limit=request.args.get('limit',10)
-        ins=Ins.query.get_or_404(insid)
-        query=Ins.query.offset((int(page) - 1) * limit).limit(limit)
+        distance = request.args.get('distance', distance)
+        page = request.args.get('page', 1)
+        limit = request.args.get('limit', 10)
+        ins = Ins.query.get_or_404(insid)
+        query = Ins.query.offset((int(page) - 1) * limit).limit(limit)
         total = query.count()
         _=[]
         for i in query.all():
@@ -232,12 +232,12 @@ class InsIns(Resource):
             else :continue
 
         result={
-            'code':0,
-            'msg':'ok',
-            'count':total,
-            'data':_
+            'code': 0,
+            'msg': 'ok',
+            'count': total,
+            'data': _
         }
-        return result,200
+        return result, 200
 
 
 
@@ -248,59 +248,56 @@ class InsUsesrView(Resource):
     @api.doc('查询机构下面的用户列表')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     def get(self,insid):
-        page=request.args.get('page',1)
-        limit=request.args.get('limit',10)
-        if g.role.name=='propertyuser':
-            ins=Ins.query.filter(Ins.id==insid).filter(Ins.type=='物业').first()
-        elif g.role.name=='stationuser':
-            ins=Ins.query.filter(Ins.id==insid).filter(Ins.type=='消防站').first()
-        else: ins=Ins.query.get_or_404(insid)
-        users=User.query.filter(User.id.in_( i.id for i in ins.user)).order_by(User.id).offset((int(page)-1)*limit).\
+        page=request.args.get('page', 1)
+        limit=request.args.get('limit', 10)
+        if g.role.name == 'propertyuser':
+            ins = Ins.query.filter(Ins.id == insid).filter(Ins.type == '物业').first()
+        elif g.role.name == 'stationuser':
+            ins = Ins.query.filter(Ins.id == insid).filter(Ins.type == '消防站').first()
+        else:
+            ins = Ins.query.get_or_404(insid)
+            users = User.query.filter(User.id.in_(i.id for i in ins.user)).order_by(User.id).offset((int(page)-1)*limit).\
             limit(limit).all()
-        total=len(users)
+        total = len(users)
         _=[]
         for user in users:
             __={}
-            __['user_id']=user.id
-            __['user_name']=user.username
-            __['telephone']=user.contract_tel
+            __['user_id'] = user.id
+            __['user_name'] = user.username
+            __['telephone'] = user.contract_tel
             _.append(__)
 
         result={
-            'code':0,
-            'message':"ok",
-            "count":total,
-            "data":_
+            'code': 0,
+            'message': "ok",
+            "count": total,
+            "data": _
         }
-        return result,200
-
+        return result, 200
 
 
 @api.route('/<insid>/users/<userid>')
 class InsUserView(Resource):
     @api.doc('增加机构成员/用户绑定机构')
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['propertyuser','stationuser', 'admin', 'superadmin'])
-    @api.response(200,'ok')
-    def post(self,insid,userid):
-     ins=Ins.query.get_or_404(insid)
-     user=User.query.get_or_404(userid)
+    @role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
+    @api.response(200, 'ok')
+    def post(self, insid, userid):
+     ins = Ins.query.get_or_404(insid)
+     user = User.query.get_or_404(userid)
      if user not in ins.user:
-         if g.user.id == ins.admin_user_id or g.role.name in ['admin','admin'] :
+         if g.user.id == ins.admin_user_id or g.role.name in ['admin', 'admin'] :
                 ins.user.append(user)
                 db.session.commit()
-                return '添加成功',200
-         else: return '权限不足',200
-     else:return '用户已存在',301
-
+                return '添加成功', 200
+         else: return '权限不足', 200
+     else:return '用户已存在', 301
 
     @api.doc('删除机构成员/解除用户绑定机构')
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['propertyuser','stationuser', 'admin', 'superadmin'])
+    @role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
     def delete(self, insid, userid):
-      user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-      roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
       ins = Ins.query.get_or_404(insid)
       user = User.query.get_or_404(userid)
       if  user in ins.user:
@@ -312,20 +309,21 @@ class InsUserView(Resource):
 
       else:return '成员不存在', 301
 
+
 @api.route('/<insid>/community')
 class InsCommunityView(Resource):
-    @page_format(code=0,msg='ok')
+    @page_format(code=0, msg='ok')
     @api.doc('查询机构覆盖的社区')
     @ api.header('jwt', 'JSON Web Token')
     @ role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
-    @api.marshal_with(community_model,as_list=True)
-    @api.response(200,'ok')
+    @api.marshal_with(community_model, as_list=True)
+    @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
-    def get(self,insid):
-        ins=Ins.query.get_or_404(insid)
-        print(ins.community)
-        return ins.community,200
+    def get(self, insid):
+        ins = Ins.query.get_or_404(insid)
+        return ins.community, 200
+
 
 @api.route('/<insid>/subuseralarmrecord')
 class InsUseralarmrecordViews(Resource):
@@ -334,15 +332,15 @@ class InsUseralarmrecordViews(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
     def get(self,insid):
-        ins1=Ins.query.get_or_404(insid)
-        user=ins1.user
-        if g.user in user or  g.role.name in ['admin','superadmin']:
-            if g.role.name=='propertyuser':
-                ins = Ins.query.filter(Ins.type=='物业').filter(Ins.id==insid).first()
-            elif g.role.name=='stationuser':
+        ins1 = Ins.query.get_or_404(insid)
+        user = ins1.user
+        if g.user in user or g.role.name in ['admin', 'superadmin']:
+            if g.role.name == 'propertyuser':
+                ins = Ins.query.filter(Ins.type == '物业').filter(Ins.id == insid).first()
+            elif g.role.name == 'stationuser':
                 ins = Ins.query.filter(Ins.type == '消防站').filter(Ins.id == insid).first()
-            else:ins=Ins.query.get_or_404(insid)
-            community=ins.community
+            else:ins = Ins.query.get_or_404(insid)
+            community = ins.community
             home=[]
             for i in community:
                 home.extend(i.homes.all())
@@ -351,7 +349,7 @@ class InsUseralarmrecordViews(Resource):
             total=len(useralarmrecord)
             for i in useralarmrecord:
                 __={}
-                __['id']=i.id
+                __['id'] = i.id
                 __['type'] = i.type
                 __['content'] = i.content
                 __['time'] = str(i.time)
@@ -363,12 +361,13 @@ class InsUseralarmrecordViews(Resource):
                 __['if_confirm'] = i.if_confirm
                 _.append(__)
             result={
-                'code':0,
-                'msg':'ok',
-                'total':total,
-                'data':_
+                'code': 0,
+                'msg': 'ok',
+                'total': total,
+                'data': _
             }
-            return result,200
+            return result, 200
+
 
 @api.route('/useralarmrecord/')
 class InsUseralarmrecordViews1(Resource):
@@ -382,22 +381,22 @@ class InsUseralarmrecordViews1(Resource):
         _=[]
         for i in useralarmrecord:
             __={}
-            __['id']=i.id
-            __['type']=i.type
-            __['content']=i.content
-            __['time']=str(i.time)
-            __['home_id']=i.home_id
-            __['ins_id']=i.ins_id
-            __['ins_name']=Ins.query.get_or_404(i.ins_id).name
-            __['user_id']=i.user_id
-            __['note']=i.note
-            __['reference_alarm_id']:i.reference_alarm_id
-            __['if_confirm']=i.if_confirm
+            __['id'] = i.id
+            __['type'] = i.type
+            __['content'] = i.content
+            __['time'] = str(i.time)
+            __['home_id'] = i.home_id
+            __['ins_id'] = i.ins_id
+            __['ins_name'] = Ins.query.get_or_404(i.ins_id).name
+            __['user_id'] = i.user_id
+            __['note'] = i.note
+            __['reference_alarm_id']=i.reference_alarm_id
+            __['if_confirm'] = i.if_confirm
             _.append(__)
         result={
-            'data':_
+            'data': _
         }
-        return result,200
+        return result, 200
 
 
 
