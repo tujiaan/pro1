@@ -17,7 +17,7 @@ def BuiltSensorSendMessage(app):
                     homeuser = HomeUser.query.filter(HomeUser.home_id == home.id).all()
                     user = User.query.filter(User.id.in_(i.user_id for i in homeuser)).all()
                     for j in user:
-                        messagesend = MessageSend(message_id=i.id, message_type='传感器报警', user_id=j.id)
+                        messagesend = MessageSend(message_id=i.id, message_type='传感器报警', user_id=j.id,role_id='1')
                         ms = MessageSend.query.filter(and_(MessageSend.message_id == i.id, MessageSend.user_id == j.id)).first()
                         if ms==None:
                             db.session.add(messagesend)
@@ -28,7 +28,9 @@ def BuiltSensorSendMessage(app):
                         ins = community.ins
                         for j in ins:
                             for k in j.user:
-                                messagesend = MessageSend(message_id=i.id, message_type='传感器报警', user_id=k.id)
+                                if j.type=='物业':
+                                    messagesend = MessageSend(message_id=i.id, message_type='传感器报警', user_id=k.id,role_id='2')
+                                else: messagesend = MessageSend(message_id=i.id, message_type='传感器报警', user_id=k.id,role_id='3')
                                 ms = MessageSend.query.filter(
                                     and_(MessageSend.message_id == i.id, MessageSend.user_id == j.id)).first()
                                 if ms == None:
@@ -58,29 +60,152 @@ def BuiltUserSendMessage(app):
                 list1 = []
                 for i in ins:
                     list1.append(i.user.all())
-                if i.type == 0 or i.type == 1:
-                    userrole = UserRole.query.filter(or_(UserRole.role_id == '4', UserRole.role_id == '5')).union(
-                        UserRole.query.filter((UserRole.role_id == '6'))).all()
-                    query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
-                    query2 = User.query.with_entities(User.id).filter(User.id.in_(i[0].id for i in list1))
-                    query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
-
-                elif i.type == 2:
-                    query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
-                    query2 = User.query.with_entities(User.id).filter(User.id.in_(i[0].id for i in list1))
-                    userrole = UserRole.query.filter(or_(UserRole.role_id == '5', UserRole.role_id == '6')).all()
-                    query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
-
+                if ins.type=='物业':
+                    if i.type == 0 or i.type == 1:
+                        userrole = UserRole.query.filter(or_(UserRole.role_id == '4', UserRole.role_id == '5')).union(
+                            UserRole.query.filter((UserRole.role_id == '6'))).all()
+                        query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
+                        query2 = User.query.with_entities(User.id).filter(User.id.in_(i[0].id for i in list1))
+                        query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
+                        list2 = query1.union(query2).union(query3).all()
+                        for j in list2:
+                            if j in query1.all():
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,role_id='1')
+                            elif j in query2.all():
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id, role_id='2')
+                            else:
+                                user_role=UserRole.query.filter(UserRole.user_id==j.id).all()
+                                roles=Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+                                if '4'in [i.id for i in roles]:
+                                    messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                              role_id='4')
+                                elif '5'in [i.id for i in roles]:
+                                    messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                              role_id='5')
+                                else:messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                              role_id='6')
+                            db.session.add(messagesend)###119 admin superadmin 不会出现在同一人
+                            db.session.commit()
+                    elif i.type == 2:
+                        query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
+                        query2 = User.query.with_entities(User.id).filter(User.id.in_(i[0].id for i in list1))
+                        userrole = UserRole.query.filter(or_(UserRole.role_id == '5', UserRole.role_id == '6')).all()
+                        query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
+                        list2 = query1.union(query2).union(query3).all()
+                        for j in list2:
+                            if j in query1.all():
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id, role_id='1')
+                            elif j in query2.all():
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id, role_id='2')
+                            else:
+                                user_role = UserRole.query.filter(UserRole.user_id == j.id).all()
+                                if '5' in [i.id for i in roles]:
+                                    messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                      role_id='5')
+                                else:
+                                    messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                              role_id='6')
+                            db.session.add(messagesend)  ###119 admin superadmin 不会出现在同一人
+                            db.session.commit()
+                    else:
+                        query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
+                        query2 = User.query.with_entities(User.id).filter(User.id.in_(i[0].id for i in list1))
+                        userrole = UserRole.query.filter(or_(UserRole.role_id=='4',UserRole.role_id=='5')).union(UserRole.query.filter((UserRole.role_id=='6'))).all()
+                        query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
+                    list2 = query1.union(query2).union(query3).all()
+                    for j in list2:
+                        if j in query1.all():
+                            messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id, role_id='1')
+                        elif j in query2.all():
+                            messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id, role_id='2')
+                        else:
+                            user_role = UserRole.query.filter(UserRole.user_id == j.id).all()
+                            roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+                            if '4' in [i.id for i in roles]:
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                          role_id='4')
+                            elif '5' in [i.id for i in roles]:
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                          role_id='5')
+                            else:
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                          role_id='6')
+                        db.session.add(messagesend)  ###119 admin superadmin 不会出现在同一人
+                        db.session.commit()
                 else:
-                    query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
-                    query2 = User.query.with_entities(User.id).filter(User.id.in_(i[0].id for i in list1))
-                    userrole = UserRole.query.filter(or_(UserRole.role_id=='4',UserRole.role_id=='5')).union(UserRole.query.filter((UserRole.role_id=='6'))).all()
-                    query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
-                list2 = query1.union(query2).union(query3).all()
-                for j in list2:
-                       messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id)
-                       db.session.add(messagesend)
-                       db.session.commit()
+                    if i.type == 0 or i.type == 1:
+                        userrole = UserRole.query.filter(or_(UserRole.role_id == '4', UserRole.role_id == '5')).union(
+                            UserRole.query.filter((UserRole.role_id == '6'))).all()
+                        query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
+                        query2 = User.query.with_entities(User.id).filter(User.id.in_(i[0].id for i in list1))
+                        query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
+                        list2 = query1.union(query2).union(query3).all()
+                        for j in list2:
+                            if j in query1.all():
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,role_id='1')
+                            elif j in query2.all():
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id, role_id='3')
+                            else:
+                                user_role=UserRole.query.filter(UserRole.user_id==j.id).all()
+                                roles=Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+                                if '4'in [i.id for i in roles]:
+                                    messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                              role_id='4')
+                                elif '5'in [i.id for i in roles]:
+                                    messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                              role_id='5')
+                                else:messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                              role_id='6')
+                            db.session.add(messagesend)###119 admin superadmin 不会出现在同一人
+                            db.session.commit()
+                    elif i.type == 2:
+                        query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
+                        query2 = User.query.with_entities(User.id).filter(User.id.in_(i[0].id for i in list1))
+                        userrole = UserRole.query.filter(or_(UserRole.role_id == '5', UserRole.role_id == '6')).all()
+                        query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
+                        list2 = query1.union(query2).union(query3).all()
+                        for j in list2:
+                            if j in query1.all():
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id, role_id='1')
+                            elif j in query2.all():
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id, role_id='3')
+                            else:
+                                user_role = UserRole.query.filter(UserRole.user_id == j.id).all()
+                                roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+
+                                if '5' in [i.id for i in roles]:
+                                    messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                      role_id='5')
+                                else:
+                                    messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                              role_id='6')
+                            db.session.add(messagesend)  ###119 admin superadmin 不会出现在同一人
+                            db.session.commit()
+                    else:
+                        query1 = User.query.with_entities(User.id).filter(User.id.in_(i.id for i in user1))
+                        query2 = User.query.with_entities(User.id).filter(User.id.in_(i[0].id for i in list1))
+                        userrole = UserRole.query.filter(or_(UserRole.role_id=='4',UserRole.role_id=='5')).union(UserRole.query.filter((UserRole.role_id=='6'))).all()
+                        query3 = User.query.with_entities(User.id).filter(User.id.in_(i.user_id for i in userrole))
+                    list2 = query1.union(query2).union(query3).all()
+                    for j in list2:
+                        if j in query1.all():
+                            messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id, role_id='1')
+                        elif j in query2.all():
+                            messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id, role_id='3')
+                        else:
+                            user_role = UserRole.query.filter(UserRole.user_id == j.id).all()
+                            roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+                            if '4' in [i.id for i in roles]:
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                          role_id='4')
+                            elif '5' in [i.id for i in roles]:
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                          role_id='5')
+                            else:
+                                messagesend = MessageSend(message_id=i.id, message_type='用户报警', user_id=j.id,
+                                                          role_id='6')
+                        db.session.add(messagesend)  ###119 admin superadmin 不会出现在同一人
+                        db.session.commit()
             else: pass
         return None, 200
 

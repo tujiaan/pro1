@@ -319,11 +319,11 @@ class ReferenceAlarmIdViews(Resource):
         else:return False
 
 
-@api.route('/<message_id>/<user_id>/messagesend')
+@api.route('/<message_id>/<user_id>/<role_id>/messagesend')
 class MessageSend2Views(Resource):
-    def get(self, message_id, user_id):
-        messagesend = MessageSend.query.filter(MessageSend.message_id == message_id).filter(MessageSend.user_id == user_id)\
-            .first()
+    def get(self, message_id, user_id,role_id):
+        messagesend = MessageSend.query.filter(MessageSend.message_id == message_id).\
+            filter(MessageSend.user_id == user_id).filter(MessageSend.role_id==role_id) .first()
         if messagesend==None:
             return True, 200
         else: return False, 200
