@@ -123,7 +123,7 @@ class UserAlarmRecordsView(Resource):
         db.session.commit()
         if args['reference_alarm_id']:
             alarmhandle = AlarmHandle(reference_message_id=args['reference_alarm_id'], type='1', handle_time=datetime.datetime.now(), handle_type='202', user_id=g.user.id)
-        else:alarmhandle = AlarmHandle(rtype='1', handle_time=datetime.datetime.now(), handle_type='200', user_id=g.user.id, reference_message_id=useralarmrecord.id)
+        else:alarmhandle = AlarmHandle(type='1', handle_time=datetime.datetime.now(), handle_type='200', user_id=g.user.id, reference_message_id=useralarmrecord.id)
         db.session.add(alarmhandle)
         db.session.commit()
         return {'useralarmrecord_id': useralarmrecord.id}, 200
