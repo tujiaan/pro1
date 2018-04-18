@@ -97,7 +97,7 @@ class Getui(object):
                     "transmission_content": message_id
                 }
         }
-        res = requests.post(url=url,headers=headers,json=data)
+        res = requests.post(url=url, headers=headers, json=data)
         return res.json().get('taskid')
 
     def sendList(self, alias, taskid):

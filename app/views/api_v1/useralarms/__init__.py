@@ -137,7 +137,7 @@ class UserAlarmRecordView(Resource):
     @role_require(['119user', 'propertyuser', 'stationuser', 'admin', 'superadmin'])
     @api.response(200, 'ok')
     def put(self, useralarmrecordid):
-        useralarmrecord=UserAlarmRecord.query.get_or_404(useralarmrecordid)
+        useralarmrecord = UserAlarmRecord.query.get_or_404(useralarmrecordid)
         if useralarmrecord.home_id!=None:
             home = Home.query.get_or_404(useralarmrecord.home_id)
             community = home.community
@@ -285,7 +285,7 @@ class UserAlarmRecordView(Resource):
 @api.route('/<useralarmrecordid>/users/')
 class UseralarmrecordView2(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser','propertyuser','stationuser', '119user', 'admin', 'superadmin'])
+    @role_require(['homeuser', 'propertyuser', 'stationuser', '119user', 'admin', 'superadmin'])
     @api.doc('推送')
     @api.response(200, 'ok')
     def post(self, useralarmrecordid):
@@ -317,3 +317,13 @@ class ReferenceAlarmIdViews(Resource):
         if sensoralarm != None:
             return True
         else:return False
+
+
+@api.route('/<messageid>/<user_id>/messagesend')
+class MessageSend2Views(Resource):
+    def get(self, message_id, user_id):
+        messagesend = MessageSend.query.filter(MessageSend.message_id == message_id).filter(MessageSend.user_id == user_id)\
+            .first()
+        if messagesend==None:
+            return True, 200
+        else: return False, 200
