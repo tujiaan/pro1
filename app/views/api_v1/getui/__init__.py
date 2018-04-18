@@ -7,16 +7,16 @@ api = Namespace('Test', description='测试接口')
 from .parser import *
 from app.ext.getui import getui
 
+
 @api.route('/getuibind/')
 class test(Resource):
     @api.expect(test_parser)
     def post(self):
-
-        args=test_parser.parse_args()
-        userid=args['userid']
-        cid=args['cid']
+        args = test_parser.parse_args()
+        userid = args['userid']
+        cid = args['cid']
         # print(getui.__dict__)################
-        return getui.bind(userid,cid )
+        return getui.bind(userid, cid)
             # return
             # getui.sendList('你好guitui',['123456789'])
 

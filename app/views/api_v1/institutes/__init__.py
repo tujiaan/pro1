@@ -240,16 +240,15 @@ class InsIns(Resource):
         return result, 200
 
 
-
 @api.route('/<insid>/users')
 class InsUsesrView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['propertyuser','stationuser', 'admin', 'superadmin'])
     @api.doc('查询机构下面的用户列表')
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    def get(self,insid):
-        page=request.args.get('page', 1)
-        limit=request.args.get('limit', 10)
+    def get(self, insid):
+        page = request.args.get('page', 1)
+        limit = request.args.get('limit', 10)
         if g.role.name == 'propertyuser':
             ins = Ins.query.filter(Ins.id == insid).filter(Ins.type == '物业').first()
         elif g.role.name == 'stationuser':
@@ -393,7 +392,7 @@ class InsUseralarmrecordViews1(Resource):
             __['reference_alarm_id']=i.reference_alarm_id
             __['if_confirm'] = i.if_confirm
             _.append(__)
-        result={
+        result = {
             'data': _
         }
         return result, 200

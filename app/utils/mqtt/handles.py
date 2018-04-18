@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import dateutil
 from flask import json
-from app.ext import mqtt,db
+from app.ext import mqtt, db
 from app.models import Gateway, Sensor, SensorHistory, SensorAlarm, AlarmHandle
 
 
@@ -46,16 +46,16 @@ def gateway_info(client, userdata, message):
 
 def gateway_data(client, userdata, message):
     p = json.loads(message.payload)
-    list=p.get('sensors')
-    time=dateutil.parser.parse(p.get('time'))
+    list = p.get('sensors')
+    time = dateutil.parser.parse(p.get('time'))
     with client.app.app_context():
-        for i in list :
-            sensorhistory=SensorHistory()
+        for i in list:
+            sensorhistory = SensorHistory()
             if i['id']>'S0001'and i['id']<'S0999':
-                 sensorhistory.sensor_id=i
-                 sensorhistory.time= time
-                 sensorhistory.sensor_value=i.get('value')
-                 if sensorhistory.sensor_value==1:
+                 sensorhistory.sensor_id = i
+                 sensorhistory.time = time
+                 sensorhistory.sensor_value = i.get('value')
+                 if sensorhistory.sensor_value == 1:
                     sensoralarm = SensorAlarm(sensor_id=i, sensor_type=0, alarm_time=time, gateway_id= Sensor.query.get(i['id']).gateway_id)
                     db.session.add(sensoralarm)
                     db.session.commit()
@@ -63,13 +63,13 @@ def gateway_data(client, userdata, message):
                  else:pass
             elif i.get('id')>='S1001'and i.get('id')<'S1999':
                 sensorhistory.sensor_id = i['id']
-                sensorhistory.time =time
+                sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
-                if  int(sensorhistory.sensor_value) > 50:
-                    sensoralarm=SensorAlarm(sensor_id=i['id'],sensor_type=1,var_type='温度',alarm_value=i.get('value'),unit='℃',alarm_time=time,gateway_id=Sensor.query.get(i['id']).gateway_id )
+                if int(sensorhistory.sensor_value) > 50:
+                    sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=1, var_type='温度', alarm_value=i.get('value'),unit='℃',alarm_time=time,gateway_id=Sensor.query.get(i['id']).gateway_id )
                     db.session.add(sensoralarm)
-                    sm=SensorHistory.query.filter(SensorHistory.sensor_id==i['id']).filter(SensorHistory.time.between(time,time-timedelta(minutes=10)))
-                    count=1
+                    sm = SensorHistory.query.filter(SensorHistory.sensor_id == i['id']).filter(SensorHistory.time.between(time,time-timedelta(minutes=10)))
+                    count = 1
                     for i in sm:
                         if int(i.sensor_value) > 50:
                             count += 1
@@ -82,7 +82,7 @@ def gateway_data(client, userdata, message):
             elif i['id']>'S2001'and i['id']<'S2999':
                 sensorhistory.sensor_id = i
                 sensorhistory.time =time
-                sensorhistory.sensor_value =i.get('value')
+                sensorhistory.sensor_value = i.get('value')
                 if sensorhistory.sensor_value == 1:
                      sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=2,  alarm_time=time, gateway_id= Sensor.query.get(i['id']).gateway_id)
                      db.session.add(sensoralarm)
@@ -103,7 +103,7 @@ def gateway_data(client, userdata, message):
                   for i in sm:
                       if float(i.sensor_value) > Sensor.query.get(i).max_value:
                           count += 1
-                  if count >=len(sm-1):
+                  if count >= len(sm-1):
                       db.session.commit()
                   else:
                       pass
@@ -123,7 +123,9 @@ def gateway_data(client, userdata, message):
                     pass
             db.session.add(sensorhistory)
             db.session.commit()
-    alarmhandler=AlarmHandle(type='0', handle_type='100', reference_message_id=sensoralarm.id,handle_time=datetime.datetime.now())
+    alarmhandler = AlarmHandle(type='0', handle_type='100', reference_message_id=sensoralarm.id, handle_time=datetime.datetime.now())
+    db.session.add(alarmhandler)
+    db.session.commit()
     return None, 200
 
 
