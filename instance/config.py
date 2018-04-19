@@ -20,8 +20,8 @@ WTF_CSRF_ENABLED = False
 # sudo docker run --name yiyiwei-db -d --env MYSQL_ROOT_PASSWORD=yangjiawei --env MYSQL_DATABASE=yiyiwei --env MYSQL_USER=yiyiwei --env MYSQL_PASSWORD=yiyiwei -p 3306:3306  mysql:5.5
 
 ##Sqlalchemy
-#SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:yangjiawei@47.91.222.196:3306/firefighting'
-SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:root@127.0.0.1:3306/firefighting1'
+SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:yangjiawei@47.91.222.196:3306/firefighting'
+#SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:root@127.0.0.1:3306/firefighting1'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 ##Cache
@@ -66,12 +66,12 @@ APP_SECRET = 'HnDWnPyb3u9AerwLqzEpQ9'
 APP_KEY = 'Q44tX55Jbv8AKOYJOJyrF'
 MASTER_SECRET= 'KyHs20ukV5AnGIve7nbIC8'
 ##mqtt
-#MQTT_BROKER_URL = '47.91.222.196'
-MQTT_BROKER_URL = '127.0.0.1'
+MQTT_BROKER_URL = '47.91.222.196'
+#MQTT_BROKER_URL = '127.0.0.1'
 MQTT_BROKER_PORT = 1883
 MQTT_USERNAME = 'admin'
-MQTT_PASSWORD = 'public'
-#MQTT_PASSWORD = 'xiaofang@HT'
+#MQTT_PASSWORD = 'public'
+MQTT_PASSWORD = 'xiaofang@HT'
 MQTT_KEEPALIVE = 5
 MQTT_TLS_ENABLED = False
 MQTT_LAST_WILL_QOS = 2
