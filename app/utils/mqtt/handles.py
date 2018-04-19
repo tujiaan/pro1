@@ -18,7 +18,7 @@ def gateway_info(client, userdata, message):
             db.session.add(g)
             db.session.commit()
         for sensor in sensors:
-                sid = sensor.get('id',None)
+                sid = sensor.get('id', None)
                 if sid is None:
                     continue
                 s = Sensor.query.get(sid)
@@ -41,7 +41,7 @@ def gateway_info(client, userdata, message):
                     g.sensors.append(s)
                     db.session.commit()
     mqtt.subscribe(f'{gateway_id}/data')
-    mqtt.client.message_callback_add(f'{gateway_id}/data',gateway_data)
+    mqtt.client.message_callback_add(f'{gateway_id}/data', gateway_data)
 
 
 def gateway_data(client, userdata, message):
@@ -56,7 +56,7 @@ def gateway_data(client, userdata, message):
                  sensorhistory.time = time
                  sensorhistory.sensor_value = i.get('value')
                  if sensorhistory.sensor_value == 1:
-                    sensoralarm = SensorAlarm(sensor_id=i, sensor_type=0, alarm_time=time, gateway_id= Sensor.query.get(i['id']).gateway_id)
+                    sensoralarm = SensorAlarm(sensor_id=i, sensor_type=0, alarm_time=time, gateway_id=Sensor.query.get(i['id']).gateway_id)
                     db.session.add(sensoralarm)
                     db.session.commit()
                     pass

@@ -1,7 +1,7 @@
 from flask_restplus.reqparse import RequestParser
 
 test_parser = RequestParser()
-test_parser.add_argument('userid',type=str,required=True,location='form')
+test_parser.add_argument('userid', type=str, required=True, location='form')
 test_parser.add_argument('cid', type=str, required=True, location='form')
 
 test_parser1 = RequestParser()

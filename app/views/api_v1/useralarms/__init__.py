@@ -8,6 +8,7 @@ from sqlalchemy import and_, or_
 from app.ext import db, getui
 from app.models import UserAlarmRecord, Community, Home, User, Sensor, UserRole, Role, HomeUser, Ins, MessageSend, \
     SensorAlarm, AlarmHandle
+from app.utils.auth import decode_jwt
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 #from app.utils.myutil.pushmessage import JPush2
@@ -319,11 +320,18 @@ class ReferenceAlarmIdViews(Resource):
         else:return False
 
 
-@api.route('/<message_id>/<user_id>/<role_id>/messagesend')
+@api.route('/<message_id>/messagesend')
 class MessageSend2Views(Resource):
-    def get(self, message_id, user_id,role_id):
-        messagesend = MessageSend.query.filter(MessageSend.message_id == message_id).\
-            filter(MessageSend.user_id == user_id).filter(MessageSend.role_id==role_id) .first()
-        if messagesend==None:
-            return True, 200
-        else: return False, 200
+ @api.header('jwt', 'JSON Web Token')
+ def get(self, message_id):
+     jwt_str = request.headers.get('jwt', None)
+     user_id = decode_jwt(jwt_str).get('user_id')
+     role_id = decode_jwt(jwt_str).get('role_id')
+     messagesend = MessageSend.query.filter(MessageSend.message_id == message_id).\
+            filter(MessageSend.user_id == user_id).filter(MessageSend.role_id == role_id) .first()
+     if messagesend == None:
+         return True, 200##如果是当前用户的角色则返回True
+     else:
+         messagesend=MessageSend.query.filter(MessageSend.message_id == message_id).\
+            filter(MessageSend.user_id == user_id).first()
+         return {"role_id": messagesend.role_id, "user_id": messagesend.user_id}, 200##如果不是当前角色，则返回消息应该发送的角色

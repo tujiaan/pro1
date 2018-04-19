@@ -74,6 +74,7 @@ class Ins(db.Model):
     admin_user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='管理员id')
     community = db.relationship('Community', secondary=t_community_ins, backref=db. backref('f1_community', lazy='dynamic'), lazy='dynamic')
     user = db.relationship('User', secondary=t_user_ins,backref=db.backref('f_user', lazy='dynamic'), lazy='dynamic' )
+    disabled = db.Column(db.Boolean,default=False,comment='是否可用')
 
 
 class Location (db.Model):
@@ -98,6 +99,7 @@ class Community(db.Model):
     ins = db.relationship('Ins',secondary=t_community_ins, backref=db.backref('f1_ins', lazy='dynamic'), lazy='dynamic')
     homes = db.relationship('Home', lazy='dynamic')
     location_id = db.Column(db.String(50), db.ForeignKey('location.id'), comment='位置')
+    disabled = db.Column(db.Boolean, default=False, comment='是否可用')
 
 
 class FacilityIns(db.Model):
@@ -121,6 +123,7 @@ class Facility(db.Model):
     note = db.Column(db.String(200),comment='备注')
     knowledge = db.relationship('Knowledge', secondary=t_facility_knowledge,
                                  backref=db.backref('f_knowledge', lazy='dynamic'),lazy='dynamic')
+    disabled = db.Column(db.Boolean, default=False, comment='是否可用')
 
 
 class Gateway(db.Model):
@@ -146,6 +149,7 @@ class Home(db.Model):
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     alternate_phone = db.Column(db.String(50), comment='备用电话')
     gateway_id=db.Column(db.String(50),db.ForeignKey('gateway.id'), comment='网关id')
+    disabled = db.Column(db.Boolean, default=False, comment='是否可用')
 
 
 class Knowledge(db.Model):
@@ -156,7 +160,7 @@ class Knowledge(db.Model):
     content = db.Column(db.Text, comment='知识正文')
     title = db.Column(db.String(50), comment='知识标题')
     facility = db.relationship('Facility', secondary=t_facility_knowledge, backref=db.backref('f_facility', lazy='dynamic'), lazy='dynamic')
-
+    disabled = db.Column(db.Boolean, default=False, comment='是否可用')
 
 class Menu(db.Model):
     __tablename__ = 'menu'
@@ -195,11 +199,11 @@ class Sensor(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     gateway_id = db.Column(db.String(24), db.ForeignKey('gateway.id'), comment='网关id')
     gateway = db.relationship('Gateway')
-    set_type=db.Column(db.String(24),default='0',comment='0:不设定，1:自设定，2:智能设定')
-    online=db.Column(db.Boolean,comment='是否在线')
+    set_type = db.Column(db.String(24),default='0',comment='0:不设定，1:自设定，2:智能设定')
+    online = db.Column(db.Boolean,comment='是否在线')
     sensor_place = db.Column(db.String(255), comment='位置')
     sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾,1.温度 2.燃气 3.智能插座,4.电磁阀)')
-    max_value=db.Column(db.Float,comment='阈值')
+    max_value = db.Column(db.Float, comment='阈值')
     alarms_history = db.relationship('SensorAlarm', lazy='dynamic')
 
 
@@ -217,7 +221,7 @@ class MessageSend(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     message_id = db.Column(db.String(24), comment='报警id')
     message_type = db.Column(db.String(24), comment='报警信息类型')
-    role_id=db.Column(db.String(24),db.ForeignKey('role.id'), comment='角色id')
+    role_id = db.Column(db.String(24), db.ForeignKey('role.id'), comment='角色id')
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='接受用户id')
     if_send = db.Column(db.Boolean, default=False, comment='是否已经发送')
     if_read = db.Column(db.Boolean, default=False, comment='是否阅读')
@@ -231,7 +235,7 @@ class SensorHistory(db.Model):
     sensor_state = db.Column(db.String, comment='传感器状态 ')
     sensor_code = db.Column(db.Boolean, comment='是否正常 ')
     sensor_value = db.Column(db.String(255), comment='当前值')
-    time = db.Column(db.DateTime,comment='时间')
+    time = db.Column(db.DateTime, comment='时间')
 
 
 class SensorAlarm(db.Model):
@@ -240,13 +244,13 @@ class SensorAlarm(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True, comment='')
     sensor_id = db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='网关id')
     sensor = db.relationship('Sensor')
-    gateway_id = db.Column(db.String(24), db.ForeignKey('gateway.id'),comment='关联网关id')
-    note = db.Column(db.String(255),comment='报警内容')
+    gateway_id = db.Column(db.String(24), db.ForeignKey('gateway.id'), comment='关联网关id')
+    note = db.Column(db.String(255), comment='报警内容')
     sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾 1.温度 2.燃气 3.电流,4)')
-    var_type = db.Column(db.String(24),comment='变量类型')
+    var_type = db.Column(db.String(24), comment='变量类型')
     unit = db.Column(db.String(24), comment='变量单位')
     alarm_value = db.Column(db.String, comment='报警数值')
-    alarm_time = db.Column(db.DateTime,default=datetime.datetime.now, comment='报警时间')
+    alarm_time = db.Column(db.DateTime, default=datetime.datetime.now, comment='报警时间')
     #confirm_time = db.Column(db.DateTime, comment='确认时间')
     is_timeout = db.Column(db.Boolean, default=False, comment='是否超时')
    # user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='确认人id')
@@ -268,7 +272,7 @@ class User(db.Model):
     lastTime = db.Column(db.DateTime, comment='最后登陆时间')
     user_role = db.relationship('UserRole', foreign_keys=[UserRole.user_id], backref=db.backref('f_user_role', lazy='joined'), lazy='dynamic')
     real_name = db.Column(db.String(50), comment='姓名')
-    sensor_visable=db.Column(db.Boolean,default=True, comment='传感器是否可见')
+    sensor_visable=db.Column(db.Boolean, default=True, comment='传感器是否可见')
     ins = db.relationship('Ins', secondary=t_user_ins, backref=db.backref('f_ins', lazy='dynamic'), lazy='dynamic')
 
 

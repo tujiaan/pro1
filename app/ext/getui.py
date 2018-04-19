@@ -115,5 +115,19 @@ class Getui(object):
         res = requests.post(url=url, headers=headers, json=data)
         return res.json()
 
+    def unbind(self, userid, cid):
+        url = str('https: // restapi.getui.com / v1 /' +str(self.appid)+'/ unbind_alias')
+        headers = {
+            'Content-Type': 'application/json',
+            'authtoken': str(self.sign)
+        }
+        data = {
+            "cid": cid,
+            "alias": userid
+        }
+        res = requests.post(url=url, headers=headers, json=data)
+        return res.json()
+
+
 
 getui = Getui()

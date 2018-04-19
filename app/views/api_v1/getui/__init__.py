@@ -9,7 +9,7 @@ from app.ext.getui import getui
 
 
 @api.route('/getuibind/')
-class test(Resource):
+class test1(Resource):
     @api.expect(test_parser)
     def post(self):
         args = test_parser.parse_args()
@@ -21,8 +21,18 @@ class test(Resource):
             # getui.sendList('你好guitui',['123456789'])
 
 
+@api.route('/getuiunbind/')
+class test4(Resource):
+    @api.expect(test_parser)
+    def post(self):
+        args = test_parser.parse_args()
+        userid = args['userid']
+        cid = args['cid']
+        return getui.unbind(userid, cid)
+
+
 @api.route('/getuisend/')
-class test(Resource):
+class test2(Resource):
     @api.expect(test_parser1)
     def post(self):
         args = test_parser1.parse_args()
@@ -36,7 +46,7 @@ class test(Resource):
 
 
 @api.route('/gettaskid/')
-class test(Resource):
+class test3(Resource):
     @api.expect(test_parser2)
     def post(self):
         args = test_parser2.parse_args()

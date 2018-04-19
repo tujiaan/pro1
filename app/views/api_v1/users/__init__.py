@@ -164,31 +164,29 @@ class UserProfile(Resource):
     @api.response(200, 'ok')
     @api.expect(user_parser)
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin','superadmin'])
-    def put(self,userid):
-        user=User.query.get_or_404(userid)
-        args=user_parser.parse_args()
-        user_role=UserRole.query.filter(UserRole.user_id==g.user.id).all()
-        roles=Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
+    @role_require(['admin', 'superadmin'])
+    def put(self, userid):
+        user = User.query.get_or_404(userid)
+        args = user_parser.parse_args()
         def use(x):
             if int(x) == 0:
                 return False
             else:
                 return True
-        if g.role.name=='admin':
-            if g.user.id==userid:
+        if g.role.name == 'admin':
+            if g.user.id == userid:
                 if args['username']:
-                    user.username=args['username']
+                    user.username = args['username']
                 else:pass
                 if args['contract_tel']:
-                    user.contract_tel=args['contract_tel']
+                    user.contract_tel = args['contract_tel']
                 else:pass
                 if args['email']:
-                    user.email=args['email']
+                    user.email = args['email']
                 else:pass
                 db.session.commit()
-                return '修改成功',200
-            else:return '权限不足',201
+                return '修改成功', 200
+            else:return '权限不足', 201
         else:
             if args['username']:
                 user.username = args['username']
@@ -278,7 +276,7 @@ class ProfileView(Resource):
 class UserFindView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
-    @page_format(code=0,msg='ok')
+    @page_format(code=0, msg='ok')
     @api.response(200, 'ok')
     @api.marshal_with(user_model, as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
@@ -337,11 +335,11 @@ class user(Resource):
     @role_require(['admin', 'superadmin'])
     def delete(self, userid):
         user = User.query.get_or_404(userid)
-        userrole=UserRole.query.filter(UserRole.user_id==userid).all()
-        role=Role.query.filter(Role.id.in_(i.role_id for i in userrole)).all()
+        userrole = UserRole.query.filter(UserRole.user_id == userid).all()
+        role = Role.query.filter(Role.id.in_(i.role_id for i in userrole)).all()
         for i in userrole:
-           i.disabled=True
-        if g.role.name=='superadmin':
+           i.disabled = True
+        if g.role.name == 'superadmin':
             db.session.commit()
             return None, 200
         elif g.role.name=='admin':
@@ -407,8 +405,8 @@ class UserRolesVsiew(Resource):
     @role_require(['admin', 'superadmin'])
     @api.doc('授权')
     @api.expect(role_parser)
-    @api.response(200,'ok')
-    def post(self,userid):
+    @api.response(200, 'ok')
+    def post(self, userid):
         user=User.query.get_or_404(userid)
         args=role_parser.parse_args()
         user_role2=UserRole.query.filter(UserRole.user_id == userid).filter(UserRole.role_id=='2').first()

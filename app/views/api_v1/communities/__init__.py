@@ -16,19 +16,21 @@ from app.views.api_v1.communities.parser import community_parser, community_pars
 
 api=Namespace('Community',description='社区相关操作')
 from app.views.api_v1.communities.models import community_model, _community_model, home_model
+
+
 @api.route('/')
 class CommunitiesView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['propertyuser','stationuser','admin', '119user','superadmin'])
+    @role_require(['propertyuser', 'stationuser', 'admin', '119user', 'superadmin'])
     @api.doc('查询所有的社区列表')
-    @api.response(200,'ok')
+    @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     def get(self):
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 10))
         query = Community.query.order_by(Community.id)
         total = query.count()
-        query=query.order_by(Community.id).offset((int(page) - 1) * limit).limit(limit)
+        query = query.filter(Community.disabled == False).offset((int(page) - 1) * limit).limit(limit)
 
         _=[]
         for i in query.all():
@@ -51,15 +53,12 @@ class CommunitiesView(Resource):
             else:
                 _.append(__)
         result={
-            'code':0,
-            'message':'ok',
-            'count':total,
-            'data':_
+            'code': 0,
+            'message': 'ok',
+            'count': total,
+            'data': _
         }
-        return result,200
-
-
-
+        return result, 200
 
     @api.route('/showlist')
     class CommunitiesView1(Resource):
@@ -72,56 +71,58 @@ class CommunitiesView(Resource):
         @api.doc(params={'page': '页数', 'limit': '数量'})
         @page_range()
         def get(self):
-            community = Community.query
+            community = Community.query.filter(Community.disabled==False)
             return community, 200
 
     @api.doc('新增社区')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
-    @api.expect(community_parser,validate=True)
-    @api.response(200,'ok')
+    @api.expect(community_parser, validate=True)
+    @api.response(200, 'ok')
     def post(self):
-        args=community_parser.parse_args()
-        community=Community()
+        args = community_parser.parse_args()
+        community = Community()
         if 'name'in args:
-            community.name=args.get('name',None)
+            community.name = args.get('name', None)
         else:pass
         if 'ins_id'in args:
-            community.ins_id=args.get('ins_id',None)
+            community.ins_id = args.get('ins_id', None)
         else:pass
         if 'longitude'in args:
-            community.longitude=args.get('longitude',None)
+            community.longitude = args.get('longitude', None)
         else:pass
         if 'latitude'in args:
-            community.latitude=args.get('latitude',None)
+            community.latitude = args.get('latitude', None)
         else:pass
         if 'save_distance'in args:
-            community.save_distance=args.get('save_distance',None)
+            community.save_distance = args.get('save_distance', None)
         else:pass
         if 'eva_distance'in args:
-            community.eva_distance=args.get('eva_distance',None)
+            community.eva_distance = args.get('eva_distance', None)
         else:pass
         if 'detail_address'in args:
-            community.detail_address=args.get('detail_address',None)
+            community.detail_address = args.get('detail_address', None)
         else:pass
         if args['community_picture']:
-            community.community_picture= upload_file(args['community_picture'])
+            community.community_picture = upload_file(args['community_picture'])
         else:pass
         if args['location_id']:
-            community.location_id=args['location_id']
+            community.location_id = args['location_id']
         else:pass
         db.session.add(community)
         db.session.commit()
-        return None,200
+        return None, 200
+
+
 @api.route('/<communityid>/')
 class CommunityView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin','119user','propertyuser','stationuser' ,'superadmin'])
+    @role_require(['admin', '119user', 'propertyuser', 'stationuser', 'superadmin'])
     @api.doc('查询特定的小区信息')
-    @api.response(200,'ok')
-    def get(self,communityid):
-        community=Community.query.get_or_404(communityid)
-        ins=community.ins
+    @api.response(200, 'ok')
+    def get(self, communityid):
+        community = Community.query.get_or_404(communityid)
+        ins = community.ins
         _=[ ]
         for i in ins:
             __={}
@@ -230,7 +231,7 @@ class CommunityInsViews(Resource):
     @api.response(200,'ok')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin',  'superadmin'])
-    def post(self,communityid,insid):
+    def post(self, communityid, insid):
         community=Community.query.get_or_404(communityid)
         ins=Ins.query.get_or_404(insid)
         community.ins.append(ins)
