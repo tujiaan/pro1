@@ -329,7 +329,7 @@ class MessageSend2Views(Resource):
      role_id = decode_jwt(jwt_str).get('role_id')
      messagesend = MessageSend.query.filter(MessageSend.message_id == message_id).\
             filter(MessageSend.user_id == user_id).filter(MessageSend.role_id == role_id) .first()
-     if messagesend == None:
+     if messagesend != None:
          return True, 200##如果是当前用户的角色则返回True
      else:
          messagesend=MessageSend.query.filter(MessageSend.message_id == message_id).\
