@@ -305,10 +305,3 @@ class AlarmHandle(db.Model):
     user_id = db.Column(db.String(24), comment='处理人员id')#  不关联用户，可以写入系统操作
     handle_time = db.Column(db.DateTime, default=datetime.datetime.now, comment='操作时间')
     note = db.Column(db.String(255), comment='操作备注')
-
-
-
-
-
-
-

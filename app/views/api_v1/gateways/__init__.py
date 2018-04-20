@@ -72,12 +72,3 @@ class GatewayView(Resource):
     def get(self, gatewayid):
         gateway = Gateway.query.get_or_404(gatewayid)
         return gateway.sensors,200
-
-
-
-
-
-
-
-
-

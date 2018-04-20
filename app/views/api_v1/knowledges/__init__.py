@@ -27,7 +27,7 @@ class Knowledges(Resource):
     @api.response(200, 'ok')
     @page_range()
     def get(self):
-            list=Knowledge.query
+            list=Knowledge.query.filter(Knowledge.disabled==False)
             return list,200
 
     @api.header('jwt', 'JSON Web Token')
@@ -51,7 +51,7 @@ class KnowledgeView(Resource):
     @api.response(200,'ok')
     @page_range()
     def get(self,knowledgetype):
-     list=Knowledge.query.filter(Knowledge.type==knowledgetype)
+     list=Knowledge.query.filter(Knowledge.disabled==False).filter(Knowledge.type==knowledgetype)
      return list,200
 
 
@@ -61,7 +61,7 @@ class KnowledgeView(Resource):
     @api.marshal_with(knowledges_model)
     @api.response(200,'ok')
     def get(self,knowledgeid):
-        knowledge=Knowledge.query.get_or_404(knowledgeid)
+        knowledge=Knowledge.query.filter(Knowledge.disabled==False).get_or_404(knowledgeid)
         return knowledge,200
 
     @api.header('jwt', 'JSON Web Token')
@@ -91,10 +91,11 @@ class KnowledgeView(Resource):
     @role_require(['admin', 'superadmin', 'knowledgeadmin'])
     def delete(self, knowledgeid):
         knowledge = Knowledge.query.get_or_404(knowledgeid)
-        facility=knowledge.facility.all()
-        for i in facility:
-            KnowledgeFacilityView1.delete(self,knowledgeid,i.id)
-        db.session.delete(knowledge)
+        knowledge.disabled = True
+        # facility=knowledge.facility.all()
+        # for i in facility:
+        #     KnowledgeFacilityView1.delete(self,knowledgeid,i.id)
+        # db.session.delete(knowledge)
         db.session.commit()
         return None,200
 
@@ -109,7 +110,8 @@ class KnowledgeFacilityView(Resource):
     @page_range()
     def get(self, knowledgeid):
         knowledge = Knowledge.query.get_or_404(knowledgeid)
-        return knowledge.facility, 200
+        facility =  knowledge.facility.filter(Facility.disabled==False)
+        return facility, 200
 
 
 @api.route('/<knowledgeid>/facility/<facilityid>')

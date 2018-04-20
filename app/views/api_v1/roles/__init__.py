@@ -19,7 +19,7 @@ class RolesView(Resource ):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
-        list=Role.query
+        list=Role.query.filter(Role.disabled==False)
         return list,200
     @api.doc('新建角色')
     @api.expect(roles_parser)
@@ -36,7 +36,9 @@ class RoleView(Resource):
     @api.response(200,'ok')
     def delete(self,roleid):
         role=Role.query.get_or_404(roleid)
-        db.session.delete(role)
+        role.disabled = False
+        # TODO:是否应该删除与这个角色对应的所有user
+        # db.session.delete(role)
         db.session.commit()
         return None,200
     @api.doc('更新角色信息')

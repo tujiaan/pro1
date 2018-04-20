@@ -7,7 +7,7 @@ from app.ext import db
 from instance.config import SQLALCHEMY_DATABASE_URI
 
 app=create_app()
-app.config[SQLALCHEMY_DATABASE_URI ]= 'mysql://root:root@127.0.0.1:3306/firefighting'
+app.config["SQLALCHEMY_DATABASE_URI" ]=  SQLALCHEMY_DATABASE_URI
 #db = SQLAlchemy()
 migrate = Migrate(app, db)
 manager = Manager(app)

@@ -282,7 +282,7 @@ class UserFindView(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
-        list = User.query
+        list = User.query.filter(User.disabled==False)
         return list,200
         # page = request.args.get('page',1)
         # limit = request.args.get('limit',10)
@@ -335,6 +335,7 @@ class user(Resource):
     @role_require(['admin', 'superadmin'])
     def delete(self, userid):
         user = User.query.get_or_404(userid)
+        user.disabled = True
         userrole = UserRole.query.filter(UserRole.user_id == userid).all()
         role = Role.query.filter(Role.id.in_(i.role_id for i in userrole)).all()
         for i in userrole:
@@ -362,7 +363,7 @@ class UserHomeView(Resource):
     @api.marshal_with(institute_model, as_list=True)
     @page_range()
     def get(self, userid):
-        user = User.query.get_or_404(userid)
+        user = User.query.get_or_404(userid).filter(User.disabled==True)
         return user.ins, 200
 
 
@@ -377,7 +378,7 @@ class UserHomeView(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self, userid):
-        homeuser = HomeUser.query.filter(HomeUser.user_id==userid).all()
+        homeuser = HomeUser.query.filter(HomeUser.user_id==userid).filter(User.disabled==True).all()
         home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
         return home, 200
 
@@ -392,9 +393,9 @@ class UserRolesVsiew(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self, userid):
-        user = User.query.get_or_404(userid)
+        user = User.query.get_or_404(userid).filter(User.disabled==True)
         user_role=UserRole.query.filter(UserRole.user_id==user.id).all()
-        roles= Role.query.filter(Role.id.in_(i.role_id for i in user_role))
+        roles= Role.query.filter(Role.id.in_(i.role_id for i in user_role)).filter(Role.disabled==False)
         if g.role.name=='admin':
             if 'admin'not in [i.name for i in roles] and  'superadmin'not in [i.name for i in roles]:
                 return roles,200

@@ -260,9 +260,3 @@ class CommunityInsViews(Resource):
             return '解除成功', 200
         else:
             return '社区不存在', 201
-
-
-
-
-
-

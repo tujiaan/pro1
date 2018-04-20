@@ -40,7 +40,7 @@ class HomesView(Resource):
             __['home_id'] = i.id
             __['home_name'] = i.name
             __['community_id'] = i.community_id
-            __['community_name'] = Community.query.filter(Community.id == i.community_id).filter(Community.disabled == False).name, None
+            __['community_name'] = Community.query.filter(Community.id == i.community_id).first().name, None
             __['detail_address'] = i.detail_address
             __['link_name'] = i.link_name
             __['tephone'] = i.telephone
@@ -49,7 +49,7 @@ class HomesView(Resource):
             __['gateway_id'] = i.gateway_id
             __['alternate_phone'] = i.alternate_phone
             __['admin_user_id'] = i.admin_user_id
-            __['admin_name'] = User.query.filter(User.disabled == False).filter(User.id == i.admin_user_id).username, None
+            __['admin_name'] = User.query.filter(User.disabled == False).filter(User.id == i.admin_user_id).first().username, None
             _.append(__)
         result = {
             'code': 0,
@@ -356,4 +356,3 @@ class HomeApplyView(Resource):
             'data': _
         }
         return result
-
