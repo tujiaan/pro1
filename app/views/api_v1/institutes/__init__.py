@@ -49,7 +49,8 @@ class InstitutesViews(Resource):
             __['longitude'] = str(i.longitude)
             __['latitude'] = str(i.latitude)
             __['admin_user_id'] = i.admin_user_id
-            __['admin_name'] = User.query.get_or_404(i.admin_user_id).username
+            __['admin_name'] = User.query.filter(User.id==i.admin_user_id).filter(User.disabled==False).first().username
+            __['admin_contract_tel']=User.query.filter(User.id==i.admin_user_id).filter(User.disabled==False).first().contract_tel
             _.append(__)
         result = {
             'code': 0,
