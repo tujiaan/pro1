@@ -211,8 +211,8 @@ class SensorTime(db.Model):
     __tablename__ = 'sensor_time'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     sensor_id=db.Column(db.String(50),db.ForeignKey('sensor.id'), comment='传感器id')
-    start_time = db.Column(db.String, comment='开始时间')
-    end_time = db.Column(db.String, comment='结束时间')
+    start_time = db.Column(db.String(24), comment='开始时间')
+    end_time = db.Column(db.String(24), comment='结束时间')
     switch_on=db.Column(db.Boolean, default=False,comment='定时开关')
 
 
@@ -232,7 +232,7 @@ class SensorHistory(db.Model):
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     sensor = db.relationship('Sensor')
     sensor_id = db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='传感器id')
-    sensor_state = db.Column(db.String, comment='传感器状态 ')
+    sensor_state = db.Column(db.String(24), comment='传感器状态 ')
     sensor_code = db.Column(db.Boolean, comment='是否正常 ')
     sensor_value = db.Column(db.String(255), comment='当前值')
     time = db.Column(db.DateTime, comment='时间')
@@ -249,7 +249,7 @@ class SensorAlarm(db.Model):
     sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾 1.温度 2.燃气 3.电流,4)')
     var_type = db.Column(db.String(24), comment='变量类型')
     unit = db.Column(db.String(24), comment='变量单位')
-    alarm_value = db.Column(db.String, comment='报警数值')
+    alarm_value = db.Column(db.String(24), comment='报警数值')
     alarm_time = db.Column(db.DateTime, default=datetime.datetime.now, comment='报警时间')
     #confirm_time = db.Column(db.DateTime, comment='确认时间')
     is_timeout = db.Column(db.Boolean, default=False, comment='是否超时')
