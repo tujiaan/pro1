@@ -29,8 +29,8 @@ def BuiltSensorSendMessage(app):
                         for j in ins:
                             for k in j.user:
                                 if j.type=='物业':
-                                    messagesend = MessageSend(message_id=i.id, message_type='传感器报警', user_id=k.id,role_id='2')
-                                else: messagesend = MessageSend(message_id=i.id, message_type='传感器报警', user_id=k.id,role_id='3')
+                                    messagesend = MessageSend(message_id=i.id, message_type='传感器报警', user_id=k.id, role_id='2')
+                                else: messagesend = MessageSend(message_id=i.id, message_type='传感器报警', user_id=k.id, role_id='3')
                                 ms = MessageSend.query.filter(
                                     and_(MessageSend.message_id == i.id, MessageSend.user_id == j.id)).first()
                                 if ms == None:
@@ -54,7 +54,7 @@ def BuiltUserSendMessage(app):
                     home = Home.query.filter(Home.id == i.home_id).first()
                     homeuser = HomeUser.query.filter(HomeUser.home_id == i.home_id).all()
                     user1 = User.query.filter(User.id.in_(i.user_id for i in homeuser)).all()
-                    ins = home.community.ins
+                    ins = home.community.ins.all()
                 else:
                     ins = Ins.query.filter(Ins.id == i.ins_id).all()
                 list1 = []
