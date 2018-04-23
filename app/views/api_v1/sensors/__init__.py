@@ -1,6 +1,6 @@
 import dateutil
 from flask import g, request
-from flask_restplus import Namespace
+from flask_restplus import Namespace, abort
 from flask_restplus import  Resource
 from sqlalchemy import and_, func
 
@@ -33,15 +33,15 @@ class SensorsView(Resource):
         homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
         home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
         if g.role.name == 'homeuser':
-            if sensor_type!=None:
+            if sensor_type:
                 query = db.session.query(Sensor, Home).join(Home, Home.gateway_id == Sensor.gateway_id).\
                     filter(Sensor.sensor_type == sensor_type).filter(Sensor.gateway_id.in_(i.gateway_id for i in home)).order_by(Sensor.id)\
                     .offset((int(page) - 1) * limit).limit(limit)
-            else:  query = db.session.query(Sensor,Home).join(Home,Home.gateway_id==Sensor.gateway_id).\
+            else:  query = db.session.query(Sensor,Home).join(Home,Home.gateway_id == Sensor.gateway_id).\
                   filter(Sensor.gateway_id.in_(i.gateway_id for i in home)).order_by(Sensor.id)\
                     .offset((int(page) - 1) * limit).limit(limit)
         else:
-            if sensor_type!=None:
+            if sensor_type:
                 query = db.session.query(Sensor, Home).join(Home, Home.gateway_id == Sensor.gateway_id).\
                     filter(Sensor.sensor_type == sensor_type).order_by(Sensor.id).offset((int(page) - 1) * limit).limit(limit)
             else:     query = db.session.query(Sensor, Home).join(Home, Home.gateway_id == Sensor.gateway_id).\
@@ -90,47 +90,49 @@ class SensorsView(Resource):
     @api.doc('获取传感器详情')
     @api.response(200, 'ok')
     def get(self, sensorid):
-        sensor=Sensor.query.get_or_404(sensorid)
-        home=Home.query.filter(Home.gateway_id==sensor.gateway_id).first()
-        user=User.query.get_or_404(home.admin_user_id)
-        homeuser= HomeUser.query.filter(HomeUser.home_id==home.id).all()
-        query=db.session.query(Sensor,SensorHistory,Home).join(SensorHistory,Sensor.id==SensorHistory.sensor_id).\
-            join(Home,Sensor.gateway_id==Home.gateway_id).filter(Sensor.id==sensorid)
-        total=query.count()
-        _=[]
-        for i in [query.first()]:
-            __={}
-            __['sensor_id']=i[0].id
-            __['sensor_type']=i[0].sensor_type
-            __['max_value']=i[0].max_value
-            __['set_type']=i[0].set_type
-            __['sensor_place']=i[0].sensor_place
-            __['sensor_state']=tuple(SensorHistoryView.get(self,i[0].id))[0].get('sensor_state')
-            __['gateway_id']=i[0].gateway_id
-            __['home_id']=i[2].id
-            __['home_name']=i[2].name
-            _.append(__)
-        result = {
-            'code': 0,
-            'msg': 'ok',
-            'count': total,
-            'data': _
-        }
-        if user.sensor_visable==False:
-            if g.role.name=='homeuser':
-                if g.user.id not in [i.user_id for i in homeuser]:
-                    return '权限不足',201
-                else: return result,200
-            elif g.role.name in[ 'propertyuser', 'stationuser', '119user']:
-                return '权限不足', 201
-            else:return result,200
-        else:
-            if g.role.name == 'homeuser':
-                if g.user.id not in [i.user_id for i in homeuser]:
+        sensor = Sensor.query.get_or_404(sensorid)
+        home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled==False).first()
+        user = User.query.filter(User.id == home.admin_user_id).filter(User.disabled == False).first()
+        if home and user:
+            homeuser = HomeUser.query.filter(HomeUser.home_id == home.id).all()
+            query = db.session.query(Sensor, SensorHistory, Home).join(SensorHistory, Sensor.id == SensorHistory.sensor_id).\
+                join(Home, Sensor.gateway_id == Home.gateway_id).filter(Sensor.id == sensorid)
+            total = query.count()
+            _ = []
+            for i in [query.first()]:
+                __ = {}
+                __['sensor_id'] = i[0].id
+                __['sensor_type'] = i[0].sensor_type
+                __['max_value'] = i [0].max_value
+                __['set_type'] = i[0].set_type
+                __['sensor_place'] = i[0].sensor_place
+                __['sensor_state'] = tuple(SensorHistoryView.get(i[0].id))[0].get('sensor_state')
+                __['gateway_id'] = i[0].gateway_id
+                __['home_id'] = i[2].id
+                __['home_name'] = i[2].name
+                _.append(__)
+            result = {
+                'code': 0,
+                'msg': 'ok',
+                'count': total,
+                'data': _
+            }
+            if user.sensor_visable==False:
+                if g.role.name =='homeuser':
+                    if g.user.id not in [i.user_id for i in homeuser]:
+                        return '权限不足', 201
+                    else: return result, 200
+                elif g.role.name in['propertyuser', 'stationuser', '119user']:
                     return '权限不足', 201
-                else:return result,200
+                else:return result, 200
             else:
-                return result,200
+                if g.role.name == 'homeuser':
+                    if g.user.id not in [i.user_id for i in homeuser]:
+                        return '权限不足', 201
+                    else:return result, 200
+                else:
+                    return result, 200
+        else: return '信息有误',201
 
     @api.doc('更新传感器信息')
     @api.header('jwt', 'JSON Web Token')
@@ -165,7 +167,7 @@ class SensorsView(Resource):
         else:pass
         if g.user.id == home.admin_user_id:
             db.session.commit()
-            return None,200
+            return None, 200
         else:return '权限不足', 301
 
 
@@ -181,19 +183,21 @@ class SensorAlarmsView(Resource):
     @page_range()
     def get(self, sensorid):
         sensor = Sensor.query.get_or_404(sensorid)
-        home = Home.query.filter(Home.gateway_id == sensor.gateway_id).first()
-        homeuser=HomeUser.query.filter(HomeUser.home_id == home.id).all()
-        sensoralarm = SensorAlarm.query.filter(SensorAlarm.sensor_id == sensorid)
-        if g.role.name == 'homeuser':
-            if g.user.id in [i.user_id for i in homeuser]:
-              return sensoralarm, 200
+        home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled == False).first()
+        if home:
+            homeuser = HomeUser.query.filter(HomeUser.home_id == home.id).all()
+            sensoralarm = SensorAlarm.query.filter(SensorAlarm.sensor_id == sensorid)
+            if g.role.name == 'homeuser':
+                if g.user.id in [i.user_id for i in homeuser]:
+                  return sensoralarm, 200
+                else:
+                    pass
+            elif g.role.name in ['119user', 'stationuser', 'propertyuser']:
+                return sensoralarm.filter(SensorAlarm.is_confirm == False).filter(SensorAlarm.is_timeout == True).\
+                       filter(SensorAlarm.sensor_id == sensorid)
             else:
-                pass
-        elif g.role.name in ['119user', 'stationuser', 'propertyuser']:
-            return  sensoralarm.filter(SensorAlarm.is_confirm == False).filter(SensorAlarm.is_timeout == True).\
-                   filter(SensorAlarm.sensor_id == sensorid)
-        else:
-            return sensoralarm, 200
+                return sensoralarm, 200
+        else:abort(401, message='家庭未绑定网关')
 
 
 @api.route('/<sensorid>/sensorhistory')
@@ -210,7 +214,7 @@ class SensorHistoryView(Resource):
             order_by(SensorHistory.time.desc()).first()
         if g.role.name == 'homeuser':
             if g.user.id in [i.user_id for i in (HomeUser.query.filter(HomeUser.home_id == home.id))]:
-                return  sensorhistory, 200
+                return sensorhistory, 200
             else:return '权限不足', 201
         else:
             return sensorhistory, 200
@@ -224,12 +228,14 @@ class SensorTimeView(Resource):
     @api.marshal_with(sensortime_model, as_list=True)
     def get(self, sensorid):
         sensor = Sensor.query.get_or_404(sensorid)
-        home = Home.query.filter(Home.gateway_id == sensor.gateway_id).first()
-        homeuser = HomeUser.query.filter(HomeUser.home_id == home.id).all()
-        sensortime = SensorTime.query.filter(SensorTime.sensor_id == sensorid).all()
-        if g.user.id in [i.user_id for i in homeuser]:
-            return sensortime, 200
-        else:return '权限不足', 201
+        home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled==False).first()
+        if home:
+            homeuser = HomeUser.query.filter(HomeUser.home_id == home.id).all()
+            sensortime = SensorTime.query.filter(SensorTime.sensor_id == sensorid).all()
+            if g.user.id in [i.user_id for i in homeuser]:
+                return sensortime, 200
+            else:return '权限不足', 201
+        else:return '家庭不存在',201
 
 
 @api.route('/<sensortimeid>/sensortime')
@@ -240,12 +246,14 @@ class SensorTimeView(Resource):
     def delete(self, sensortimeid):
         sensortime = SensorTime.query.get_or_404(sensortimeid)
         sensor = Sensor.query.get_or_404(sensortime.sensorid)
-        home = Home.query.filter(Home.gateway_id == sensor.gateway_id).first()
-        db.session.delete(sensortime)
-        if g.user.id == home.admin_user_id:
-            db.session.commit()
-            return '删除成功', 200
-        else:return '权限不足', 201
+        home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled == False).first()
+        if home:
+            db.session.delete(sensortime)
+            if g.user.id == home.admin_user_id:
+                db.session.commit()
+                return '删除成功', 200
+            else:return '权限不足', 201
+        else:return '家庭不存在', 404
 
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser'])
@@ -254,15 +262,17 @@ class SensorTimeView(Resource):
     def put(self, sensortimeid):
         sensortime = SensorTime.query.get_or_404(sensortimeid)
         sensor = Sensor.query.get_or_404(sensortime.sensor_id)
-        home = Home.query.filter(Home.gateway_id == sensor.gateway_id)
-        args = sensortime_parser.parse_args()
-        if args['switch_on']:
-            sensortime.switch_on = args['switch_on']
-        else:pass
-        if g.user.id == home.admin_user_id:
-            db.session.commit()
-            return '开启成功', 200
-        else: return '权限不足', 201
+        home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled == False).first()
+        if home:
+            args = sensortime_parser.parse_args()
+            if args['switch_on']:
+                sensortime.switch_on = args['switch_on']
+            else:pass
+            if g.user.id == home.admin_user_id:
+                db.session.commit()
+                return '开启成功', 200
+            else: return '权限不足', 201
+        else:return '家庭不存在', 404
 
 
 @api.route('/sensortime/')

@@ -10,6 +10,8 @@ from app.views.api_v1.sensors import sensor_model
 
 api = Namespace('Gateway', description='网关相关接口')
 from .model import *
+
+
 @api.route('/')
 class GatewayView1(Resource):
     @api.header('jwt', 'JSON Web Token')
@@ -18,7 +20,7 @@ class GatewayView1(Resource):
     @api.doc('查询所有的网关')
     @api.marshal_with(gateway_model,as_list=True)
     @api.response(200,'ok')
-    @api.doc(params={'page':'页数','limit':'数量'})
+    @api.doc(params={'page':'页数', 'limit': '数量'})
     @page_range()
     def get(self):
         list=Gateway.query
@@ -27,8 +29,8 @@ class GatewayView1(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     @api.doc('新增网关')
-    @api.response(200,'ok')
-    @api.response(409,'重复')
+    @api.response(200, 'ok')
+    @api.response(409, '重复')
     @api.marshal_with(gateway_model)
     @api.expect(gateway_parser)
     def post(self):
@@ -37,6 +39,7 @@ class GatewayView1(Resource):
         db.session.add(gateway)
         db.session.commit()
         return gateway,200
+
 
 @api.route('/<gatewayid>')
 class GatewayView2(Resource):
@@ -52,7 +55,7 @@ class GatewayView2(Resource):
         return None,200
 
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin'])
+    @role_require(['homeuser', 'propertyuser', 'stationuser', '119user''admin', 'superadmin'])
     @api.doc('查询特定的网关')
     @api.marshal_with(gateway_model)
     @api.response(200, 'ok')

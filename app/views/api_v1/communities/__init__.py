@@ -1,7 +1,7 @@
 import base64
 
 from flask import g, request
-from flask_restplus import Namespace, Resource
+from flask_restplus import Namespace, Resource, abort
 
 from app.ext import db
 from app.models import Community, Ins, Home, UserRole, Role, Location, UserAlarmRecord
@@ -14,7 +14,7 @@ from app.views.api_v1 import homes
 from app.views.api_v1.communities.parser import community_parser, community_parser1
 
 
-api=Namespace('Community', description='社区相关操作')
+api = Namespace('Community', description='社区相关操作')
 from app.views.api_v1.communities.models import community_model, _community_model, home_model
 
 
@@ -35,8 +35,8 @@ class CommunitiesView(Resource):
         _=[]
         for i in query.all():
             __={}
-            __['id']=i.id
-            __['name']=i.name
+            __['id'] = i.id
+            __['name'] = i.name
             __['detail_address'] = i.detail_address
             __['save_distance'] = i.save_distance
             __['eva_distance'] = i.eva_distance
@@ -45,10 +45,10 @@ class CommunitiesView(Resource):
             __['location_id'] = i.location_id
             __['location_district'] = Location.query.get_or_404(i.location_id).district
             __['community_picture'] = i.community_picture
-            if g.role.name in['propertyuser','stationuser']:
+            if g.role.name in['propertyuser', 'stationuser']:
                 for j in i.ins.all():
                  if g.user.id == j.admin_user_id:
-                     _.append(__)
+                     _ .append(__)
                  else:pass
             else:
                 _.append(__)
@@ -72,7 +72,9 @@ class CommunitiesView(Resource):
         @page_range()
         def get(self):
             community = Community.query.filter(Community.disabled == False)
-            return community, 200
+            if len(community.all())>0:
+                return community, 200
+            else:abort(404, message='机构不存在')
 
     @api.doc('新增社区')
     @api.header('jwt', 'JSON Web Token')
@@ -122,7 +124,7 @@ class CommunityView(Resource):
     @api.response(200, 'ok')
     def get(self, communityid):
         community = Community.query.filter(Community.id == communityid).filter(Community.disabled == False).first()
-        if community!=None:
+        if community:
             ins = community.ins
             _=[]
             for i in ins:
@@ -158,7 +160,7 @@ class CommunityView(Resource):
     def put(self, communityid):
         args = community_parser1.parse_args()
         community = Community.query.filter(Community.id == communityid).filter(Community.disabled==False).first()
-        if community!=None:
+        if community:
             if 'name' in args and args['name']:
                 community.name = args.get('name')
             else:
@@ -223,28 +225,30 @@ class CommunityHome(Resource):
     @api.doc('查询社区覆盖的家庭')
     @api.marshal_with(home_model, as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @page_range()
     @api.response(200, 'ok')
+    @page_range()
     def get(self, communityid):
-        community = Community.query.filter(Community.id == communityid).filter(Community.disabled==False).first()
-        if community!=None:
+        community = Community.query.filter(Community.id == communityid).filter(Community.disabled == False).first()
+        if community:
             return community.homes, 200
-        else: return'社区不存在', 201
+        else:abort(404, message='社区不存在')
 
 
 @api.route('/<communityid>/ins/<insid>')
 class CommunityInsViews(Resource):
     @api.doc('增加机构和社区绑定')
-    @api.response(200,'ok')
+    @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin',  'superadmin'])
     def post(self, communityid, insid):
-        community = Community.query.filter(Community.id==communityid).filter(Community.disabled==False).first()
-        if community!=None:
-            ins=Ins.query.get_or_404(insid)
-            community.ins.append(ins)
-            db.session.commit()
-            return '绑定成功', 200
+        community = Community.query.filter(Community.id == communityid).filter(Community.disabled == False).first()
+        if community:
+            ins = Ins.query.filter(Ins.id == insid).filter(Ins.disabled == False).first()
+            if ins:
+                community.ins.append(ins)
+                db.session.commit()
+                return '绑定成功', 200
+            else: return '机构不存在', 201
         else:return'社区不存在', 201
 
     @api.doc('解除机构和社区绑定')
@@ -253,11 +257,13 @@ class CommunityInsViews(Resource):
     @role_require(['admin', 'superadmin'])
     def delete(self, communityid, insid):
         community = Community.query.filter(Community.id == communityid).filter(Community.disabled == False).first()
-        if community != None:
-            ins = Ins.query.get_or_404(insid)
-            community.ins.remove(ins)
-            db.session.commit()
-            return '解除成功', 200
+        if community:
+            ins = Ins.query.filter(Ins.disabled == False).filter(Ins.id == insid).first()
+            if ins:
+                community.ins.remove(ins)
+                db.session.commit()
+                return '解除成功', 200
+            else: return '机构不存在', 201
         else:
             return '社区不存在', 201
 

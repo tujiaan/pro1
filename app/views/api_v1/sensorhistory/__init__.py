@@ -1,5 +1,6 @@
+
 from flask import g
-from flask_restplus import Namespace, Resource
+from flask_restplus import Namespace, Resource, abort
 
 from app.models import SensorHistory, Sensor, Home, HomeUser, UserRole, Role
 from app.utils.auth.auth import role_require
@@ -21,11 +22,13 @@ class SensorHistoriesView(Resource):
     @page_range()
     def get(self):
         homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
-        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
-        sensor = Sensor.query.filter(Sensor.home_id.in_(i.id for i in home)).all()
-        if g.role.name == 'homeuser':
-            return SensorHistory.query.filter(SensorHistory.sensor_id.in_(i.id for i in sensor)), 200
-        else: return SensorHistory.query, 200
+        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).filter(Home.disabled == False).all()
+        if len(home)>0:
+            sensor = Sensor.query.filter(Sensor.gateway_id.in_(i.gateway_id for i in home)).all()
+            if g.role.name == 'homeuser':
+                return SensorHistory.query.filter(SensorHistory.sensor_id.in_(i.id for i in sensor)), 200
+            else: return SensorHistory.query, 200
+        else: abort(404, message='家庭不存在')
 
 
 @api.route('/<sensorid>')
@@ -39,16 +42,18 @@ class SensorHistoryView(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self, sensorid):
-        user_role = UserRole.query.filter(UserRole.user_id == g.user.id).all()
-        roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
-        sensor = Sensor.query.get_or_404(sensorid)
-        home = Home.query.filter(Home.sensor.contains(sensor)).first()
-        sensorhistory = SensorHistory.query.filter(SensorHistory.sensor_id == sensorid)
-        homeuser = HomeUser.query.filter(HomeUser.home_id == home.id)
-        if g.role.name == 'homeuser':
-            if g.user.id in [i.user_id for i in homeuser]:
-                return sensorhistory, 200
-            else: pass
-        else:
-            return sensorhistory, 200
+            sensor = Sensor.query.get_or_404(sensorid)
+            home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled == False).first()
+            if home:
+                sensorhistory = SensorHistory.query.filter(SensorHistory.sensor_id == sensorid)
+                homeuser = HomeUser.query.filter(HomeUser.home_id == home.id)
+                if g.role.name == 'homeuser':
+                    if g.user.id in [i.user_id for i in homeuser]:
+                        return sensorhistory, 200
+                    else: pass
+                else:
+                    return sensorhistory, 200
+            else:abort(404, message='家庭不存在')
+
+
 

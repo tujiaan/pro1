@@ -27,50 +27,52 @@ class SensorAlarmsView(Resource):
         end = request.args.get('end', datetime.datetime.now())
         type = request.args.get('type', None)
         homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
-        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
-        sensors=Sensor.query.filter(Sensor.gateway_id.in_(i.gateway_id for i in home)).all()
-        if g.role.name == 'homeuser':
-            if type!=None:
-                query = db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start, end))\
-                    .filter(SensorAlarm.sensor_type == type).filter(SensorAlarm.sensor_id.in_(i.id for i in sensors)).\
-                    order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
-            else:query = db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start, end))\
-                    .filter(SensorAlarm.sensor_id.in_(i.id for i in sensors)).\
-                    order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
-        else:
-            if type!=None:
-                query = db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end)).filter(SensorAlarm.sensor_type==type)\
-                    .order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).filter(Home.disabled == False).all()
+        if home:
+            sensors = Sensor.query.filter(Sensor.gateway_id.in_(i.gateway_id for i in home)).all()
+            if g.role.name == 'homeuser':
+                if type:
+                    query = db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start, end))\
+                        .filter(SensorAlarm.sensor_type == type).filter(SensorAlarm.sensor_id.in_(i.id for i in sensors)).\
+                        order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+                else:query = db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start, end))\
+                        .filter(SensorAlarm.sensor_id.in_(i.id for i in sensors)).\
+                        order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
             else:
-                query = db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start, end))\
-                    .order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+                if type:
+                    query = db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start,end)).filter(SensorAlarm.sensor_type==type)\
+                        .order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
+                else:
+                    query = db.session.query(SensorAlarm) .filter(SensorAlarm.alarm_time.between(start, end))\
+                        .order_by(SensorAlarm.id).offset((int(page) - 1) * limit).limit(limit)
 
-        total = SensorAlarm.query.count()
-        _=[]
-        for i in query.all():
-         sensor = Sensor.query.get_or_404(i.sensor_id)
-         home = Home.query.filter(Home.gateway_id == sensor.gateway_id).first()
-         __={}
-         __['sensoralarms_id'] = i.id
-         __['sensoralarms_sensor_id'] = i.sensor_id
-         __['sensoralarms_sensor_type'] = i.sensor_type
-         __['sensoralarms_alarm_value'] = i.alarm_value
-         __['sensoralarms_note'] = i.note
-         __['home_name'] = home.name
-         __['home_id'] = home.id
-         __['home_admin_id'] = home.admin_user_id
-         __['sensoralarm_is_confirm'] = i.is_confirm
-         __['sensoralarms_alarm_time'] = str(i.alarm_time)
-         __['detail_address'] = home.detail_address
-         __['community_name'] = home.community.name
-         _.append(__)
-        result = {
-            'code': 0,
-            'msg': 'ok',
-            'count': total,
-            'data': _
-        }
-        return result, 200
+            total = SensorAlarm.query.count()
+            _=[]
+            for i in query.all():
+             sensor = Sensor.query.get_or_404(i.sensor_id)
+             home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled==False).first()
+             __={}
+             __['sensoralarms_id'] = i.id
+             __['sensoralarms_sensor_id'] = i.sensor_id
+             __['sensoralarms_sensor_type'] = i.sensor_type
+             __['sensoralarms_alarm_value'] = i.alarm_value
+             __['sensoralarms_note'] = i.note
+             __['home_name'] = home.name
+             __['home_id'] = home.id
+             __['home_admin_id'] = home.admin_user_id
+             __['sensoralarm_is_confirm'] = i.is_confirm
+             __['sensoralarms_alarm_time'] = str(i.alarm_time)
+             __['detail_address'] = home.detail_address
+             __['community_name'] = home.community.name
+             _.append(__)
+            result = {
+                'code': 0,
+                'msg': 'ok',
+                'count': total,
+                'data': _
+            }
+            return result, 200
+        else:return '家庭不存在', 201
 
     @api.doc('新增传感器报警记录')
     @api.header('jwt', 'JSON Web Token')
@@ -96,23 +98,25 @@ class SensorAlarmView(Resource):
     def get(self, sensoralarmid):
         sensoralarm = SensorAlarm.query.get_or_404(sensoralarmid)
         sensor = sensoralarm.sensor
-        home = Home.query.filter(Home.gateway_id == sensor.gateway_id).first()
-        homeuser = HomeUser.query.filter(HomeUser.home_id == home.id)
-        if g.role.name == 'homeuser':
-            if g.user.id not in[i.user_id for i in homeuser]:
-                return '权限不足', 301
+        home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled == False).first()
+        if home:
+            homeuser = HomeUser.query.filter(HomeUser.home_id == home.id)
+            if g.role.name == 'homeuser':
+                if g.user.id not in[i.user_id for i in homeuser]:
+                    return '权限不足', 301
+                else: return sensoralarm, 200
             else: return sensoralarm, 200
-        else: return sensoralarm, 200
+        else: return '家庭不存在', 201
 
     @api.doc('删除报警记录')
     @api.header('jwt', 'JSON Web Token')
-    @role_require([ ])
+    @role_require([])
     @api.response(200, 'ok')
     def delete(self, sensoralarmid):
         sensoralarm = SensorAlarm.query.get_or_404(sensoralarmid)
         db.session.delete(sensoralarm)
         db.session.commit()
-        return None,200
+        return None, 200
 
     @api.doc('更新传感器的报警记录')
     @api.expect(sensoralarms_parser1, validate=True)
@@ -126,12 +130,14 @@ class SensorAlarmView(Resource):
             sensoralarm.note = args['note']
         else:pass
         if g.role.name == 'homeuser':
-            home = Home.query.get_or_404(sensoralarm.sensor.home_id)
-            if home.admin_user_id == g.user.id:
-                sensoralarm.is_confirm = True
-                db.session.commit()
-                return None, 200
-            else: return '权限不足', 301
+            home = Home.query.filter(Home.disabled == False).filter(Home.gateway_id == sensoralarm.gateway_id).first()
+            if home:
+                if home.admin_user_id == g.user.id:
+                    sensoralarm.is_confirm = True
+                    db.session.commit()
+                    return None, 200
+                else: return '权限不足', 301
+            else:pass
         else:
             sensoralarm.is_confirm = True
             db.session.commit()

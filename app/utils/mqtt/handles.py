@@ -94,7 +94,7 @@ def gateway_data(client, userdata, message):
                 sensorhistory.sensor_id = i
                 sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
-                if float(sensorhistory.sensor_value)>Sensor.query.get(i).max_value:
+                if float(sensorhistory.sensor_value) > Sensor.query.get(i).max_value:
                   sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=3, alarm_value=i.get('value'), var_type='电流', unit='A', alarm_time=time, gateway_id=Sensor.query.get(i['id']).gateway_id)
                   db.session.add(sensoralarm)
                   sm = SensorHistory.query.filter(SensorHistory.sensor_id == i['id']).filter(

@@ -2,7 +2,7 @@ import datetime
 
 import math
 from flask import g, request
-from flask_restplus import Namespace, Resource
+from flask_restplus import Namespace, Resource, abort
 from sqlalchemy import and_, or_
 
 from app.ext import db, getui
@@ -27,90 +27,108 @@ class UserAlarmRecordsView(Resource):
     def get(self):
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 10))
-        start = request.args.get('start', 2018-1-1 )
+        start = request.args.get('start', 2018-1-1)
         end = request.args.get('end', datetime.datetime.now())
         type = request.args.get('type', None)
-        homeuser = HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
-        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).all()
-        query = db.session.query(UserAlarmRecord, Home, User).join(Home, UserAlarmRecord.home_id == Home.id) \
-            .join(User, UserAlarmRecord.user_id == User.id).filter(UserAlarmRecord.time.between(start, end))
-        if type!=None:
-            query = query.filter(UserAlarmRecord.type == type)
-            if g.role.name == 'homeuser':
-                query = query. filter(UserAlarmRecord.home_id.in_(i.id for i in home))
-            elif g.role.name == 'propertyuser':
-                ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '物业').all()
-                community = []
-                for i in ins:
-                    community.extend(i.community.all())
-                home1 = Home.query.filter(Home.community_id.in_(i.id for i in community)).all()
-                query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home1))
-            elif g.role.name == 'stationuser':
-                ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '消防站').all()
-                community = []
-                for i in ins:
-                    community.extend(i.community.all())
-                home1 = Home.query.filter(Home.community_id.in_(i.id for i in community)).all()
-                query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home1))
-            elif g.role.name == '119user':
-                query = query.filter(UserAlarmRecord.type!=2)
-            else:query = query
-        else:
-            query = query
-            if g.role.name == 'homeuser':
-                query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home)).order_by(UserAlarmRecord.id)
-            elif g.role.name == 'propertyuser':
-                ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '物业').all()
-                community = []
-                for i in ins:
-                    community.extend(i.community.all())
-                home1 = Home.query.filter(Home.community_id.in_(i.id for i in community)).all()
-                query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home1))
-            elif g.role.name == 'stationuser':
-                ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '消防站').all()
-                community = []
-                for i in ins:
-                    community.extend(i.community.all())
-                home1 = Home.query.filter(Home.community_id.in_(i.id for i in community)).all()
-                query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home1))
-            elif g.role.name == '119user':
-                query = query.filter(UserAlarmRecord.type != 2)
+        homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
+        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).filter(Home.disabled == False).all()
+        if len(home)>0:
+            query = db.session.query(UserAlarmRecord, Home, User).join(Home, UserAlarmRecord.home_id == Home.id) \
+                .join(User, UserAlarmRecord.user_id == User.id).filter(UserAlarmRecord.time.between(start, end))
+            if type:
+                query = query.filter(UserAlarmRecord.type == type)
+                if g.role.name == 'homeuser':
+                    query = query. filter(UserAlarmRecord.home_id.in_(i.id for i in home))
+                elif g.role.name == 'propertyuser':
+                    ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '物业').filter(Ins.disabled == False).all()
+                    if len(ins) > 0:
+                        community = []
+                        for i in ins:
+                            community.extend(i.community.all())
+                        home1 = Home.query.filter(Home.community_id.in_(i.id for i in community)).filter(Home.disabled == False).all()
+                        if len(home1) > 0:
+                            query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home1))
+                        else:pass
+                    else:pass
+                elif g.role.name == 'stationuser':
+                    ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '消防站').filter(Ins.disabled == False).all()
+                    if len(ins) > 0:
+                        community = []
+                        for i in ins:
+                            community.extend(i.community.all())
+                        home1 = Home.query.filter(Home.community_id.in_(i.id for i in community)).filter(Home.disabled == False).all()
+                        if len(home1) > 0:
+                            query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home1))
+                        else:pass
+                    else:pass
+                elif g.role.name == '119user':
+                    query = query.filter(UserAlarmRecord.type != 2)
+                else:query = query
             else:
                 query = query
-        query = query.order_by(UserAlarmRecord.id).offset((int(page) - 1) * limit).limit(limit)
-        total = UserAlarmRecord.query.count()
-        def if_timeout(time):
-            if abs((time-datetime.datetime.now()).seconds)<60:
-                return '未超时'
-            else:return '超时'
-        _ = []
-        for i in query.all():
-            __ = {}
-            __['useralarmrecord_id']=i[0].id
-            __['useralarmrecord_type']=i[0].type
-            __['useralarmrecord_content'] = i[0].content
-            __['useralarmrecord_time'] = str(i[0].time)
-            __['useralarmrecord_note'] = i[0].note
-            __['useralarmrecord_is_timeout']= if_timeout(i[0].time)
-            __['reference_alarm_id']=i[0].reference_alarm_id
-            __['home_id']=i[1].id
-            __['community_id']=Home.query.get_or_404(i[1].id).community.id
-            __['community_name'] = Home.query.get_or_404(i[1].id).community.name
-            __['ins_id']=i[0].ins_id
-            __['if_confirm']=i[0].if_confirm
-            __['home_name']=i[1].name
-            __['detail_address']=i[1].detail_address
-            __['user_id']=i[2].id
-            __['user_name']=i[2].username
-            __['contract_tel']=i[2].contract_tel
-            _.append(__)
-        result = {
-            'code': 200,
-            'msg': 'ok',
-            'count': total,
-            'data': _
-        }
-        return result,200
+                if g.role.name == 'homeuser':
+                    query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home)).order_by(UserAlarmRecord.id)
+                elif g.role.name == 'propertyuser':
+                    ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '物业').filter(Ins.disabled == False).all()
+                    if len(ins) > 0:
+                        community = []
+                        for i in ins:
+                            community.extend(i.community.all())
+                        home1 = Home.query.filter(Home.community_id.in_(i.id for i in community)).filter(Home.disabled == False).all()
+                        if len(home1) > 0:
+                            query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home1))
+                        else:pass
+                    else:pass
+                elif g.role.name == 'stationuser':
+                    ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '消防站').filter(Ins.disabled == False).all()
+                    if len(ins) > 0:
+                        community = []
+                        for i in ins:
+                            community.extend(i.community.all())
+                        home1 = Home.query.filter(Home.community_id.in_(i.id for i in community)).filter(Home.disabled == False).all()
+                        if len(home1) > 0:
+                            query = query.filter(UserAlarmRecord.home_id.in_(i.id for i in home1))
+                        else:pass
+                    else:pass
+                elif g.role.name == '119user':
+                    query = query.filter(UserAlarmRecord.type != 2)
+                else:
+                    query = query
+            query = query.order_by(UserAlarmRecord.id).offset((int(page) - 1) * limit).limit(limit)
+            total = UserAlarmRecord.query.count()
+            def if_timeout(time):
+                if abs((time-datetime.datetime.now()).seconds) < 60:
+                    return '未超时'
+                else:return '超时'
+            _ = []
+            for i in query.all():
+                __ = {}
+                __['useralarmrecord_id'] = i[0].id
+                __['useralarmrecord_type'] = i[0].type
+                __['useralarmrecord_content'] = i[0].content
+                __['useralarmrecord_time'] = str(i[0].time)
+                __['useralarmrecord_note'] = i[0].note
+                __['useralarmrecord_is_timeout'] = if_timeout(i[0].time)
+                __['reference_alarm_id'] = i[0].reference_alarm_id
+                __['home_id'] = i[1].id
+                __['community_id'] = Home.query.filter(Home.id == i[1].id).filter(Home.disabled == False).first().community.id
+                __['community_name'] = Home.query.filter(Home.id == i[1].id).filter(Home.disabled == False).first().community.name
+                __['ins_id'] = i[0].ins_id
+                __['if_confirm'] = i[0].if_confirm
+                __['home_name'] = i[1].name
+                __['detail_address'] = i[1].detail_address
+                __['user_id'] = i[2].id
+                __['user_name'] = i[2].username
+                __['contract_tel'] = i[2].contract_tel
+                _.append(__)
+            result = {
+                'code': 200,
+                'msg': 'ok',
+                'count': total,
+                'data': _
+            }
+            return result, 200
+        else: return '家庭不存在', 201
 
     @api.doc('新增用户报警记录(用户提交传感器报警信息)')
     @api.header('jwt', 'JSON Web Token')
@@ -139,33 +157,42 @@ class UserAlarmRecordView(Resource):
     @api.response(200, 'ok')
     def put(self, useralarmrecordid):
         useralarmrecord = UserAlarmRecord.query.get_or_404(useralarmrecordid)
-        if useralarmrecord.home_id!=None:
-            home = Home.query.get_or_404(useralarmrecord.home_id)
-            community = home.community
-            ins = community.ins
-            insuser = []
-            for i in ins:
-                insuser.extend(i.user)
-        else:ins2 = Ins.query.filter(Ins.id == useralarmrecord.ins_id).first()
-        args = useralarmrecord1_parser.parse_args()
-        if args['note']:
-            useralarmrecord.note = args['note']
-        else:pass
-        if args['reference_alarm_id']:
-            useralarmrecord.reference_alarm_id = args['reference_alarm_id']
-        else:pass
-        if args['if_confirm']:
-            if g.role.name in ['propertyuser', 'stationuser']:
-                if g.user.id in[i.id for i in insuser] or g.user.id in [i.id for i in ins2.user]:
-                    useralarmrecord.if_confirm = True
-                else:pass
-            else: useralarmrecord.if_confirm = True
-        else:pass
-        alarmhandle = AlarmHandle(type='1', handle_time=datetime.datetime.now(), handle_type='203', user_id=g.uer.id, reference_message_id=useralarmrecordid,note = args['note'])
-        db.session.add(alarmhandle)
-        db.session.commit()
-
-        return '修改成功', 200
+        if useralarmrecord.home_id:
+            home = Home.query.filter(Home.id == useralarmrecord.home_id).filter(Home.disabled == False).first()
+            if home:
+                community = home.community
+                ins = community.ins
+                insuser = []
+                for i in ins:
+                    insuser.extend(i.user)
+            else:abort(404, message='家庭不存在')
+        else:
+            ins2 = Ins.query.filter(Ins.id == useralarmrecord.ins_id).filter(Ins.disabled == False).first()
+            if len(ins2) > 0:
+                _ = []
+                for i in ins2:
+                    _.extend(i.user.all())
+            else:abort(404, message='机构不存在')
+        try:
+            args = useralarmrecord1_parser.parse_args()
+            if args['note']:
+                useralarmrecord.note = args['note']
+            else:pass
+            if args['reference_alarm_id']:
+                useralarmrecord.reference_alarm_id = args['reference_alarm_id']
+            else:pass
+            if args['if_confirm']:
+                if g.role.name in ['propertyuser', 'stationuser']:
+                    if g.user.id in[i.id for i in insuser] or g.user.id in [i.id for i in _]:
+                        useralarmrecord.if_confirm = True
+                    else:pass
+                else: useralarmrecord.if_confirm = True
+            else:pass
+            alarmhandle = AlarmHandle(type='1', handle_time=datetime.datetime.now(), handle_type='203', user_id=g.uer.id, reference_message_id=useralarmrecordid,note = args['note'])
+            db.session.add(alarmhandle)
+            db.session.commit()
+            return '修改成功', 200
+        except:abort(401, message='信息有误')
 
     @api.doc('查询单条用户报警记录')
     @api.response(200, 'ok')
@@ -198,79 +225,89 @@ class UserAlarmRecordView(Resource):
                 user4 = User.query.filter(User.id.in_(i.user_id for i in homeuser2)).all()
                 return user4
         useralarmrecord = UserAlarmRecord.query.get_or_404(useralarmrecordid)
-        if useralarmrecord.home_id != None:
-            home = Home.query.get_or_404(useralarmrecord.home_id)
-            homeuser = HomeUser.query.filter(HomeUser.home_id == home.id).all()
-            user1 = User.query.filter(User.id.in_(i.user_id for i in homeuser)).all()  # 报警家庭成员
+        if useralarmrecord.home_id :
+            home = Home.query.filter(Home.id == useralarmrecord.home_id).filter(Home.disabled == False).first()
+            if home:
+                homeuser = HomeUser.query.filter(HomeUser.home_id == home.id).all()
+                user1 = User.query.filter(User.id.in_(i.user_id for i in homeuser)).all()  # 报警家庭成员
+            else:abort(404, message='家庭不存在')
         else:
-            ins1 = Ins.query.get_or_404(useralarmrecord.ins_id)
-            community1 = ins1.community
-            home2 = []
-            for i in community1:
-                home2.extend(i.homes)
-            user2 = ins1.user  ##报警机构成员
-        if useralarmrecord.home_id!=None:
-            ins2 = Home.query.get_or_404(useralarmrecord.home_id).community.ins
+            ins1 = Ins.query.filter(Ins.disabled==False).filter(Ins.id==useralarmrecord.ins_id).first()
+            if len(ins1) > 0:
+                community1 = ins1.community.all()
+                home2 = []
+                for i in community1:
+                    home2.extend(i.homes.all())
+                user2 = ins1.user  ##报警机构成员
+            else:abort(404, message='机构不存在')
+        if useralarmrecord.home_id:
+            ins2 = Home.query.filter(Home.disabled == False).filter(Home.id == UserAlarmRecord.home_id).first().community.ins
             user3 = []
-            for i in ins2:
-             user3.extend(i.user)  # 报警家庭上级机构下的成员
-        else:pass
-        if useralarmrecord.type == '0':
-            if g.role.name == 'homeuser':
-                if g.user.id in [i.id for i in user1]:
-                    return useralarmrecord, 200
+            if len(ins2) > 0:
+                for i in ins2:
+                 user3.extend(i.user)  # 报警家庭上级机构下的成员
+            else:abort(401, message='信息有误')
+        else:abort(401, message='信息有误')
+        try:
+            if useralarmrecord.type == '0':
+                if g.role.name == 'homeuser':
+                    if g.user.id in [i.id for i in user1]:
+                        return useralarmrecord, 200
+                    else:
+                        return '权限不足', 201
+                elif g.role.name in ['propertyuser', 'stationuser']:
+                    if g.user.id in [i.id for i in user2] or g.user.id in [i.id for i in user3]:
+                        return useralarmrecord, 200
+                    else:
+                        return '权限不足', 201
                 else:
-                    return '权限不足', 201
-            elif g.role.name in ['propertyuser', 'stationuser']:
-                if g.user.id in [i.id for i in user2] or g.user.id in [i.id for i in user3]:
                     return useralarmrecord, 200
+            elif useralarmrecord.type == '1':
+                if g.role.name == 'homeuser':
+                    homeuser1 = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
+                    home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser1)).filter(Home.disabled==False).all()
+                    if len(home)>0:
+                        if g.user.id in [i.id for i in user1] or set(home).issubset(set(home2)):
+                            return useralarmrecord, 200
+                        else:
+                            return '权限不足', 201
+                    else:pass
+                elif g.role.name in ['propertyuser', 'stationuser']:
+                    if g.user.id in [i.id for i in user3] or g.user.id in [i.id for i in user2]:
+                        return useralarmrecord, 200
+                    else:
+                        return '权限不足', 201
                 else:
+                    return useralarmrecord, 200
+            elif useralarmrecord.type == '2':
+                if g.role.name == 'homeuser':
+                    if g.user.id in [i.id for i in user1]:
+                        return useralarmrecord, 200
+                    else:
+                        return '权限不足', 201
+                elif g.role.name in ['propertyuser', 'stationuser']:
+                    if g.user.id in [i.id for i in user3]:
+                        return useralarmrecord, 200
+                    else:
+                        return '权限不足', 201
+                elif g.role.name == '119user':
                     return '权限不足', 201
+                else:
+                    return useralarmrecord, 200
             else:
-                return useralarmrecord, 200
-        elif useralarmrecord.type == '1':
-            if g.role.name == 'homeuser':
-                homeuser1 = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
-                home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser1)).all()
-                if g.user.id in [i.id for i in user1] or set(home).issubset(set(home2)):
-                    return useralarmrecord, 200
+                if g.role.name == 'homeuser':
+                    if g.user.id in [i.id for i in user1] or g.user.id in [i.id for i in GetNearHome(useralarmrecord.home_id)]:
+                        return useralarmrecord, 200
+                    else:
+                        return '权限不足', 201
+                elif g.role.name in ['propertyuser', 'stationuser']:
+                    if g.user.id in [i.id for i in user3]:
+                        return useralarmrecord, 200
+                    else:
+                        return '权限不足', 201
                 else:
-                    return '权限不足', 201
-            elif g.role.name in ['propertyuser', 'stationuser']:
-                if g.user.id in [i.id for i in user3] or g.user.id in [i.id for i in user2]:
                     return useralarmrecord, 200
-                else:
-                    return '权限不足', 201
-            else:
-                return useralarmrecord, 200
-        elif useralarmrecord.type == '2':
-            if g.role.name == 'homeuser':
-                if g.user.id in [i.id for i in user1]:
-                    return useralarmrecord, 200
-                else:
-                    return '权限不足', 201
-            elif g.role.name in ['propertyuser', 'stationuser']:
-                if g.user.id in [i.id for i in user3]:
-                    return useralarmrecord, 200
-                else:
-                    return '权限不足', 201
-            elif g.role.name == '119user':
-                return '权限不足', 201
-            else:
-                return useralarmrecord, 200
-        else:
-            if g.role.name == 'homeuser':
-                if g.user.id in [i.id for i in user1] or g.user.id in [i.id for i in GetNearHome(useralarmrecord.home_id)]:
-                    return useralarmrecord, 200
-                else:
-                    return '权限不足', 201
-            elif g.role.name in ['propertyuser', 'stationuser']:
-                if g.user.id in [i.id for i in user3]:
-                    return useralarmrecord, 200
-                else:
-                    return '权限不足', 201
-            else:
-                return useralarmrecord, 200
+        except:return '参数有误', 201
 
     @api.doc('删除用户报警记录')
     @api.header('jwt', 'JSON Web Token')
@@ -306,7 +343,7 @@ class UseralarmrecordView2(Resource):
 class ReferenceAlarmIdViews(Resource):
     def get(self, referencealarmid):
         sensoralarm = SensorAlarm.query.filter(SensorAlarm.id == referencealarmid).first()
-        if sensoralarm!=None:
+        if sensoralarm:
             return True
         else:return False
 
@@ -315,7 +352,7 @@ class ReferenceAlarmIdViews(Resource):
 class ReferenceAlarmIdViews(Resource):
     def get(self, messageid):
         sensoralarm = SensorAlarm.query.filter(SensorAlarm.id == messageid).first()
-        if sensoralarm != None:
+        if sensoralarm:
             return True
         else:return False
 

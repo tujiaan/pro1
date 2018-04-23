@@ -1,9 +1,9 @@
 import datetime
 from flask import request, g
-from flask_restplus import Namespace, Resource
+from flask_restplus import Namespace, Resource, abort
 from sqlalchemy import and_
 from app.ext import db
-from app.models import Home, Ins, User, HomeUser, Sensor, SensorHistory, UserRole, Role, Community
+from app.models import Home, Ins, User, HomeUser, Sensor, SensorHistory, UserRole, Role, Community, Gateway
 from app.utils.auth import decode_jwt, user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -19,9 +19,9 @@ from.model import *
 @api.route('/')
 class HomesView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin','homeuser', 'superadmin'])
+    @role_require(['admin', 'homeuser', 'superadmin'])
     @api.doc('查询家庭列表')
-    @api.response(200,'ok')
+    @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     def get(self):
         page = int(request.args.get('page', 1))
@@ -40,7 +40,7 @@ class HomesView(Resource):
             __['home_id'] = i.id
             __['home_name'] = i.name
             __['community_id'] = i.community_id
-            __['community_name'] = Community.query.filter(Community.id == i.community_id).filter(Community.disabled == False).name, None
+            __['community_name'] = Community.query.filter(Community.id == i.community_id).filter(Community.disabled == False).first().name
             __['detail_address'] = i.detail_address
             __['link_name'] = i.link_name
             __['tephone'] = i.telephone
@@ -49,7 +49,7 @@ class HomesView(Resource):
             __['gateway_id'] = i.gateway_id
             __['alternate_phone'] = i.alternate_phone
             __['admin_user_id'] = i.admin_user_id
-            __['admin_name'] = User.query.filter(User.disabled == False).filter(User.id == i.admin_user_id).username, None
+            __['admin_name'] = User.query.filter(User.disabled == False).filter(User.id == i.admin_user_id).first().username
             _.append(__)
         result = {
             'code': 0,
@@ -57,7 +57,7 @@ class HomesView(Resource):
             'count': total,
             'data': _
         }
-        return result,200
+        return result, 200
 
     @api.doc('新增家庭')
     @api.expect(home_parser)
@@ -68,7 +68,7 @@ class HomesView(Resource):
         args = home_parser.parse_args()
         home = Home(**args)
         if g.user.contract_tel != args.get('telephone'):
-            return '号码不一致', 200
+            return '联系方式与该用户号码不一致', 200
         elif home.gateway_id in [i.gateway_id for i in Home.query.all()]:
             return '网关被占用', 201
         else:
@@ -81,21 +81,25 @@ class HomesView(Resource):
             homeuser.confirm_time = datetime.datetime.now()
             db.session.add(homeuser)
             db.session.commit()
+            gateway = Gateway.query.get_or_404(args['gateway_id'])
+            gateway.home_id = home.id
+            gateway.useable = True
+            db.session.commit()
             return '创建成功', 201
 
 
 @api.route('/<homeid>')
 class HomeView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['homeuser','propertyuser', 'stationuser', '119user', 'admin', 'superadmin'])
+    @role_require(['homeuser', 'propertyuser', 'stationuser', '119user', 'admin', 'superadmin'])
     @api.doc('根据家庭id查找家庭')
     @api.marshal_with(home_model)
     @api.response(200, 'ok')
     def get(self, homeid):
         home = Home.query.filter(Home.id == homeid).filter(Home.disabled == False).first()
-        if home !=None:
+        if home:
             homeuser = HomeUser.query.filter(HomeUser.home_id == homeid).all()
-            if g.role.name=='homeuser':
+            if g.role.name == 'homeuser':
                 if g.user.id in [i.user_id for i in homeuser]:
                     return home, 200
                 else: return '权限不足', 201
@@ -108,7 +112,7 @@ class HomeView(Resource):
     @api.response(200, 'ok')
     def delete(self, homeid):
         home = Home.query.filter(Home.id == homeid).filter(Home.disabled == False).first()
-        home.disabled=True
+        home.disabled = True
        # homeuser=HomeUser.query.filter(HomeUser.home_id == homeid).all()
         if g.role.name in ['admin', 'superadmin']:
             # for u in homeuser:
@@ -133,8 +137,8 @@ class HomeView(Resource):
     def put(self, homeid):
         args = home_parser1.parse_args()
         home1 = Home(**args)
-        home = Home.query.filter(Home.disabled==False).filter(Home.id == homeid).first()
-        if home!=None:
+        home = Home.query.filter(Home.disabled == False).filter(Home.id == homeid).first()
+        if home:
             if home.admin_user_id == g.user.id or g.role.name in['admin', 'superadmin']:
                 if home1.admin_user_id:
                     home.admin_user_id = home1.admin_user_id
@@ -174,7 +178,7 @@ class HomeView(Resource):
                 db.session.commit()
                 return home, 200
             else: return '权限不足', 200
-        else:return '家庭不存在',201
+        else:return '家庭不存在', 201
 
 
 @api.route('/<homeid>/<gatewayid>')
@@ -218,9 +222,11 @@ class HomeUsersView(Resource):
     @api.marshal_with(user_model, as_list=True)
     @page_range()
     def get(self, homeid):
-        home = Home.query.filter(Home.id == homeid).filter(Home.disabled==False).first()
-        homeuser = HomeUser.query.filter(HomeUser.home_id == homeid).all()
-        return User.query.filter(User.id.in_(i.user_id for i in homeuser)), 200
+        home = Home.query.filter(Home.id == homeid).filter(Home.disabled == False).first()
+        if home:
+            homeuser = HomeUser.query.filter(HomeUser.home_id == homeid).all()
+            return User.query.filter(User.id.in_(i.user_id for i in homeuser)), 200
+        else: abort(404, message='家庭不存在')
 
     @api.doc('用户退出家庭')
     @api.response(200, 'ok')
@@ -229,8 +235,8 @@ class HomeUsersView(Resource):
     def delete(self, homeid):
         home = Home.query.filter(Home.id == homeid).filter(Home.disabled==False).first()
         user = g.user
-        if home!=None:
-            homeuser = HomeUser.query.filter(and_(HomeUser.home_id == home.id,HomeUser.user_id == user.id)).first()
+        if home:
+            homeuser = HomeUser.query.filter(and_(HomeUser.home_id == home.id, HomeUser.user_id == user.id)).first()
             if homeuser:
                 db.session.delete(homeuser)
                 db.session.commit()
@@ -246,12 +252,13 @@ class HomeInsView(Resource):
     @role_require(['homeuser', 'admin', 'superadmin'])
     @api.doc('查询家庭附近的机构')
     @api.response(200, 'ok')
-    def get(self,homeid,distance):
+    def get(self, homeid, distance):
         page = request.args.get('page', 1)
         limit = request.args.get('limit', 10)
-        home=Home.query.filter(Home.id == homeid).filter(Home.disabled==False).first()
-        if home!=None:
-            homeuser=HomeUser.query.filter(HomeUser.user_id==g.user.id).all()
+        home = Home.query.filter(Home.id == homeid).filter(Home.disabled == False).first()
+        if home:
+            homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
+
             def getDistance(lat0, lng0, lat1, lng1):
                 lat0 = math.radians(lat0)
                 lat1 = math.radians(lat1)
@@ -264,9 +271,9 @@ class HomeInsView(Resource):
                 c = 2 * math.asin(math.sqrt(a))
                 r = 6371  # 地球平均半径，单位为公里
                 return c * r * 1000
-            query=Ins.query
+            query = Ins.query
             total = query.count()
-            query=query.offset((int(page) - 1) * limit).limit(limit)
+            query = query.offset((int(page) - 1) * limit).limit(limit)
             _ = []
             for i in tuple(query.all()):
                 __ = {}
@@ -275,8 +282,8 @@ class HomeInsView(Resource):
                 __['ins_latitude'] = str(i.latitude)
                 __['ins_type'] = i.type
                 __['ins_name'] = i.name
-                __['distance'] = round(getDistance(i.latitude,i.longitude,home.latitude,home.longitude))
-                if getDistance(i.latitude,i.longitude,home.latitude,home.longitude)<float(distance):
+                __['distance'] = round(getDistance(i.latitude, i.longitude, home.latitude, home.longitude))
+                if getDistance(i.latitude, i.longitude, home.latitude, home.longitude) < float(distance):
                   _.append(__)
             result = {
                 'code': 0,
@@ -284,7 +291,7 @@ class HomeInsView(Resource):
                 'count': total,
                 'data': _
             }
-            if homeid in [i.home_id for i in homeuser] or g.role.name in ['admin','superadmin'] :
+            if homeid in [i.home_id for i in homeuser] or g.role.name in ['admin', 'superadmin']:
                     return result, 200
             else:return '权限不足', 201
         else:return '家庭不存在', 201
@@ -297,7 +304,7 @@ class HomeSensorView(Resource):
     @api.doc('查询家中的传感器')
     def get(self, homeid):
         home = Home.query.filter(Home.id == homeid).filter(Home.disabled == False).first()
-        if home!=None:
+        if home:
             homeuser = HomeUser.query.filter(HomeUser.home_id == homeid).all()
             if g.role.name =='homeuser':
                 if g.user.id in [i.user_id for i in homeuser]:
@@ -356,4 +363,13 @@ class HomeApplyView(Resource):
             'data': _
         }
         return result
+
+
+@api.route('/<id>/ifhome')
+def ifhomeid(id):
+    home = Home.query.filter(Home.id == id).filter(Home.disabled == False).first()
+    if home:
+        return True
+    else: return False
+
 

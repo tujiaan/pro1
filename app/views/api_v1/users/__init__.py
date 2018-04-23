@@ -1,5 +1,5 @@
 from flask import g, flash, request
-from flask_restplus import Namespace, Resource
+from flask_restplus import Namespace, Resource, abort
 from sqlalchemy import select, text, and_, Boolean, false, true
 from app.ext import db
 from app.models import User, Role, Ins, Home, HomeUser, UserRole
@@ -72,13 +72,13 @@ class LoginView(Resource):
     @api.response(409, '用户不存在')
     def post(self):
         args = login_parser1.parse_args()
-        user_role=UserRole.query.filter(UserRole.role_id==args.get('role_id')).all()
+        user_role = UserRole.query.filter(UserRole.role_id == args.get('role_id')).all()
         jwt_str = request.headers.get('jwt', None)
         identity = decode_jwt(jwt_str)
-        user_id=identity.get('user_id')
+        user_id = identity.get('user_id')
         if user_id in [i.user_id for i in user_role]:
-            jwt=encode_jwt(user_id=user_id ,role_id=args.get('role_id'))
-            return {'jwt':jwt},200
+            jwt = encode_jwt(user_id=user_id, role_id=args.get('role_id'))
+            return {'jwt': jwt}, 200
         else:return None, 409
 
 
@@ -108,8 +108,10 @@ class UserHomeView1(Resource):
     @page_range()
     def get(self):
         homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).filter(HomeUser.if_confirm == True)
-        list = Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
-        return list, 200
+        list = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).filter(Home.disabled == False)
+        if len(list.all())>0:
+            return list, 200
+        else: abort(401, '用户没有家庭')
 
 
 @api.route('/ins/')
@@ -121,12 +123,14 @@ class UserHomeView1(Resource):
     @api.marshal_with(institute_model, as_list=True)
     @page_range()
     def get(self):
-        ins = Ins.query.filter(Ins.user.contains(g.user))
-        if g.role.name=='propertyuser':
-            ins=ins.filter(Ins.type=='物业')
-        else:
-            ins = ins.filter(Ins.type == '消防站')
-        return ins, 200
+        ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.disabled == False)
+        if len(ins.all()) > 0:
+            if g.role.name == 'propertyuser':
+                ins = ins.filter(Ins.type == '物业')
+            else:
+                ins = ins.filter(Ins.type == '消防站')
+            return ins, 200
+        else:abort(401, '该用户未加入机构')
 
 
 @api.route('/password/')
@@ -166,45 +170,47 @@ class UserProfile(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     def put(self, userid):
-        user = User.query.get_or_404(userid)
-        args = user_parser.parse_args()
-        def use(x):
-            if int(x) == 0:
-                return False
+        user = User.query.filter(User.disabled == False).filter(User.id == userid).first()
+        if user:
+            args = user_parser.parse_args()
+            def use(x):
+                if int(x) == 0:
+                    return False
+                else:
+                    return True
+            if g.role.name == 'admin':
+                if g.user.id == userid:
+                    if args['username']:
+                        user.username = args['username']
+                    else:pass
+                    if args['contract_tel']:
+                        user.contract_tel = args['contract_tel']
+                    else:pass
+                    if args['email']:
+                        user.email = args['email']
+                    else:pass
+                    db.session.commit()
+                    return '修改成功', 200
+                else:return '权限不足', 201
             else:
-                return True
-        if g.role.name == 'admin':
-            if g.user.id == userid:
                 if args['username']:
                     user.username = args['username']
-                else:pass
+                else:
+                    pass
                 if args['contract_tel']:
-                    user.contract_tel = args['contract_tel']
-                else:pass
+                    user.password = args['contract_tel']
+                else:
+                    pass
                 if args['email']:
                     user.email = args['email']
+                else:
+                    pass
+                if args['disabled']:
+                    user.disabled=use(args['disabled'])
                 else:pass
                 db.session.commit()
                 return '修改成功', 200
-            else:return '权限不足', 201
-        else:
-            if args['username']:
-                user.username = args['username']
-            else:
-                pass
-            if args['contract_tel']:
-                user.password = args['contract_tel']
-            else:
-                pass
-            if args['email']:
-                user.email = args['email']
-            else:
-                pass
-            if args['disabled']:
-                user.disabled=use(args['disabled'])
-            else:pass
-            db.session.commit()
-            return '修改成功', 200
+        else: return '用户不存在', 201
 
 
 @api.route('/<userid>/password')
@@ -213,13 +219,15 @@ class UserPassword(Resource):
     @api.response(200, 'ok')
     @api.expect(userpassword_parser)
     @api.header('jwt', 'JSON Web Token')
-    @role_require( ['superadmin'])
-    def put(self,userid):
-        user=User.query.get_or_404(userid)
-        args=userpassword_parser.parse_args()
-        user.password=args['password']
-        db.session.commit()
-        return '修改成功',200
+    @role_require(['superadmin'])
+    def put(self, userid):
+        user = User.query.filter(User.id == userid).filter(User.disabled == False).first()
+        if user:
+            args = userpassword_parser.parse_args()
+            user.password = args['password']
+            db.session.commit()
+            return '修改成功', 200
+        else:return '用户不存在', 201
 
 
 @api.route('/telephone/')
@@ -282,8 +290,10 @@ class UserFindView(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
-        list = User.query
-        return list,200
+        list = User.query.filter(User.disabled == False)
+        if len(list.all()) > 0:
+            return list, 200
+        else: abort(404, '暂无用户')
         # page = request.args.get('page',1)
         # limit = request.args.get('limit',10)
         #
@@ -320,36 +330,40 @@ class user(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     def get(self, userid):
-        user = User.query.get_or_404(userid)
+        user = User.query.filter(User.disabled == False).filter(User.id == userid).first()
         user_role = UserRole.query.filter(UserRole.user_id == user.id).all()
         roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role))
-        if g.role.name=='superadmin':
-            return user, 200
-        elif 'admin'in [i.name for i in roles]:
-            return '权限不足', 200
-        else:return user,200
+        if user:
+            if g.role.name =='superadmin':
+                return user, 200
+            elif 'admin'in [i.name for i in roles]:
+                return '权限不足', 200
+            else:return user, 200
+        else: return '用户不存在', 201
 
     @api.header('jwt', 'JSON Web Token')
     @api.doc('根据id删除用户')
     @api.response(200, 'ok')
     @role_require(['admin', 'superadmin'])
     def delete(self, userid):
-        user = User.query.get_or_404(userid)
-        userrole = UserRole.query.filter(UserRole.user_id == userid).all()
-        role = Role.query.filter(Role.id.in_(i.role_id for i in userrole)).all()
-        for i in userrole:
-           i.disabled = True
-        if g.role.name == 'superadmin':
-            db.session.commit()
-            return None, 200
-        elif g.role.name=='admin':
-            if 'admin'not in [i.name for i in role]and 'superadmin'not in [i.name for i in role]:
+        user = User.query.filter(User.disabled).filter(User.id == userid).first()
+        if user:
+            userrole = UserRole.query.filter(UserRole.user_id == userid).all()
+            role = Role.query.filter(Role.id.in_(i.role_id for i in userrole)).all()
+            for i in userrole:
+               i.disabled = True
+            if g.role.name == 'superadmin':
                 db.session.commit()
                 return None, 200
+            elif g.role.name =='admin':
+                if 'admin'not in [i.name for i in role]and 'superadmin'not in [i.name for i in role]:
+                    db.session.commit()
+                    return None, 200
+                else:
+                    return '权限不足', 201
             else:
                 return '权限不足', 201
-        else:
-            return '权限不足', 201
+        else: return '用户不存在',201
 
 
 @api.route('/<userid>/ins')
@@ -362,13 +376,14 @@ class UserHomeView(Resource):
     @api.marshal_with(institute_model, as_list=True)
     @page_range()
     def get(self, userid):
-        user = User.query.get_or_404(userid)
-        return user.ins, 200
+        user = User.query.filter(User.disabled == False).filter(User.id == userid).first()
+        if user:
+             return user.ins, 200
+        else:abort(404, message='用户不存在')
 
 
 @api.route('/<userid>/home')
 class UserHomeView(Resource):
-
     @role_require(['admin', 'superadmin'])
     @page_format(code=0, msg='ok')
     @api.header('jwt', 'JSON Web Token')
@@ -377,9 +392,11 @@ class UserHomeView(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self, userid):
-        homeuser = HomeUser.query.filter(HomeUser.user_id==userid).all()
-        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser))
-        return home, 200
+        homeuser = HomeUser.query.filter(HomeUser.user_id == userid).all()#######################没删干净######################
+        home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).filter(Home.disabled == False)
+        if home:
+            return home, 200
+        else:abort(401, message='用户没有家庭')
 
 
 @api.route('/<userid>/auth')
@@ -392,14 +409,16 @@ class UserRolesVsiew(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self, userid):
-        user = User.query.get_or_404(userid)
-        user_role=UserRole.query.filter(UserRole.user_id==user.id).all()
-        roles= Role.query.filter(Role.id.in_(i.role_id for i in user_role))
-        if g.role.name=='admin':
-            if 'admin'not in [i.name for i in roles] and  'superadmin'not in [i.name for i in roles]:
-                return roles,200
-            else:pass
-        else: return roles, 200
+        user = User.query.filter(User.disabled == False).filter(User.id == userid).first()
+        if user:
+            user_role = UserRole.query.filter(UserRole.user_id == user.id).all()
+            roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role))
+            if g.role.name == 'admin':
+                if 'admin'not in [i.name for i in roles] and 'superadmin'not in [i.name for i in roles]:
+                    return roles, 200
+                else:pass
+            else: return roles, 200
+        else:abort(404, message='用户不存在')
 
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
@@ -407,37 +426,39 @@ class UserRolesVsiew(Resource):
     @api.expect(role_parser)
     @api.response(200, 'ok')
     def post(self, userid):
-        user=User.query.get_or_404(userid)
-        args=role_parser.parse_args()
-        user_role2=UserRole.query.filter(UserRole.user_id == userid).filter(UserRole.role_id=='2').first()
-        user_role3= UserRole.query.filter(UserRole.user_id==userid).filter(UserRole.role_id == '3').first()
-        user_role4 = UserRole.query.filter(UserRole.user_id==userid).filter(UserRole.role_id == '4').first()
-        user_role5 = UserRole.query.filter(UserRole.user_id==userid).filter(UserRole.role_id == '5').first()
-        user_role7 = UserRole.query.filter(UserRole.user_id==userid).filter(UserRole.role_id == '7').first()
-        print(user_role2)
-        def use(x):
-            if int(x)==0:
-                return False
-            else:return True
-        if args['propertyuser']:
-                user_role2.if_usable=use(args['propertyuser'])
-        else:pass
-        if args['stationuser']:
-                user_role3.if_usable=use(args['stationuser'])
-        else:pass
-        if args['119user']:
-              user_role4.if_usable=use(args['119user'])
-        else:pass
-        if g.role.name=='superadmin':
-            if args['admin']:
-                user_role5.if_usable=use(args['admin'])
+        user = User.query.filter(User.disabled == False).filter(User.id == userid).first()
+        if user:
+            args = role_parser.parse_args()
+            user_role2 = UserRole.query.filter(UserRole.user_id == userid).filter(UserRole.role_id=='2').first()
+            user_role3 = UserRole.query.filter(UserRole.user_id == userid).filter(UserRole.role_id == '3').first()
+            user_role4 = UserRole.query.filter(UserRole.user_id == userid).filter(UserRole.role_id == '4').first()
+            user_role5 = UserRole.query.filter(UserRole.user_id == userid).filter(UserRole.role_id == '5').first()
+            user_role7 = UserRole.query.filter(UserRole.user_id == userid).filter(UserRole.role_id == '7').first()
+
+            def use(x):
+                if int(x)==0:
+                    return False
+                else:return True
+            if args['propertyuser']:
+                    user_role2.if_usable = use(args['propertyuser'])
             else:pass
-        else:pass
-        if args['knowledgeadmin']:
-            user_role7.if_usable=use(args['knowledgeadmin'])
-        else:pass
-        db.session.commit()
-        return '授权成功',200
+            if args['stationuser']:
+                    user_role3.if_usable = use(args['stationuser'])
+            else:pass
+            if args['119user']:
+                  user_role4.if_usable = use(args['119user'])
+            else:pass
+            if g.role.name == 'superadmin':
+                if args['admin']:
+                    user_role5.if_usable = use(args['admin'])
+                else:pass
+            else:pass
+            if args['knowledgeadmin']:
+                user_role7.if_usable = use(args['knowledgeadmin'])
+            else:pass
+            db.session.commit()
+            return '授权成功', 200
+        else: return '用户不存在', 201
 
 
 @api.route('/<userid>/roles/<roleid>')
@@ -447,48 +468,54 @@ class UserRoleView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     def post(self, userid, roleid):
-        role = Role.query.get_or_404(roleid)
-        user_role1=UserRole.query.filter(and_(UserRole.user_id==userid,UserRole.role_id==roleid)).first()
-        if role.name != 'superadmin':
-            if role.name not in ['admin', 'superadmin'] or g.role.name== 'superadmin' :
-                try:
-                    user_role1.if_usable = True
-                    db.session.commit()
-                    return None, 200
-                except:
-                    return '该条记录已存在', 400
-            elif role.name == 'admin'  and g.role.name=='superadmin':
-                try:
-                    user_role1.if_usable = True
-                    db.session.commit()
-                    return None, 200
-                except:
-                    return '该条记录已存在', 400
+        user = User.query.filter(User.disabled == False).filter(User.id == userid).first()
+        if user:
+            role = Role.query.get_or_404(roleid)
+            user_role1 = UserRole.query.filter(and_(UserRole.user_id == userid, UserRole.role_id == roleid)).first()
+            if role.name != 'superadmin':
+                if role.name not in ['admin', 'superadmin'] or g.role.name == 'superadmin':
+                    try:
+                        user_role1.if_usable = True
+                        db.session.commit()
+                        return None, 200
+                    except:
+                        return '该条记录已存在', 400
+                elif role.name == 'admin'and g.role.name == 'superadmin':
+                    try:
+                        user_role1.if_usable = True
+                        db.session.commit()
+                        return None, 200
+                    except:
+                        return '该条记录已存在', 400
+                else:
+                    return '权限不足', 301
             else:
-                return '权限不足', 301
-        else:
-            pass
+                pass
+        else:return '用户不存在', 201
 
     @api.doc('给用户解除角色/删除xx用户')
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
     def delete(self, userid, roleid):
-        role = Role.query.get_or_404(roleid)
-        user_role1 = UserRole.query.filter(and_(UserRole.role_id == roleid, UserRole.user_id == userid)).first()
-        if role.name not in ['admin', 'superadmin'] or g.role.name=='superadmin' :
-            try:
-                user_role1.if_usable = False
-                db.session.commit()
-                return None, 200
-            except:
-                return '用户已不具备该角色', 200
-        elif role.name == 'admin' and g.role.name=='superadmin' :
-            try:
-                user_role1.if_usable = False
-                db.session.commit()
-                return None, 200
-            except:
-                return '用户已不具备该角色', 200
-        else:
-            return '权限不足', 301
+        user = User.query.filter(User.disabled == False).filter(User.id == userid).first()
+        if user:
+            role = Role.query.get_or_404(roleid)
+            user_role1 = UserRole.query.filter(and_(UserRole.role_id == roleid, UserRole.user_id == userid)).first()
+            if role.name not in ['admin', 'superadmin'] or g.role.name == 'superadmin':
+                try:
+                    user_role1.if_usable = False
+                    db.session.commit()
+                    return None, 200
+                except:
+                    return '用户已不具备该角色', 200
+            elif role.name == 'admin' and g.role.name == 'superadmin':
+                try:
+                    user_role1.if_usable = False
+                    db.session.commit()
+                    return None, 200
+                except:
+                    return '用户已不具备该角色', 200
+            else:
+                return '权限不足', 301
+        else: return '用户不存在', 201

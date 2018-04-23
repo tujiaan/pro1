@@ -1,5 +1,5 @@
 from flask import g, request
-from flask_restplus import Namespace, Resource
+from flask_restplus import Namespace, Resource, abort
 
 from app.ext import db
 from app.models import Facility, FacilityIns, Knowledge, UserRole, Role, Ins
@@ -17,14 +17,16 @@ from .models import *
 class FacilitiesInsView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
-    @page_format(code=0,msg='ok')
+    @page_format(code=0, msg='ok')
     @api.doc('查询设施列表')
     @api.marshal_with(facility_data_model, as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @page_range()
     def get(self):
         list = Facility.query.filter(Facility.disabled == False)
-        return list, 200
+        if len(list.all()) > 0:
+            return list, 200
+        else:abort(404, message='设施不存在')
 
     @api.doc('新增设施')
     @api.header('jwt', 'JSON Web Token')
@@ -49,24 +51,24 @@ class FacilityDataView(Resource):
     @api.response(200, 'ok')
     def get(self, facilityid):
         facility_data = Facility.query.filter(Facility.disabled == False).filter(Facility.id == facilityid).first()
-        if facility_data!=None:
+        if facility_data:
             return facility_data, 200
-        else:return '设施不存在',201
+        else:return '设施不存在', 201
 
     @api.doc('更新设施详情')
     @api.expect(f1_parser)
     @api.response(200, 'ok')
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin','propertyuser','stationuser'])
-    def put(self,facilityid):
-        facility = Facility.query.filter(Facility.id==facilityid).filter(Facility.disabled==False).first()
-        if facility!=None:
+    @role_require(['admin', 'superadmin', 'propertyuser', 'stationuser'])
+    def put(self, facilityid):
+        facility = Facility.query.filter(Facility.id == facilityid).filter(Facility.disabled == False).first()
+        if facility:
             args = f1_parser.parse_args()
             if args['facility_name']:
-                facility.facility_name=args['facility_name']
+                facility.facility_name = args['facility_name']
             else:pass
             if args['facility_picture']:
-                facility.facility_picture=upload_file(args['facility_picture'])
+                facility.facility_picture = upload_file(args['facility_picture'])
             else:pass
             if args['note']:
                 facility.note = args['note']
@@ -90,7 +92,7 @@ class FacilityDataView(Resource):
     @role_require(['admin', 'superadmin'])
     def delete(self, facilityid):
         facility = Facility.query.filter(Facility.disabled == False).filter(Facility.id == facilityid).first()
-        if facility!=None:
+        if facility:
             facility.disabled = True
         else:return '设施不存在', 201
         # knowledge = facility.knowledge
@@ -116,7 +118,7 @@ class FacilitesInsView(Resource):
     @api.response(200, 'ok')
     @page_range()
     def get(self):
-       list=FacilityIns.query
+       list = FacilityIns.query
        return list, 200
 
     @api.doc('新增设施机构关联')
@@ -129,10 +131,10 @@ class FacilitesInsView(Resource):
         facilityins = FacilityIns(**args)
         ins = Ins.query.filter(Ins.disabled == False).filter(Ins.id == facilityins.ins_id).first()
         facility = Facility.query.filter(Facility.disabled == False).filter(Facility.id == FacilityIns.facility_id).first()
-        if ins!=None and facility!=None:
+        if ins and facility:
             db.session.add(facilityins)
             db.session.commit()
-            return  None, 200
+            return None, 200
         else:return '信息有误', 201
 
 
@@ -152,10 +154,10 @@ class FacilitesInsView(Resource):
             __={}
             __['id'] = i.id
             __['ins_id'] = i.ins_id
-            __['ins_name'] = Ins.query.get_or_404(i.ins_id).name
+            __['ins_name'] = Ins.query.filter(Ins.disabled == False).filter(Ins.id == i.ins_id).first().name
             __['facility_id'] = i.facility_id
-            __['facility_name'] = Facility.query.get_or_404(i.facility_id).facility_name
-            __['facility_picture'] = Facility.query.get_or_404(i.facility_id).facility_picture
+            __['facility_name'] = Facility.query.filter(Ins.disabled == False).filter(Ins.id == i.ins_id).first().facility_name
+            __['facility_picture'] = Facility.query.filter(Ins.disabled == False).filter(Ins.id == i.ins_id).first().facility_picture
             __['count'] = i.count
             __['expire_time'] = str(i.expire_time)
             __['note'] = i.note
@@ -219,14 +221,13 @@ class FacilityKnowledgesView(Resource):
     @api.doc('查询设施的知识')
     @api.marshal_with(knowledges_model, as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @ page_range()
     @api.response(200, 'ok')
+    @ page_range()
     def get(self, facilityid):
-        facility = Facility.query.filter(Facility.id==facilityid).filter(Facility.disabled==False).first()
-        if facility!=None:
+        facility = Facility.query.filter(Facility.id == facilityid).filter(Facility.disabled == False).first()
+        if facility:
             return facility.knowledge, 200
-        else:
-            return '设施不存在', 201
+        else: abort(404, message='设施不存在')
 
 
 @api.route('/<facilityid>/knowledges/<knowledgeid>/')
@@ -239,7 +240,7 @@ class FacilityKnowledgeView(Resource):
     def post(self, facilityid, knowledgeid):
         facility = Facility.query.filter(Facility.disabled == False).filter(Facility.id == facilityid).first()
         knowledge = Knowledge.query.filter(Knowledge.disabled == False).filter(Knowledge.id == knowledgeid).first()
-        if facility != None and knowledge != None:
+        if facility and knowledge:
             facility.knowledge.append(knowledge)
             db.session.commit()
             return '绑定成功', 200
@@ -254,7 +255,7 @@ class FacilityKnowledgeView(Resource):
     def delete(self, facilityid, knowledgeid):
         facility = Facility.query.filter(Facility.disabled == False).filter(Facility.id == facilityid).first()
         knowledge = Knowledge.query.filter(Knowledge.disabled == False).filter(Knowledge.id == knowledgeid).first()
-        if facility != None and knowledge != None:
+        if facility and knowledge:
             facility.knowledge.remove(knowledge)
             db.session.commit()
             return '解除成功', 200

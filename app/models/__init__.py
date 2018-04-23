@@ -149,7 +149,7 @@ class Home(db.Model):
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
     alternate_phone = db.Column(db.String(50), comment='备用电话')
     gateway_id=db.Column(db.String(50),db.ForeignKey('gateway.id'), comment='网关id')
-    disabled = db.Column(db.Boolean, default=False, comment='是否可用')
+    disabled = db.Column(db.Boolean, nullable=False, default=False, comment='是否可用')
 
 
 class Knowledge(db.Model):
@@ -210,10 +210,10 @@ class Sensor(db.Model):
 class SensorTime(db.Model):
     __tablename__ = 'sensor_time'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    sensor_id=db.Column(db.String(50),db.ForeignKey('sensor.id'), comment='传感器id')
+    sensor_id = db.Column(db.String(50),db.ForeignKey('sensor.id'), comment='传感器id')
     start_time = db.Column(db.String(24), comment='开始时间')
     end_time = db.Column(db.String(24), comment='结束时间')
-    switch_on=db.Column(db.Boolean, default=False,comment='定时开关')
+    switch_on = db.Column(db.Boolean, default=False,comment='定时开关')
 
 
 class MessageSend(db.Model):
@@ -223,8 +223,8 @@ class MessageSend(db.Model):
     message_type = db.Column(db.String(24), comment='报警信息类型')
     role_id = db.Column(db.String(24), db.ForeignKey('role.id'), comment='角色id')
     user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='接受用户id')
-    if_send = db.Column(db.Boolean, default=False, comment='是否已经发送')
-    if_read = db.Column(db.Boolean, default=False, comment='是否阅读')
+    if_send = db.Column(db.Boolean, default=False, nullable=False, comment='是否已经发送')
+    if_read = db.Column(db.Boolean, default=False, nullable=False,comment='是否阅读')
 
 
 class SensorHistory(db.Model):
