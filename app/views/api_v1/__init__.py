@@ -25,7 +25,7 @@ api = flask_restplus.Api(api_bp,
                          version="1.0", )
 
 api.add_namespace(user_ns,path='/users')
-api.add_namespace(tool_ns,path='/tools')
+#api.add_namespace(tool_ns,path='/tools')
 api.add_namespace(gateway_ns, path='/gateways')
 api.add_namespace(facility_ns, path='/facilities')
 api.add_namespace(home_ns, path='/homes')
