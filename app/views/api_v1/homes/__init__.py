@@ -365,11 +365,12 @@ class HomeApplyView(Resource):
         return result
 
 
-@api.route('/<id>/ifhome')
-def ifhomeid(id):
-    home = Home.query.filter(Home.id == id).filter(Home.disabled == False).first()
-    if home:
-        return True
-    else: return False
+# @api.route('/<id>/ifhome')
+# class IfHome(Resource):
+#     def ifhomeid(id):
+#         home = Home.query.filter(Home.id == id).filter(Home.disabled == False).first()
+#         if home:
+#             return True
+#         else: return False
 
 

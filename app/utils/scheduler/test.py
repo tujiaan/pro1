@@ -42,7 +42,7 @@ def BuiltSensorSendMessage(app):
                                             db.session.commit()
                                         else:
                                             pass
-                            else:abort(404, message='机构不存在')
+                            else: abort(404, message='机构不存在')
                     else: abort(404, message='家庭不存在')
                 else:pass
             else: pass
@@ -279,31 +279,32 @@ def OpenSensor(app):
 
 
 def builtusersendmessage(app):
-    with app.app_context:
+    with app.app_context():
         useralarmrecords = UserAlarmRecord.query.all()
-        messsgesends = MessageSend.query.all()
         for useralarmrecord in useralarmrecords:
-            if useralarmrecord.type == '0':
+            messsgesends = MessageSend.query.filter(MessageSend.message_id == useralarmrecord.id).all()
+            if useralarmrecord.type == 0:
                 if useralarmrecord.home_id:
                     home = Home.query.filter(Home.disabled == False).filter(Home.id == useralarmrecord.home_id).first()
                     if home:
                         homeusers1 = HomeUser.query.filter(HomeUser.home_id == home.id).all()
                         user1 = User.query.filter(User.disabled == False).filter(User.id.in_(i.user_id for i in homeusers1)).all()#####报警家庭成员
                         user2 = []###报警家庭上级机构
-                        community = home.community.first()
+                        community = home.community
                         inses = community.ins.all()
                         for ins in inses:
                             user2.extend(ins.user.all())
                         userroles4 = UserRole.query.filter(UserRole.role_id == '4').all()
-                        user3 = User.query.filter(User.disabled == False).filter(User.id.in_(i.user_id for i in userroles4).all())###119用户
+                        user3 = User.query.filter(User.disabled == False).filter(User.id.in_(i.user_id for i in userroles4)).all()###119用户
                         userroles5 = UserRole.query.filter(UserRole.role_id == '5').all()
                         user4 = User.query.filter(User.disabled == False).filter(
-                            User.id.in_(i.user_id for i in userroles5).all())##平台管理员
+                            User.id.in_(i.user_id for i in userroles5)).all()##平台管理员
                         userroles6 = UserRole.query.filter(UserRole.role_id == '6').all()
                         user5 = User.query.filter(User.disabled == False).filter(
-                            User.id.in_(i.user_id for i in userroles6).all())###超级管理员
-                        list = []
-                        list.extend(user1).expend(user2).extend(user3).expend(user4).extend(user5)
+                            User.id.in_(i.user_id for i in userroles6)).all()###超级管理员
+                        list=user1+user2+user3+user4+user5
+                        # list = []
+                        # list=list.extend(user1).extend(user2).extend(user3).extend(user4).extend(user5)
                         for i in list:
                             if i in user1:
                                 messsgesend = MessageSend(user_id=i.id, role_id='1', message_id=useralarmrecord.id,
@@ -337,13 +338,13 @@ def builtusersendmessage(app):
                         user2 = User.query.filter(User.disabled==False).filter(User.id.in_(i.user_id for i in homeuser)).all()#####报警机构管辖下的家庭用户
                         userroles4 = UserRole.query.filter(UserRole.role_id == '4').all()
                         user3 = User.query.filter(User.disabled == False).filter(
-                            User.id.in_(i.user_id for i in userroles4).all())  ###119用户
+                            User.id.in_(i.user_id for i in userroles4)).all()  ###119用户
                         userroles5 = UserRole.query.filter(UserRole.role_id == '5').all()
                         user4 = User.query.filter(User.disabled == False).filter(
-                            User.id.in_(i.user_id for i in userroles5).all())  ##平台管理员
+                            User.id.in_(i.user_id for i in userroles5)).all()  ##平台管理员
                         userroles6 = UserRole.query.filter(UserRole.role_id == '6').all()
                         user5 = User.query.filter(User.disabled == False).filter(
-                            User.id.in_(i.user_id for i in userroles6).all())  ###超级管理员
+                            User.id.in_(i.user_id for i in userroles6)).all()  ###超级管理员
                         list=[]
                         list.extend(user1).extend(user2).extend(user3).extend(user4).extend(user5)
                         for i in list:
@@ -367,7 +368,7 @@ def builtusersendmessage(app):
                             else:
                                 continue
                     else: abort(401, message='机构不存在')
-            elif useralarmrecord.type == '1':
+            elif useralarmrecord.type == 1:
                 if useralarmrecord.home_id:
                     home = Home.query.filter(Home.disabled==False).filter(Home.id==useralarmrecord.home_id).first()
                     if home:
@@ -375,21 +376,21 @@ def builtusersendmessage(app):
                         user1 = User.query.filter(User.disabled == False).filter(
                             User.id.in_(i.user_id for i in homeusers1)).all()  #####发送疏散家庭成员
                         user2 = []  ###发送疏散家庭上级机构
-                        community = home.community.first()
+                        community = home.community
                         inses = community.ins.all()
                         for ins in inses:
                             user2.extend(ins.user.all())
                         userroles4 = UserRole.query.filter(UserRole.role_id == '4').all()
                         user3 = User.query.filter(User.disabled == False).filter(
-                            User.id.in_(i.user_id for i in userroles4).all())  ###119用户
+                            User.id.in_(i.user_id for i in userroles4)).all()  ###119用户
                         userroles5 = UserRole.query.filter(UserRole.role_id == '5').all()
                         user4 = User.query.filter(User.disabled == False).filter(
-                            User.id.in_(i.user_id for i in userroles5).all())  ##平台管理员
+                            User.id.in_(i.user_id for i in userroles5)).all()  ##平台管理员
                         userroles6 = UserRole.query.filter(UserRole.role_id == '6').all()
                         user5 = User.query.filter(User.disabled == False).filter(
-                            User.id.in_(i.user_id for i in userroles6).all())  ###超级管理员
+                            User.id.in_(i.user_id for i in userroles6)).all()  ###超级管理员
                         list = []
-                        list.extend(user1).expend(user2).extend(user3).expend(user4).extend(user5)
+                        list=(user1)+(user2)+(user3)+(user4)+(user5)
                         for i in list:
                             if i in user1:
                                 messsgesend = MessageSend(user_id=i.id, role_id='1', message_id=useralarmrecord.id,
@@ -426,15 +427,15 @@ def builtusersendmessage(app):
                             User.id.in_(i.user_id for i in homeuser)).all()  #####报警机构管辖下的家庭用户
                         userroles4 = UserRole.query.filter(UserRole.role_id == '4').all()
                         user3 = User.query.filter(User.disabled == False).filter(
-                            User.id.in_(i.user_id for i in userroles4).all())  ###119用户
+                            User.id.in_(i.user_id for i in userroles4)).all()  ###119用户
                         userroles5 = UserRole.query.filter(UserRole.role_id == '5').all()
                         user4 = User.query.filter(User.disabled == False).filter(
-                            User.id.in_(i.user_id for i in userroles5).all())  ##平台管理员
+                            User.id.in_(i.user_id for i in userroles5)).all()  ##平台管理员
                         userroles6 = UserRole.query.filter(UserRole.role_id == '6').all()
                         user5 = User.query.filter(User.disabled == False).filter(
-                            User.id.in_(i.user_id for i in userroles6).all())  ###超级管理员
+                            User.id.in_(i.user_id for i in userroles6)).all()  ###超级管理员
                         list = []
-                        list.extend(user1).extend(user2).extend(user3).extend(user4).extend(user5)
+                        list=(user1)+(user2)+(user3)+(user4)+(user5)
                         for i in list:
                             if i in user1:
                                 if ins.type == '物业':
@@ -459,7 +460,7 @@ def builtusersendmessage(app):
                                 continue
                     else:
                         abort(401, message='机构不存在')
-            elif useralarmrecord.type == '3':
+            elif useralarmrecord.type == 3:
                 if useralarmrecord.home_id:
                     home = Home.query.filter(Home.disabled == False).filter(Home.id == useralarmrecord.home_id).first()
                     if home:
@@ -474,12 +475,12 @@ def builtusersendmessage(app):
                         user3 = User.query.filter(User.disabled == False).filter(User.id.in_(i.user_id for i in userroles4).all())###119用户
                         userroles5 = UserRole.query.filter(UserRole.role_id == '5').all()
                         user4 = User.query.filter(User.disabled == False).filter(
-                            User.id.in_(i.user_id for i in userroles5).all())##平台管理员
+                            User.id.in_(i.user_id for i in userroles5)).all()##平台管理员
                         userroles6 = UserRole.query.filter(UserRole.role_id == '6').all()
                         user5 = User.query.filter(User.disabled == False).filter(
-                            User.id.in_(i.user_id for i in userroles6).all())###超级管理员
+                            User.id.in_(i.user_id for i in userroles6)).all()###超级管理员
                         list = []
-                        list.extend(user1).expend(user2).extend(user3).expend(user4).extend(user5)
+                        list = (user1) + (user2) + (user3) + (user4) + (user5)
                         for i in list:
                             if i in user1:
                                 messsgesend = MessageSend(user_id=i.id, role_id='1', message_id=useralarmrecord.id,
@@ -501,4 +502,5 @@ def builtusersendmessage(app):
                                 db.session.commit()
                             else: continue
                     else:abort(404, message='家庭不存在')
-                else:pass
+                else:
+                    pass
