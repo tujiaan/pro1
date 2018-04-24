@@ -74,7 +74,7 @@ class Ins(db.Model):
     admin_user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='管理员id')
     community = db.relationship('Community', secondary=t_community_ins, backref=db. backref('f1_community', lazy='dynamic'), lazy='dynamic')
     user = db.relationship('User', secondary=t_user_ins,backref=db.backref('f_user', lazy='dynamic'), lazy='dynamic' )
-    disabled = db.Column(db.Boolean,default=False,comment='是否可用')
+    disabled = db.Column(db.Boolean,nullable=False,default=False,comment='是否可用')
 
 
 class Location (db.Model):
@@ -99,7 +99,7 @@ class Community(db.Model):
     ins = db.relationship('Ins',secondary=t_community_ins, backref=db.backref('f1_ins', lazy='dynamic'), lazy='dynamic')
     homes = db.relationship('Home', lazy='dynamic')
     location_id = db.Column(db.String(50), db.ForeignKey('location.id'), comment='位置')
-    disabled = db.Column(db.Boolean, default=False, comment='是否可用')
+    disabled = db.Column(db.Boolean, nullable=False,default=False, comment='是否可用')
 
 
 class FacilityIns(db.Model):
@@ -123,7 +123,7 @@ class Facility(db.Model):
     note = db.Column(db.String(200),comment='备注')
     knowledge = db.relationship('Knowledge', secondary=t_facility_knowledge,
                                  backref=db.backref('f_knowledge', lazy='dynamic'),lazy='dynamic')
-    disabled = db.Column(db.Boolean, default=False, comment='是否可用')
+    disabled = db.Column(db.Boolean, nullable=False,default=False, comment='是否可用')
 
 
 class Gateway(db.Model):
@@ -160,7 +160,7 @@ class Knowledge(db.Model):
     content = db.Column(db.Text, comment='知识正文')
     title = db.Column(db.String(50), comment='知识标题')
     facility = db.relationship('Facility', secondary=t_facility_knowledge, backref=db.backref('f_facility', lazy='dynamic'), lazy='dynamic')
-    disabled = db.Column(db.Boolean, default=False, comment='是否可用')
+    disabled = db.Column(db.Boolean,nullable=False, default=False, comment='是否可用')
 
 class Menu(db.Model):
     __tablename__ = 'menu'
@@ -186,7 +186,7 @@ class Role(db.Model):
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     name = db.Column(db.String(30), nullable=False)
-    disabled = db.Column(db.Boolean, default=True, comment='是否可用')
+    disabled = db.Column(db.Boolean, nullable=False,default=True, comment='是否可用')
     description = db.Column(db.String(60), comment='权限描述')
     user_role=db.relationship('UserRole', foreign_keys=[UserRole.role_id],backref=db.backref('F_user_role', lazy='joined'),lazy='dynamic')
     menus = db.relationship('Menu', secondary=t_role_menu,
@@ -262,7 +262,7 @@ class User(db.Model):
 
     __tablename__ = 'user'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    disabled = db.Column(db.Boolean, default=False, comment='是否停用   (1、禁用 0、正常)')
+    disabled = db.Column(db.Boolean, nullable=False, default=False, comment='是否停用   (1、禁用 0、正常)')
     contract_tel = db.Column(db.String(20), comment='用户电话')
     username = db.Column(db.String(20), index=True, comment='用户名)')
     password = db.Column(db.String(32), comment='密码')
