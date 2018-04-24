@@ -352,10 +352,11 @@ class user(Resource):
             role = Role.query.filter(Role.id.in_(i.role_id for i in userrole)).all()
             for i in userrole:
                i.disabled = True
+            user.disabled = True
             if g.role.name == 'superadmin':
                 db.session.commit()
                 return None, 200
-            elif g.role.name =='admin':
+            elif g.role.name == 'admin':
                 if 'admin'not in [i.name for i in role]and 'superadmin'not in [i.name for i in role]:
                     db.session.commit()
                     return None, 200
@@ -363,7 +364,7 @@ class user(Resource):
                     return '权限不足', 201
             else:
                 return '权限不足', 201
-        else: return '用户不存在',201
+        else: return '用户不存在', 201
 
 
 @api.route('/<userid>/ins')
