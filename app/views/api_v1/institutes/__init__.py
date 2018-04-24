@@ -184,7 +184,7 @@ class InstituteView(Resource):
     @role_require(['admin', 'superadmin'])
     @api.response(200, 'ok')
     def delete(self, insid):
-        institute = Ins.query.filter(Ins.disabled == False).filter(Ins.id==insid).first
+        institute = Ins.query.filter(Ins.disabled == False).filter(Ins.id==insid).first()
         if institute:
             institute.disabled = True
             # facilityins=FacilityIns.query.filter(FacilityIns.ins_id==insid).all()
