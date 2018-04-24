@@ -268,7 +268,7 @@ class InsUsesrView(Resource):
         else:
             ins = Ins.query.filter(Ins.disabled == False).filter(Ins.id == insid).first()
             if ins:
-                users = User.query.filter(User.id.in_(i.id for i in ins.user.all())).filter(User.disable == False).order_by(User.id).offset((int(page)-1)*limit).\
+                users = User.query.filter(User.id.in_(i.id for i in ins.user.all())).filter(User.disabled == False).order_by(User.id).offset((int(page)-1)*limit).\
                 limit(limit).all()
                 total = len(users)
                 _ = []
