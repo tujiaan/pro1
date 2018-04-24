@@ -348,23 +348,23 @@ class user(Resource):
     def delete(self, userid):
         user = User.query.filter(User.disabled == False).filter(User.id == userid).first()
         if user:
-            userrole = UserRole.query.filter(UserRole.user_id == userid).all()
+            userrole = UserRole.query.filter(UserRole.user_id == userid).filter(UserRole.if_usable == True).all()
             role = Role.query.filter(Role.id.in_(i.role_id for i in userrole)).all()
             for i in userrole:
-               i.disabled = True
+               i.if_usable = False
             user.disabled = True
             if g.role.name == 'superadmin':
                 db.session.commit()
-                return None, 200
+                return '删除成功', 200
             elif g.role.name == 'admin':
                 if 'admin'not in [i.name for i in role]and 'superadmin'not in [i.name for i in role]:
                     db.session.commit()
-                    return None, 200
+                    return '删除成功', 200
                 else:
                     return '权限不足', 201
             else:
                 return '权限不足', 201
-        else: return '用户不存在', 201
+        else: return '用户不存在', 401
 
 
 @api.route('/<userid>/ins')
