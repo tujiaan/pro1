@@ -346,7 +346,7 @@ class user(Resource):
     @api.response(200, 'ok')
     @role_require(['admin', 'superadmin'])
     def delete(self, userid):
-        user = User.query.filter(User.disabled).filter(User.id == userid).first()
+        user = User.query.filter(User.disabled == False).filter(User.id == userid).first()
         if user:
             userrole = UserRole.query.filter(UserRole.user_id == userid).all()
             role = Role.query.filter(Role.id.in_(i.role_id for i in userrole)).all()
