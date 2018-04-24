@@ -170,7 +170,7 @@ class UserAlarmRecordView(Resource):
                 _ = []
                 for i in ins2:
                     _.extend(i.user.all())
-            else:abort(404,me)
+            else:abort(404)
         try:
             args = useralarmrecord1_parser.parse_args()
             if args['note']:
