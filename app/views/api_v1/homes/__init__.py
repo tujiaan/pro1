@@ -343,7 +343,9 @@ class HomeApplyView(Resource):
     def get(self):
         page = request.args.get('page', 1)
         limit = request.args.get('limit', 10)
-        query = db.session.query(User, Home).join(HomeUser, User.id == HomeUser.user_id).filter(HomeUser.if_confirm == False).join(Home,HomeUser.home_id==Home.id ).order_by(Home.id)
+        query = db.session.query(User, Home).join(HomeUser, User.id == HomeUser.user_id).\
+            filter(HomeUser.if_confirm == False).join(Home, HomeUser.home_id == Home.id)\
+            .filter(Home.admin_user_id == g.user.id).order_by(Home.id)
         total = query.count()
         query = query.offset((int(page) - 1) * limit).limit(limit)
         _ = []
