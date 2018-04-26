@@ -223,10 +223,10 @@ class HomeUsersView(Resource):
     @page_range()
     def get(self, homeid):
         home = Home.query.filter(Home.id == homeid).filter(Home.disabled == False).first()
-        if home:
+        try:
             homeuser = HomeUser.query.filter(HomeUser.home_id == homeid).all()
             return User.query.filter(User.id.in_(i.user_id for i in homeuser)), 200
-        else: abort(404, message='家庭不存在')
+        except:return None,201
 
     @api.doc('用户退出家庭')
     @api.response(200, 'ok')

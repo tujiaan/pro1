@@ -184,7 +184,7 @@ class SensorAlarmsView(Resource):
     def get(self, sensorid):
         sensor = Sensor.query.get_or_404(sensorid)
         home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled == False).first()
-        if home:
+        try:
             homeuser = HomeUser.query.filter(HomeUser.home_id == home.id).all()
             sensoralarm = SensorAlarm.query.filter(SensorAlarm.sensor_id == sensorid)
             if g.role.name == 'homeuser':
@@ -197,7 +197,7 @@ class SensorAlarmsView(Resource):
                        filter(SensorAlarm.sensor_id == sensorid)
             else:
                 return sensoralarm, 200
-        else:abort(401, message='家庭未绑定网关')
+        except: return None,201
 
 
 @api.route('/<sensorid>/sensorhistory')

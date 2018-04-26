@@ -96,7 +96,7 @@ class Community(db.Model):
     eva_distance = db.Column(db.Integer, comment='疏散距离')
     longitude = db.Column(db.Float(asdecimal=True), comment='经度')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
-    ins = db.relationship('Ins',secondary=t_community_ins, backref=db.backref('f1_ins', lazy='dynamic'), lazy='dynamic')
+    ins = db.relationship('Ins', secondary=t_community_ins, backref=db.backref('f1_ins', lazy='dynamic'), lazy='dynamic')
     homes = db.relationship('Home', lazy='dynamic')
     location_id = db.Column(db.String(50), db.ForeignKey('location.id'), comment='位置')
     disabled = db.Column(db.Boolean, nullable=False,default=False, comment='是否可用')

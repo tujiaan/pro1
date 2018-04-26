@@ -26,9 +26,9 @@ class Knowledges(Resource):
     @page_range()
     def get(self):
             list=Knowledge.query.filter(Knowledge.disabled == False)
-            if len(list.all()) > 0:
+            try:
                 return list, 200
-            else:abort(404, message='暂无知识')
+            except: return None,201
 
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin', 'knowledgeadmin'])
@@ -52,9 +52,9 @@ class KnowledgeView(Resource):
     @page_range()
     def get(self, knowledgetype):
      list=Knowledge.query.filter(Knowledge.type == knowledgetype).filter(Knowledge.disabled == False)
-     if len(list.all())>0:
+     try:
         return list, 200
-     else: abort(404, message='暂无该类型知识')
+     except: return None, 201
 
 
 @api.route('/<knowledgeid>/')
@@ -118,9 +118,9 @@ class KnowledgeFacilityView(Resource):
     @page_range()
     def get(self, knowledgeid):
         knowledge = Knowledge.query.filter(Knowledge.id == knowledgeid).filter(Knowledge.disabled == False).first()
-        if knowledge:
+        try:
             return knowledge.facility, 200
-        else:abort(404, message='该知识不存在')
+        except: return None,201
 
 
 @api.route('/<knowledgeid>/facility/<facilityid>')

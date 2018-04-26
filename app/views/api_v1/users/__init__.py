@@ -107,30 +107,33 @@ class UserHomeView1(Resource):
     @api.marshal_with(home_model, as_list=True)
     @page_range()
     def get(self):
-        homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).filter(HomeUser.if_confirm == True)
-        list = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).filter(Home.disabled == False)
-        if len(list.all())>0:
+        try:
+            homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).filter(HomeUser.if_confirm == True)
+            list = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).filter(Home.disabled == False)
+            # if len(list.all()) > 0
             return list, 200
-        else: abort(401, '用户没有家庭')
+            # else: abort(401, '用户没有家庭')
+        except:return None, 201
 
 
 @api.route('/ins/')
 class UserHomeView1(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['stationuser', 'propertyuser'])
+    @role_require(['stationuser', 'propertyuser', 'superadmin'])
     @page_format(code='0', msg='success')
     @api.doc('查询自己关联的机构')
     @api.marshal_with(institute_model, as_list=True)
     @page_range()
     def get(self):
         ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.disabled == False)
-        if len(ins.all()) > 0:
+        try:
             if g.role.name == 'propertyuser':
                 ins = ins.filter(Ins.type == '物业')
             else:
                 ins = ins.filter(Ins.type == '消防站')
             return ins, 200
-        else:abort(401, '该用户未加入机构')
+        except:return None, 201
+
 
 
 @api.route('/password/')

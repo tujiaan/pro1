@@ -24,9 +24,9 @@ class FacilitiesInsView(Resource):
     @page_range()
     def get(self):
         list = Facility.query.filter(Facility.disabled == False)
-        if len(list.all()) > 0:
+        try:
             return list, 200
-        else:abort(404, message='设施不存在')
+        except:return None,201
 
     @api.doc('新增设施')
     @api.header('jwt', 'JSON Web Token')
@@ -225,9 +225,9 @@ class FacilityKnowledgesView(Resource):
     @ page_range()
     def get(self, facilityid):
         facility = Facility.query.filter(Facility.id == facilityid).filter(Facility.disabled == False).first()
-        if facility:
+        try:
             return facility.knowledge, 200
-        else: abort(404, message='设施不存在')
+        except: return None, 201
 
 
 @api.route('/<facilityid>/knowledges/<knowledgeid>/')

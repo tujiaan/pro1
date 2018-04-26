@@ -338,9 +338,9 @@ class InsCommunityView(Resource):
     @page_range()
     def get(self, insid):
         ins = Ins.query.filter(Ins.disabled == False).filter(Ins.id == insid).first()
-        if ins:
+        try:
             return ins.community, 200
-        else: abort(404, message='机构不存在')
+        except: return None, 201
 
 
 @api.route('/<insid>/subuseralarmrecord')

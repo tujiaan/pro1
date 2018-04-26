@@ -23,12 +23,12 @@ class SensorHistoriesView(Resource):
     def get(self):
         homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
         home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).filter(Home.disabled == False).all()
-        if len(home)>0:
+        try:
             sensor = Sensor.query.filter(Sensor.gateway_id.in_(i.gateway_id for i in home)).all()
             if g.role.name == 'homeuser':
                 return SensorHistory.query.filter(SensorHistory.sensor_id.in_(i.id for i in sensor)), 200
             else: return SensorHistory.query, 200
-        else: abort(404, message='家庭不存在')
+        except: return None,201
 
 
 @api.route('/<sensorid>')
@@ -44,7 +44,7 @@ class SensorHistoryView(Resource):
     def get(self, sensorid):
             sensor = Sensor.query.get_or_404(sensorid)
             home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled == False).first()
-            if home:
+            try:
                 sensorhistory = SensorHistory.query.filter(SensorHistory.sensor_id == sensorid)
                 homeuser = HomeUser.query.filter(HomeUser.home_id == home.id)
                 if g.role.name == 'homeuser':
@@ -53,7 +53,8 @@ class SensorHistoryView(Resource):
                     else: pass
                 else:
                     return sensorhistory, 200
-            else:abort(404, message='家庭不存在')
+            except:return None, 201
+
 
 
 

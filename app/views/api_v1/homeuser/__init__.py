@@ -28,12 +28,12 @@ class HomeUsersView(Resource):
     def get(self):
         list = HomeUser.query
         home = Home.query.filter(Home.admin_user_id == g.user.id).filter(Home.disabled == False).all()
-        if home:
+        try:
             if g.role.name in ['admin', 'superadmin']:
                 return list, 200
             else:
-                return list.filter(HomeUser.home_id.in_(i.id for i in home)).filter(HomeUser.if_confirm == True),
-        else: abort(404, message='家庭不存在')
+                return list.filter(HomeUser.home_id.in_(i.id for i in home)).filter(HomeUser.if_confirm == True)
+        except: return None,201
 
 
 @api.route('/<homeid>/')
@@ -66,13 +66,13 @@ class HomeUserView1(Resource):
     @api.response(200, 'ok')
     @page_range()
     def get(self, homeid):
-       home = Home.query.filter(Home.disabled == False).filter(Home.id == homeid).first()
-       if home:
+        home = Home.query.filter(Home.disabled == False).filter(Home.id == homeid).first()
+        try:
            if g.user.id == home.admin_user_id:
                homeuser = HomeUser.query.filter(HomeUser.if_confirm == False).filter(HomeUser.home_id == homeid)
                return homeuser, 200
            else: return '权限不足', 200
-       else:abort(404, message='家庭不存在')
+        except:return None,201
 
 
 @api.route('/<homeid>/<userid>/')

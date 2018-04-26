@@ -72,9 +72,9 @@ class CommunitiesView(Resource):
         @page_range()
         def get(self):
             community = Community.query.filter(Community.disabled == False)
-            if len(community.all())>0:
+            try:
                 return community, 200
-            else:abort(404, message='机构不存在')
+            except:return None, 201
 
     @api.doc('新增社区')
     @api.header('jwt', 'JSON Web Token')
@@ -230,7 +230,10 @@ class CommunityHome(Resource):
     def get(self, communityid):
         community = Community.query.filter(Community.id == communityid).filter(Community.disabled == False).first()
         if community:
-            return community.homes, 200
+            try:
+                homes=community.homes
+                return homes, 200
+            except:return None, 201
         else:abort(404, message='社区不存在')
 
 
