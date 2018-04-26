@@ -38,8 +38,6 @@ def page_range(s=1, o=10):
                 code = result[1] if l > 1 else None
                 header = result[2] if l > 2 else {}
                 result = result[0]
-
-
             r = Range(request.headers.get('Range'))
             r2 = range_parser.parse_args()
             page = r.page or r2.get('page') or s
@@ -47,13 +45,11 @@ def page_range(s=1, o=10):
             totle =result.count()
             result = result.offset((int(page)-1)*limit).limit(limit)
             header['Content-Range'] = f'items {page}-{limit if page*limit<totle else totle}/{totle}'
-
-
             return result.all(), code, header
-
         return warpper
-
     return decorator
+
+
 def page_format(code=0,msg=''):
     def decorator(method):
         @functools.wraps(method)

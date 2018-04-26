@@ -300,7 +300,7 @@ class InsUserView(Resource):
      user = User.query.filter(User.disabled == False).filter(User.id == userid).first()
      if ins and user:
          if user not in ins.user:
-             if g.user.id == ins.admin_user_id or g.role.name in ['admin', 'admin'] :
+             if g.user.id == ins.admin_user_id or g.role.name in ['admin', 'superadmin']:
                     ins.user.append(user)
                     db.session.commit()
                     return '添加成功', 200
