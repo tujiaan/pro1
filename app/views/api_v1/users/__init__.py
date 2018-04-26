@@ -24,10 +24,10 @@ class RegisterView(Resource):
     @api.response(409, '用户重复')
     def post(self):
         args = register_parser.parse_args()
-        u1 = User.query.filter(User.contract_tel == args.get('contract_tel')).first()
+        u1 = User.query.filter(User.contract_tel == args.get('contract_tel')).filter(User.disabled == False).first()
         if u1 is not None:
             return None, 409
-        u2 = User.query.filter(User.email == args.get('email')).first()
+        u2 = User.query.filter(User.email == args.get('email')).filter(User.disabled == False).first()
         if u2 is not None:
             return None, 409
         else:
