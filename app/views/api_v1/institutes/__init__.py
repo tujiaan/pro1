@@ -259,8 +259,8 @@ class InsUsesrView(Resource):
     @api.doc('查询机构下面的用户列表')
     @api.doc(params={'page': '页数', 'limit': '数量'})
     def get(self, insid):
-        page = request.args.get('page', 1)
-        limit = request.args.get('limit', 10)
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
         if g.role.name == 'propertyuser':
             ins = Ins.query.filter(Ins.id == insid).filter(Ins.disabled == False).filter(Ins.type == '物业').first()
         elif g.role.name == 'stationuser':

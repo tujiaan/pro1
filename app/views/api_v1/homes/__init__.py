@@ -1,7 +1,7 @@
 import datetime
 from flask import request, g
 from flask_restplus import Namespace, Resource, abort
-from sqlalchemy import and_
+from sqlalchemy import and_, null
 from app.ext import db
 from app.models import Home, Ins, User, HomeUser, Sensor, SensorHistory, UserRole, Role, Community, Gateway
 from app.utils.auth import decode_jwt, user_require
@@ -112,21 +112,19 @@ class HomeView(Resource):
     @api.response(200, 'ok')
     def delete(self, homeid):
         home = Home.query.filter(Home.id == homeid).filter(Home.disabled == False).first()
-        home.disabled = True
-       # homeuser=HomeUser.query.filter(HomeUser.home_id == homeid).all()
-        if g.role.name in ['admin', 'superadmin']:
-            # for u in homeuser:
-            #     db.session.delete(u)
-            # db.session.delete(home)
-            db.session.commit()
-            return None, 200
-        elif home.admin_user_id == g.user.id:
-           # for u in homeuser :
-           #     db.session.delete(u )
-           # db.session.delete(home)
-           db.session.commit()
-           return None, 200
-        else: return '权限不足', 200
+        if home:
+            gateway = Gateway.query.filter(Gateway.home_id == homeid).filter(Gateway.useable == True).first()
+            gateway.useable = False
+            gateway.home_id = None
+            home.disabled = True
+            if g.role.name in ['admin', 'superadmin']:
+                db.session.commit()
+                return None, 200
+            elif home.admin_user_id == g.user.id:
+               db.session.commit()
+               return None, 200
+            else: return '权限不足', 200
+        else:return '家庭不存在', 201
 
     @api.doc('根据家庭id更新家庭')
     @api.expect(home_parser1, validate=True)
