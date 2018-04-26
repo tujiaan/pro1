@@ -317,7 +317,7 @@ class InsUserView(Resource):
         user = User.query.filter(User.disabled == False).filter(User.id == userid).first()
         if ins and user:
           if  user in ins.user:
-              if g.user.id == ins.admin_user_id or g.role.name in ['admin', 'admin']:
+              if g.user.id == ins.admin_user_id or g.role.name in ['admin', 'superadmin']:
                     ins.user.remove(user)
                     db.session.commit()
                     return '删除成功', 200
