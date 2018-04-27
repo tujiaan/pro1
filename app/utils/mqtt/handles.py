@@ -1,6 +1,5 @@
 import json
 from datetime import datetime, timedelta
-
 import dateutil
 from flask import json
 from app.ext import mqtt, db
@@ -25,14 +24,14 @@ def gateway_info(client, userdata, message):
                 if s is None:
                     s = Sensor(id=sid)
                     s.online = sensor.get('online', False)
-                    if sid>='S1001'and sid<='S1999':
+                    if sid>='S0001'and sid<='S0999':
                         s.sensor_type = 0
-                    elif sid>='S2001'and sid<='S299':
+                    elif sid>='S1001'and sid<='S1999':
                         s.sensor_type = 1
                         s.max_value = 50
-                    elif sid>='S3001'and sid<='S3999':
+                    elif sid>='S2001'and sid<='S2999':
                         s.sensor_type = 2
-                    elif sid>'S4001'and sid<'S4999':
+                    elif sid>'S3001'and sid<'S3999':
                         s.max_value = 100
                         s.set_type = 0
                         s.sensor_type = 3
@@ -48,7 +47,6 @@ def gateway_info(client, userdata, message):
 
 
 def gateway_data(client, userdata, message):
-    print('@@@@')
     p = json.loads(message.payload)
     list = p.get('sensors')
     time = dateutil.parser.parse(p.get('time'))
@@ -70,9 +68,9 @@ def gateway_data(client, userdata, message):
                 sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
                 if int(sensorhistory.sensor_value) > 50:
-                    sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=1, var_type='温度', alarm_value=i.get('value'),unit='℃',alarm_time=time,gateway_id=Sensor.query.get(i['id']).gateway_id )
+                    sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=1, var_type='温度', alarm_value=i.get('value'), unit='℃',alarm_time=time,gateway_id=Sensor.query.get(i['id']).gateway_id )
                     db.session.add(sensoralarm)
-                    sm = SensorHistory.query.filter(SensorHistory.sensor_id == i['id']).filter(SensorHistory.time.between(time,time-timedelta(minutes=10)))
+                    sm = SensorHistory.query.filter(SensorHistory.sensor_id == i['id']).filter(SensorHistory.time.between(time, time-timedelta(minutes=10)))
                     count = 1
                     for i in sm:
                         if int(i.sensor_value) > 50:
@@ -93,7 +91,6 @@ def gateway_data(client, userdata, message):
                      db.session.commit()
                 else:
                     pass
-
             elif i['id'] > 'S3001' and i['id']< 'S3999':
                 sensorhistory.sensor_id = i['id']
                 sensorhistory.time = time
@@ -114,7 +111,6 @@ def gateway_data(client, userdata, message):
 
                   db.session.commit()
                 else:pass
-
             else:
                 sensorhistory.sensor_id = i['id']
                 sensorhistory.time = time
@@ -125,10 +121,11 @@ def gateway_data(client, userdata, message):
                     db.session.commit()
                 else:
                     pass
+            sensoralarm = sensoralarm
             db.session.add(sensorhistory)
             db.session.commit()
-            alarmhandler = AlarmHandle(type='0', handle_type='100', reference_message_id=sensoralarm.id,\
-                                       handle_time=datetime.datetime.now())
+            alarmhandler = AlarmHandle(type='0', handle_type='100', reference_message_id=sensoralarm.id,
+                                       handle_time=datetime.now())
             db.session.add(alarmhandler)
             db.session.commit()
     return None, 200
