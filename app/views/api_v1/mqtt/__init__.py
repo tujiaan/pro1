@@ -22,4 +22,5 @@ class Command(Resource):
         }
         theme = str(gatewayid)+'/cmd'
         mqtt.publish(theme, json.dumps(data))
+
         return None, 200

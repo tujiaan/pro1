@@ -395,7 +395,6 @@ class InsUseralarmrecordViews(Resource):
 class InsUseralarmrecordViews1(Resource):
     @api.doc('查询机构的报警')
     @api.response(200, 'ok')
-    #@api.marshal_with(useralarmrecord_model,as_list=True)
     @api.header('jwt', 'JSON Web Token')
     @role_require(['119user', 'admin', 'superadmin'])
     def get(self):

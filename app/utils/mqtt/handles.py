@@ -8,7 +8,7 @@ from app.models import Gateway, Sensor, SensorHistory, SensorAlarm, AlarmHandle
 
 
 def gateway_info(client, userdata, message):
-    p=json.loads(message.payload)
+    p = json.loads(message.payload)
     gateway_id = p.get('gateway_id')
     sensors = p.get('sensors')
     with client.app.app_context():
@@ -48,6 +48,7 @@ def gateway_info(client, userdata, message):
 
 
 def gateway_data(client, userdata, message):
+    print('@@@@')
     p = json.loads(message.payload)
     list = p.get('sensors')
     time = dateutil.parser.parse(p.get('time'))
@@ -55,11 +56,11 @@ def gateway_data(client, userdata, message):
         for i in list:
             sensorhistory = SensorHistory()
             if i['id']>'S0001'and i['id']<'S0999':
-                 sensorhistory.sensor_id = i
+                 sensorhistory.sensor_id = i['id']
                  sensorhistory.time = time
                  sensorhistory.sensor_value = i.get('value')
                  if sensorhistory.sensor_value == 1:
-                    sensoralarm = SensorAlarm(sensor_id=i, sensor_type=0, alarm_time=time, gateway_id=Sensor.query.get(i['id']).gateway_id)
+                    sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=0, alarm_time=time, gateway_id=Sensor.query.get(i['id']).gateway_id)
                     db.session.add(sensoralarm)
                     db.session.commit()
                     pass
@@ -76,14 +77,14 @@ def gateway_data(client, userdata, message):
                     for i in sm:
                         if int(i.sensor_value) > 50:
                             count += 1
-                    if count>9:
+                    if count > 9:
                         db.session.commit()
                     else:
                         pass
                 else:
                     pass
             elif i['id']>'S2001'and i['id']<'S2999':
-                sensorhistory.sensor_id = i
+                sensorhistory.sensor_id = i['id']
                 sensorhistory.time =time
                 sensorhistory.sensor_value = i.get('value')
                 if sensorhistory.sensor_value == 1:
@@ -94,7 +95,7 @@ def gateway_data(client, userdata, message):
                     pass
 
             elif i['id'] > 'S3001' and i['id']< 'S3999':
-                sensorhistory.sensor_id = i
+                sensorhistory.sensor_id = i['id']
                 sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
                 if float(sensorhistory.sensor_value) > Sensor.query.get(i).max_value:
@@ -115,7 +116,7 @@ def gateway_data(client, userdata, message):
                 else:pass
 
             else:
-                sensorhistory.sensor_id = i
+                sensorhistory.sensor_id = i['id']
                 sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
                 if sensorhistory.sensor_value == 1:
@@ -126,9 +127,10 @@ def gateway_data(client, userdata, message):
                     pass
             db.session.add(sensorhistory)
             db.session.commit()
-    alarmhandler = AlarmHandle(type='0', handle_type='100', reference_message_id=sensoralarm.id, handle_time=datetime.datetime.now())
-    db.session.add(alarmhandler)
-    db.session.commit()
+            alarmhandler = AlarmHandle(type='0', handle_type='100', reference_message_id=sensoralarm.id,\
+                                       handle_time=datetime.datetime.now())
+            db.session.add(alarmhandler)
+            db.session.commit()
     return None, 200
 
 
