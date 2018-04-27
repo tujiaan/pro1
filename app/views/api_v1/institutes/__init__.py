@@ -73,7 +73,7 @@ class InstitutesViews(Resource):
         if user:
             user_role = UserRole.query.filter(UserRole.user_id == user.id).all()
             roles = Role.query.filter(Role.id.in_(i.role_id for i in user_role)).all()
-            if Ins.query.filter(Ins.latitude != args['latitude']or Ins.longitude != args['longitude']):
+            if not Ins.query.filter(and_(Ins.latitude == args['latitude'], Ins.longitude == args['longitude'])).first():
                 institute.name = args['name']
                 if 'propeertyuser' in [i.name for i in roles] or 'stationuser'in [i.name for i in roles]:
                     institute.admin_user_id = args['admin_user_id']
@@ -90,7 +90,7 @@ class InstitutesViews(Resource):
                 db.session.add(institute)
                 institute.user.append(user)
                 db.session.commit()
-                return 'success', 200
+                return '创建成功',201
             else:return '机构位置已被占用', 201
         else: return'输入的用户不存在', 201
 
