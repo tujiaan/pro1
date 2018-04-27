@@ -106,7 +106,7 @@ class SensorsView(Resource):
                 __['max_value'] = i [0].max_value
                 __['set_type'] = i[0].set_type
                 __['sensor_place'] = i[0].sensor_place
-                __['sensor_state'] = tuple(SensorHistoryView.get(i[0].id))[0].get('sensor_state')
+                __['sensor_state'] = tuple(SensorHistoryView.get(SensorTimeView, i[0].id))[0].get('sensor_state')
                 __['gateway_id'] = i[0].gateway_id
                 __['home_id'] = i[2].id
                 __['home_name'] = i[2].name
