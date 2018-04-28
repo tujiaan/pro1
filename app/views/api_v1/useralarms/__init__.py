@@ -136,6 +136,7 @@ class UserAlarmRecordsView(Resource):
     def post(self):
         args = useralarmrecord_parser.parse_args()
         useralarmrecord = UserAlarmRecord(**args)
+        useralarmrecord.time = datetime.datetime.now()
         db.session.add(useralarmrecord)
         db.session.commit()
         if args['reference_alarm_id']:

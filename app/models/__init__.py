@@ -56,8 +56,8 @@ class HomeUser(db.Model):
     home_id = db.Column('home_id', db.String(24), db.ForeignKey('home.id'))
     db.UniqueConstraint('user_id', 'home_id', name='uix_home_user')
     apply_time = db.Column('apply_time', db.DateTime, default=datetime.datetime.now, comment='申请时间')
-    if_confirm = db.Column('if_confirm', db.Boolean, default=False,comment='是否批准')
-    confirm_time = db.Column('confirm_time',db.DateTime, comment='批准时间')
+    if_confirm = db.Column('if_confirm', db.Boolean, default=False, comment='是否批准')
+    confirm_time = db.Column('confirm_time', db.DateTime, comment='批准时间')
 
 
 class Ins(db.Model):
@@ -66,7 +66,7 @@ class Ins(db.Model):
     type = db.Column(db.String(255), comment='机构类型')
     name = db.Column(db.String(50), comment='机构名称')
     ins_picture = db.Column(db.String(255), comment='机构图片')
-    location_id = db.Column(db.String(50),db.ForeignKey('location.id'),comment='位置')
+    location_id = db.Column(db.String(50), db.ForeignKey('location.id'), comment='位置')
     ins_address = db.Column(db.String(255), comment='机构地址')
     note = db.Column(db.Text, comment='备注')
     latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
@@ -210,10 +210,10 @@ class Sensor(db.Model):
 class SensorTime(db.Model):
     __tablename__ = 'sensor_time'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    sensor_id = db.Column(db.String(50),db.ForeignKey('sensor.id'), comment='传感器id')
+    sensor_id = db.Column(db.String(50), db.ForeignKey('sensor.id'), comment='传感器id')
     start_time = db.Column(db.String(24), comment='开始时间')
     end_time = db.Column(db.String(24), comment='结束时间')
-    switch_on = db.Column(db.Boolean, default=False,comment='定时开关')
+    switch_on = db.Column(db.Boolean, default=False, comment='定时开关')
 
 
 class MessageSend(db.Model):
@@ -250,7 +250,7 @@ class SensorAlarm(db.Model):
     var_type = db.Column(db.String(24), comment='变量类型')
     unit = db.Column(db.String(24), comment='变量单位')
     alarm_value = db.Column(db.String(24), comment='报警数值')
-    alarm_time = db.Column(db.DateTime, default=datetime.datetime.now, comment='报警时间')
+    alarm_time = db.Column(db.DateTime, default=datetime.datetime.now(), comment='报警时间')
     #confirm_time = db.Column(db.DateTime, comment='确认时间')
     is_timeout = db.Column(db.Boolean, default=False, comment='是否超时')
    # user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='确认人id')
@@ -292,7 +292,7 @@ class UserAlarmRecord(db.Model):
     note = db.Column(db.String(255), comment='备注')
     origin = db.Column(db.String(255), comment='创建来源')
     mark = db.Column(db.String(255), comment='来源备注')
-    time = db.Column(db.DateTime, default=datetime.datetime.now, comment='创建时间')
+    time = db.Column(db.DateTime, default=datetime.datetime.now(), comment='创建时间')
 
 
 class AlarmHandle(db.Model):
@@ -303,7 +303,7 @@ class AlarmHandle(db.Model):
         '103,系统修改 104,系统超时关闭 200,用户新创建 201,用户参考传感器报警创建 202,用户参考用户报警创建 203,用户修改 204,用户超时关闭 205，用户关闭)')
     reference_message_id = db.Column(db.String(24), comment='参考信息id')
     user_id = db.Column(db.String(24), comment='处理人员id')#  不关联用户，可以写入系统操作
-    handle_time = db.Column(db.DateTime, default=datetime.datetime.now, comment='操作时间')
+    handle_time = db.Column(db.DateTime, default=datetime.datetime.now(), comment='操作时间')
     note = db.Column(db.String(255), comment='操作备注')
 
 
