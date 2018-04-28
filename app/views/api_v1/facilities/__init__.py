@@ -130,7 +130,7 @@ class FacilitesInsView(Resource):
         args = facility_parser.parse_args()
         facilityins = FacilityIns(**args)
         ins = Ins.query.filter(Ins.disabled == False).filter(Ins.id == facilityins.ins_id).first()
-        facility = Facility.query.filter(Facility.disabled == False).filter(Facility.id == FacilityIns.facility_id).first()
+        facility = Facility.query.filter(Facility.disabled == False).filter(Facility.id == facilityins.facility_id).first()
         if ins and facility:
             db.session.add(facilityins)
             db.session.commit()
