@@ -37,7 +37,7 @@ t_community_ins = db.Table(
     'community_ins',
     db.Column('community_id', db.String(24), db.ForeignKey('community.id')),
     db.Column('ins_id', db.String(24), db.ForeignKey('ins.id')),
-    db.UniqueConstraint('community_id', 'ins_id', name='uix_ins_community')
+     db.UniqueConstraint('community_id', 'ins_id', name='uix_ins_community')
 )
 
 

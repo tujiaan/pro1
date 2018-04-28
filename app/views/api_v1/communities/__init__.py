@@ -245,14 +245,16 @@ class CommunityInsViews(Resource):
     @role_require(['admin',  'superadmin'])
     def post(self, communityid, insid):
         community = Community.query.filter(Community.id == communityid).filter(Community.disabled == False).first()
-        if community:
-            ins = Ins.query.filter(Ins.id == insid).filter(Ins.disabled == False).first()
-            if ins:
-                community.ins.append(ins)
-                db.session.commit()
-                return '绑定成功', 200
-            else: return '机构不存在', 201
-        else:return'社区不存在', 201
+        try:
+            if community:
+                ins = Ins.query.filter(Ins.id == insid).filter(Ins.disabled == False).first()
+                if ins:
+                    community.ins.append(ins)
+                    db.session.commit()
+                    return '绑定成功', 200
+                else: return '机构不存在', 201
+            else:return'社区不存在', 201
+        except:return'请不要重复绑定', 201
 
     @api.doc('解除机构和社区绑定')
     @api.response(200, 'ok')
