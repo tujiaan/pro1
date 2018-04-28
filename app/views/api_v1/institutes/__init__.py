@@ -90,7 +90,7 @@ class InstitutesViews(Resource):
                 db.session.add(institute)
                 institute.user.append(user)
                 db.session.commit()
-                return '创建成功',201
+                return '创建成功', 201
             else:return '机构位置已被占用', 201
         else: return'输入的用户不存在', 201
 
@@ -100,7 +100,6 @@ class InstituteView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser', 'propertyuser', '119user', 'stationuser', 'admin', 'superadmin'])
     @api.doc('根据机构id查询机构')
-  #  @api.marshal_with(institute_model)
     @api.response(200, 'ok')
     def get(self, insid):
         ins = Ins.query.filter(Ins.disabled == False).filter(Ins.id == insid).first()

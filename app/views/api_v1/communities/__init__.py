@@ -63,7 +63,7 @@ class CommunitiesView(Resource):
     @api.route('/showlist')
     class CommunitiesView1(Resource):
         @api.header('jwt', 'JSON Web Token')
-        @ role_require(['admin', '119user', 'superadmin'])
+        @ role_require(['homeuser', '119user', 'propertyuser', 'stationuser', 'admin', '119user', 'superadmin'])
         @api.doc('查询所有的社区名称')
         @page_format(code=0, msg='ok')
         @api.marshal_with(_community_model, as_list=True)
