@@ -239,7 +239,7 @@ class UserAlarmRecordView(Resource):
                 user2 = ins1.user  ##报警机构成员
             else:abort(404, message='信息有误')
         if useralarmrecord.home_id:
-            ins2 = Home.query.filter(Home.disabled == False).filter(Home.id == UserAlarmRecord.home_id).first().community.ins
+            ins2 = Home.query.filter(Home.disabled == False).filter(Home.id == UserAlarmRecord.home_id).first().community.ins.all()
             user3 = []
             if len(ins2) > 0:
                 for i in ins2:
