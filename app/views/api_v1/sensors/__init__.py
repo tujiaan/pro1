@@ -154,7 +154,7 @@ class SensorsView(Resource):
             pass
         if args['max_value']:
             sensor1.max_value = args.get('max_value')
-            if sensor1.type == 3:
+            if sensor1.sensor_type == 3:
                 sensor1.set_type = '1'
             else: pass
         else: pass
