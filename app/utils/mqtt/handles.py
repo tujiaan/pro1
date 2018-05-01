@@ -36,6 +36,7 @@ def gateway_info(client, userdata, message):
                         s.set_type = 0
                         s.sensor_type = 3
                     else: s.sensor_type = 4
+                    sensor.sensor_place = '暂无'
                     db.session.add(s)
                     db.session.commit()
                     if s not in g.sensors:
@@ -53,21 +54,24 @@ def gateway_data(client, userdata, message):
     with client.app.app_context():
         for i in list:
             sensorhistory = SensorHistory()
+            sensoralarm = None
             if i['id']>'S0001'and i['id']<'S0999':
                  sensorhistory.sensor_id = i['id']
                  sensorhistory.time = time
                  sensorhistory.sensor_value = i.get('value')
                  if sensorhistory.sensor_value == 1:
+                    sensorhistory.sensor_state = '异常'
                     sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=0, alarm_time=time, gateway_id=Sensor.query.get(i['id']).gateway_id)
                     db.session.add(sensoralarm)
                     db.session.commit()
                     pass
-                 else:pass
+                 else:sensorhistory.sensor_state = '正常'
             elif i.get('id')>='S1001'and i.get('id')<'S1999':
                 sensorhistory.sensor_id = i['id']
                 sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
                 if int(sensorhistory.sensor_value) > 50:
+                    sensorhistory.sensor_state = '异常'
                     sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=1, var_type='温度', alarm_value=i.get('value'), unit='℃',alarm_time=time,gateway_id=Sensor.query.get(i['id']).gateway_id )
                     db.session.add(sensoralarm)
                     sm = SensorHistory.query.filter(SensorHistory.sensor_id == i['id']).filter(SensorHistory.time.between(time, time-timedelta(minutes=10)))
@@ -80,22 +84,24 @@ def gateway_data(client, userdata, message):
                     else:
                         pass
                 else:
-                    pass
+                    sensorhistory.sensor_state = '正常'
             elif i['id']>'S2001'and i['id']<'S2999':
                 sensorhistory.sensor_id = i['id']
                 sensorhistory.time =time
                 sensorhistory.sensor_value = i.get('value')
                 if sensorhistory.sensor_value == 1:
+                     sensorhistory.sensor_state = '正常'
                      sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=2,  alarm_time=time, gateway_id= Sensor.query.get(i['id']).gateway_id)
                      db.session.add(sensoralarm)
                      db.session.commit()
                 else:
-                    pass
+                    sensorhistory.sensor_state = '正常'
             elif i['id'] > 'S3001' and i['id']< 'S3999':
                 sensorhistory.sensor_id = i['id']
                 sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
                 if float(sensorhistory.sensor_value) > Sensor.query.get(i).max_value:
+                  sensorhistory.sensor_state = '异常'
                   sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=3, alarm_value=i.get('value'), var_type='电流', unit='A', alarm_time=time, gateway_id=Sensor.query.get(i['id']).gateway_id)
                   db.session.add(sensoralarm)
                   sm = SensorHistory.query.filter(SensorHistory.sensor_id == i['id']).filter(
@@ -110,18 +116,18 @@ def gateway_data(client, userdata, message):
                       pass
 
                   db.session.commit()
-                else:pass
+                else:sensorhistory.sensor_state = '正常'
             else:
                 sensorhistory.sensor_id = i['id']
                 sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
                 if sensorhistory.sensor_value == 1:
+                    sensorhistory.sensor_state = '异常'
                     sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=4, alarm_time=time, gateway_id=Sensor.query.get(i['id']).gateway_id)
                     db.session.add(sensoralarm)
                     db.session.commit()
                 else:
-                    pass
-            sensoralarm = sensoralarm
+                    sensorhistory.sensor_state = '正常'
             db.session.add(sensorhistory)
             db.session.commit()
             alarmhandler = AlarmHandle(type='0', handle_type='100', reference_message_id=sensoralarm.id,

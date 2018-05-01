@@ -91,30 +91,26 @@ class SensorsView(Resource):
     @api.response(200, 'ok')
     def get(self, sensorid):
         sensor = Sensor.query.get_or_404(sensorid)
-        home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled==False).first()
+        home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled == False).first()
         user = User.query.filter(User.id == home.admin_user_id).filter(User.disabled == False).first()
         if home and user:
             homeuser = HomeUser.query.filter(HomeUser.home_id == home.id).all()
-            query = db.session.query(Sensor, SensorHistory, Home).join(SensorHistory, Sensor.id == SensorHistory.sensor_id).\
-                join(Home, Sensor.gateway_id == Home.gateway_id).filter(Sensor.id == sensorid)
-            total = query.count()
-            _ = []
-            for i in [query.first()]:
-                __ = {}
-                __['sensor_id'] = i[0].id
-                __['sensor_type'] = i[0].sensor_type
-                __['max_value'] = i [0].max_value
-                __['set_type'] = i[0].set_type
-                __['sensor_place'] = i[0].sensor_place
-                __['sensor_state'] = tuple(SensorHistoryView.get(SensorTimeView, i[0].id))[0].get('sensor_state')
-                __['gateway_id'] = i[0].gateway_id
-                __['home_id'] = i[2].id
-                __['home_name'] = i[2].name
-                _.append(__)
+
+            _=[]
+            __ = {}
+            __['sensor_id'] = sensor.id
+            __['sensor_type'] = sensor.sensor_type
+            __['max_value'] = sensor.max_value
+            __['set_type'] = sensor.set_type
+            __['sensor_place'] = sensor.sensor_place
+            __['sensor_state'] = tuple(SensorHistoryView.get(SensorTimeView, sensor.id))[0].get('sensor_state')
+            __['gateway_id'] = sensor.gateway_id
+            __['home_id'] = home.id
+            __['home_name'] = home.name
+            _.append(__)
             result = {
                 'code': 0,
                 'msg': 'ok',
-                'count': total,
                 'data': _
             }
             if user.sensor_visable==False:
@@ -208,7 +204,7 @@ class SensorHistoryView(Resource):
     @api.marshal_with(sensorhistory_model)
     @api.response(200, 'ok')
     def get(self, sensorid):
-        sensor = Sensor.query.get_or_404(sensorid)
+        sensor = Sensor.query.filter(Sensor.id==sensorid).first()
         home = Home.query.filter(Home.gateway_id == sensor.gateway_id).first()
         sensorhistory = SensorHistory.query.filter(SensorHistory.sensor_id == sensorid).\
             order_by(SensorHistory.time.desc()).first()
