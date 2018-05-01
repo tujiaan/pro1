@@ -211,8 +211,8 @@ class SensorTime(db.Model):
     __tablename__ = 'sensor_time'
     id = db.Column(db.String(24), default=objectid, primary_key=True)
     sensor_id = db.Column(db.String(50), db.ForeignKey('sensor.id'), comment='传感器id')
-    start_time = db.Column(db.String(24), comment='开始时间')
-    end_time = db.Column(db.String(24), comment='结束时间')
+    start_time = db.Column(db.Time, comment='开始时间')
+    end_time = db.Column(db.Time, comment='结束时间')
     switch_on = db.Column(db.Boolean, default=False, comment='定时开关')
 
 

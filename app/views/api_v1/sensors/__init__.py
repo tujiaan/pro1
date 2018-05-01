@@ -223,6 +223,7 @@ class SensorTimeView(Resource):
     @api.doc('查询特定传感器定时')
     @api.marshal_with(sensortime_model, as_list=True)
     def get(self, sensorid):
+
         sensor = Sensor.query.get_or_404(sensorid)
         home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled==False).first()
         if home:
@@ -294,7 +295,8 @@ class SensorTimeView(Resource):
         if g.role.name == 'homeuser':
             if g.user.id == home.admin_user_id:
                 db.session.commit()
-                return '添加成功', 200
+               # return '添加成功', 200
+                return {'start_time': str(sensortime.start_time), 'type': str(type(sensortime.start_time))}, 200
             else:
                 return '权限不足', 201
         else:

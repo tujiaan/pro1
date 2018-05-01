@@ -253,7 +253,7 @@ def OpenSensor(app):
         sensortimes = SensorTime.query.all()
         for sensortime in sensortimes:
             sensor = Sensor.query.get_or_404(sensortime.sensor_id)
-            if sensortime.start_time == datetime.datetime.strftime(datetime.datetime.now(), '%H:%M') and sensortime.\
+            if sensortime.start_time == datetime.datetime.strftime(datetime.datetime.now(), '%H:%M:%S') and sensortime.\
                     switch_on == True:
 
                 data = {'data': {
@@ -265,7 +265,7 @@ def OpenSensor(app):
                 mqtt.publish(theme, json.dumps(data))
             else:
                 pass
-            if sensortime.end_time == datetime.datetime.strftime(datetime.datetime.now(), '%H:%M') and sensortime.\
+            if sensortime.end_time == datetime.datetime.strftime(datetime.datetime.now(), '%H:%M:%S') and sensortime.\
                     switch_on == True:
                 data = {'data': {
                     sensortime.sensor_id: '0'
