@@ -6,7 +6,7 @@ from app.ext import mqtt, db
 from app.models import Gateway, Sensor, SensorHistory, SensorAlarm, AlarmHandle
 
 
-def gateway_info(client, userdata, message):
+def gateway_info(client, userdata,message):
     p = json.loads(message.payload)
     gateway_id = p.get('gateway_id')
     sensors = p.get('sensors')
@@ -36,7 +36,7 @@ def gateway_info(client, userdata, message):
                         s.set_type = 0
                         s.sensor_type = 3
                     else: s.sensor_type = 4
-                    sensor.sensor_place = '暂无'
+                    s.sensor_place = '暂无'
                     db.session.add(s)
                     db.session.commit()
                     if s not in g.sensors:
@@ -47,14 +47,15 @@ def gateway_info(client, userdata, message):
     mqtt.client.message_callback_add(f'{gateway_id}/data', gateway_data)
 
 
-def gateway_data(client, userdata, message):
+
+def gateway_data(client,userdata, message):
     p = json.loads(message.payload)
-    list = p.get('sensors')
-    time = dateutil.parser.parse(p.get('time'))
+    lst = p.get("sensors")
+    time = dateutil.parser.parse(p.get("time"))
     with client.app.app_context():
-        for i in list:
+        for i in lst:
             sensorhistory = SensorHistory()
-            sensoralarm = None
+            #sensoralarm = None
             if i['id']>'S0001'and i['id']<'S0999':
                  sensorhistory.sensor_id = i['id']
                  sensorhistory.time = time
@@ -64,9 +65,9 @@ def gateway_data(client, userdata, message):
                     sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=0, alarm_time=time, gateway_id=Sensor.query.get(i['id']).gateway_id)
                     db.session.add(sensoralarm)
                     db.session.commit()
-                    pass
-                 else:sensorhistory.sensor_state = '正常'
-            elif i.get('id')>='S1001'and i.get('id')<'S1999':
+                 else:
+                     sensorhistory.sensor_state = '正常'
+            elif i.get('id')>='S1001'and i.get('id')<='S1999':
                 sensorhistory.sensor_id = i['id']
                 sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
@@ -77,6 +78,7 @@ def gateway_data(client, userdata, message):
                     sm = SensorHistory.query.filter(SensorHistory.sensor_id == i['id']).filter(SensorHistory.time.between(time, time-timedelta(minutes=10)))
                     count = 1
                     for i in sm:
+                        print('$$$$$$')
                         if int(i.sensor_value) > 50:
                             count += 1
                     if count > 9:
@@ -85,9 +87,9 @@ def gateway_data(client, userdata, message):
                         pass
                 else:
                     sensorhistory.sensor_state = '正常'
-            elif i['id']>'S2001'and i['id']<'S2999':
+            elif i['id']>='S2001'and i['id']<='S2999':
                 sensorhistory.sensor_id = i['id']
-                sensorhistory.time =time
+                sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
                 if sensorhistory.sensor_value == 1:
                      sensorhistory.sensor_state = '正常'
@@ -96,7 +98,7 @@ def gateway_data(client, userdata, message):
                      db.session.commit()
                 else:
                     sensorhistory.sensor_state = '正常'
-            elif i['id'] > 'S3001' and i['id']< 'S3999':
+            elif i['id'] >= 'S3001' and i['id']<= 'S3999':
                 sensorhistory.sensor_id = i['id']
                 sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
@@ -116,7 +118,8 @@ def gateway_data(client, userdata, message):
                       pass
 
                   db.session.commit()
-                else:sensorhistory.sensor_state = '正常'
+                else:
+                    sensorhistory.sensor_state = '正常'
             else:
                 sensorhistory.sensor_id = i['id']
                 sensorhistory.time = time
@@ -130,11 +133,16 @@ def gateway_data(client, userdata, message):
                     sensorhistory.sensor_state = '正常'
             db.session.add(sensorhistory)
             db.session.commit()
-            alarmhandler = AlarmHandle(type='0', handle_type='100', reference_message_id=sensoralarm.id,
-                                       handle_time=datetime.now())
-            db.session.add(alarmhandler)
-            db.session.commit()
+            sensoralarm = SensorAlarm.query.filter(SensorAlarm.sensor_id == i['id']).first()
+            if sensoralarm:
+
+                alarmhandler = AlarmHandle(type='0', handle_type='100', reference_message_id=sensoralarm.id,
+                                           handle_time=datetime.now())
+                db.session.add(alarmhandler)
+                db.session.commit()
+            else:pass
     return None, 200
+
 
 
 
