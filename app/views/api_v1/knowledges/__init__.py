@@ -63,7 +63,7 @@ class KnowledgeView(Resource):
     @api.marshal_with(knowledges_model)
     @api.response(200, 'ok')
     def get(self, knowledgeid):
-        knowledge = Knowledge.query.filter(Knowledge.disabled==False).filter(Knowledge.id==knowledgeid).first()
+        knowledge = Knowledge.query.filter(Knowledge.disabled == False).filter(Knowledge.id == knowledgeid).first()
         if knowledge:
             return knowledge, 200
         else:return '知识不存在',201

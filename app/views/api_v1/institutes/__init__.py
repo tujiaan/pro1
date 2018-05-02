@@ -95,7 +95,7 @@ class InstitutesViews(Resource):
         else: return'输入的用户不存在', 201
 
 
-@api.route('/<insid>')
+@api.route('/<insid>/')
 class InstituteView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['homeuser', 'propertyuser', '119user', 'stationuser', 'admin', 'superadmin'])
@@ -200,7 +200,7 @@ class InstituteView(Resource):
         else:return '机构不存在', 201
 
 
-@api.route('/<insid>/<distance>/ins')
+@api.route('/<insid>/<distance>/ins/')
 class InsIns(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
@@ -251,7 +251,7 @@ class InsIns(Resource):
         else:return '机构不存在', 201
 
 
-@api.route('/<insid>/users')
+@api.route('/<insid>/users/')
 class InsUsesrView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
@@ -266,29 +266,29 @@ class InsUsesrView(Resource):
             ins = Ins.query.filter(Ins.id == insid).filter(Ins.disabled == False).filter(Ins.type == '消防站').first()
         else:
             ins = Ins.query.filter(Ins.disabled == False).filter(Ins.id == insid).first()
-            if ins:
-                users = User.query.filter(User.id.in_(i.id for i in ins.user.all())).filter(User.disabled == False).order_by(User.id).offset((int(page)-1)*limit).\
-                limit(limit).all()
-                total = len(users)
-                _ = []
-                for user in users:
-                    __ = {}
-                    __['user_id'] = user.id
-                    __['user_name'] = user.username
-                    __['telephone'] = user.contract_tel
-                    _.append(__)
+        if ins:
+            users = User.query.filter(User.id.in_(i.id for i in ins.user.all())).filter(User.disabled == False).order_by(User.id).offset((int(page)-1)*limit).\
+            limit(limit).all()
+            total = len(users)
+            _ = []
+            for user in users:
+                __ = {}
+                __['user_id'] = user.id
+                __['user_name'] = user.username
+                __['telephone'] = user.contract_tel
+                _.append(__)
 
-                result = {
-                    'code': 0,
-                    'message': "ok",
-                    "count": total,
-                    "data": _
-                }
-                return result, 200
-            else:return '机构不存在', 201
+            result = {
+                'code': 0,
+                'message': "ok",
+                "count": total,
+                "data": _
+            }
+            return result, 200
+        else:return '机构不存在', 201
 
 
-@api.route('/<insid>/users/<userid>')
+@api.route('/<insid>/users/<userid>/')
 class InsUserView(Resource):
     @api.doc('增加机构成员/用户绑定机构')
     @api.header('jwt', 'JSON Web Token')
@@ -297,10 +297,15 @@ class InsUserView(Resource):
     def post(self, insid, userid):
      ins = Ins.query.filter(Ins.disabled == False).filter(Ins.id == insid).first()
      user = User.query.filter(User.disabled == False).filter(User.id == userid).first()
+     if ins.type == '物业':
+        userrole = UserRole.query.filter(UserRole.user_id == userid).filter(UserRole.role_id == '2').first()
+     else: userrole = UserRole.query.filter(UserRole.user_id == userid).filter(UserRole.role_id == '3').first()
      if ins and user:
          if user not in ins.user:
              if g.user.id == ins.admin_user_id or g.role.name in ['admin', 'superadmin']:
                     ins.user.append(user)
+                    db.session.commit()
+                    userrole.if_usable = True
                     db.session.commit()
                     return '添加成功', 200
              else: return '权限不足', 200
