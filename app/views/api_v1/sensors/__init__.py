@@ -242,7 +242,7 @@ class SensorTimeView(Resource):
     @api.doc('删除特定传感器定时')
     def delete(self, sensortimeid):
         sensortime = SensorTime.query.get_or_404(sensortimeid)
-        sensor = Sensor.query.get_or_404(sensortime.sensorid)
+        sensor = Sensor.query.get_or_404(sensortime.sensor_id)
         home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled == False).first()
         if home:
             db.session.delete(sensortime)
