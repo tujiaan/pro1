@@ -295,14 +295,14 @@ class SensorTimeView(Resource):
         if g.role.name == 'homeuser':
             if g.user.id == home.admin_user_id:
                 db.session.commit()
-                return '添加成功', 200
-                #return {'start_time': str(sensortime.start_time), 'type': str(type(sensortime.start_time))}, 200
+                #return '添加成功', 200
+                return {'start_time': str(sensortime.start_time), 'type': str(type(sensortime.start_time))}, 200
             else:
                 return '权限不足', 201
         else:
             db.session.commit()
-            return '添加成功', 200
-            #return {'start_time': str(sensortime.start_time), 'type': str(type(sensortime.start_time))}, 200
+            #return '添加成功', 200
+            return {'start_time': str(sensortime.start_time), 'type': str(type(sensortime.start_time))}, 200
 
 
 @api.route('/<start_time>/<end_time>/<sensorid>/maxvalue')
@@ -314,23 +314,25 @@ class SensorTimeViews(Resource):
         sensor = Sensor.query.get_or_404(sensorid)
         sensorhistorys = SensorHistory.query.filter(SensorHistory.sensor_id == sensorid). \
             order_by(SensorHistory.sensor_value.desc()).all()
-        sensorhistory = None
-        for i in sensorhistorys:
-            time = str(i.time.hour) + ":"+str(i.time.minute)
-            if start_time < time < end_time:
-                sensorhistory = i
-                break
-            else:
-                pass
-        sensor.max_value = sensorhistory.sensor_value
-        sensor.set_type = '2'
-        db.session.commit()
-        result = {
-            'start_time': start_time,
-            'end_time': end_time,
-            'max_value': sensorhistory.sensor_value
-            }
-        return result, 200
+        if len(sensorhistorys)>0:
+            sensorhistory = None
+            for i in sensorhistorys:
+                time = str(i.time.hour) + ":"+str(i.time.minute)
+                if start_time < time < end_time:
+                    sensorhistory = i
+                    break
+                else:
+                    pass
+            sensor.max_value = sensorhistory.sensor_value
+            sensor.set_type = '2'
+            db.session.commit()
+            result = {
+                'start_time': start_time,
+                'end_time': end_time,
+                'max_value': sensorhistory.sensor_value
+                }
+            return result, 200
+        else:return {'start_time': start_time, 'end_time': end_time, 'max_value': None}, 201
 
 
 

@@ -55,7 +55,6 @@ def gateway_data(client,userdata, message):
     with client.app.app_context():
         for i in lst:
             sensorhistory = SensorHistory()
-            #sensoralarm = None
             if i['id']>'S0001'and i['id']<'S0999':
                  sensorhistory.sensor_id = i['id']
                  sensorhistory.time = time
@@ -78,7 +77,6 @@ def gateway_data(client,userdata, message):
                     sm = SensorHistory.query.filter(SensorHistory.sensor_id == i['id']).filter(SensorHistory.time.between(time, time-timedelta(minutes=10)))
                     count = 1
                     for i in sm:
-                        print('$$$$$$')
                         if int(i.sensor_value) > 50:
                             count += 1
                     if count > 9:
@@ -102,17 +100,17 @@ def gateway_data(client,userdata, message):
                 sensorhistory.sensor_id = i['id']
                 sensorhistory.time = time
                 sensorhistory.sensor_value = i.get('value')
-                if float(sensorhistory.sensor_value) > Sensor.query.get(i).max_value:
+                if float(sensorhistory.sensor_value) > Sensor.query.get(i['id']).max_value:
                   sensorhistory.sensor_state = '异常'
                   sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=3, alarm_value=i.get('value'), var_type='电流', unit='A', alarm_time=time, gateway_id=Sensor.query.get(i['id']).gateway_id)
                   db.session.add(sensoralarm)
                   sm = SensorHistory.query.filter(SensorHistory.sensor_id == i['id']).filter(
-                      SensorHistory.time.between(time, time - timedelta(seconds=40)))
+                      SensorHistory.time.between(time, time - timedelta(seconds=40))).all()
                   count = 1
                   for i in sm:
                       if float(i.sensor_value) > Sensor.query.get(i).max_value:
                           count += 1
-                  if count >= len(sm-1):
+                  if count >= len(sm)-1:
                       db.session.commit()
                   else:
                       pass
@@ -135,7 +133,6 @@ def gateway_data(client,userdata, message):
             db.session.commit()
             sensoralarm = SensorAlarm.query.filter(SensorAlarm.sensor_id == i['id']).first()
             if sensoralarm:
-
                 alarmhandler = AlarmHandle(type='0', handle_type='100', reference_message_id=sensoralarm.id,
                                            handle_time=datetime.now())
                 db.session.add(alarmhandler)
