@@ -26,6 +26,7 @@ def upload_file(file):
         if not os.path.exists(path):
             os.makedirs(path)
         file.save(path + '/' + filename)
+        print(filename)
         return url
     except:
         return None

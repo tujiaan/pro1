@@ -28,7 +28,7 @@ class SensorAlarmsView(Resource):
         type = request.args.get('type', None)
         homeuser = HomeUser.query.filter(HomeUser.user_id == g.user.id).all()
         home = Home.query.filter(Home.id.in_(i.home_id for i in homeuser)).filter(Home.disabled == False).all()
-        if home:
+        if home or g.role.name in['propertyuser', 'stationuser', 'admin', 'superadmin']:
             sensors = Sensor.query.filter(Sensor.gateway_id.in_(i.gateway_id for i in home)).all()
             if g.role.name == 'homeuser':
                 if type:
@@ -100,7 +100,7 @@ class SensorAlarmView(Resource):
         sensor = sensoralarm.sensor
         home = Home.query.filter(Home.gateway_id == sensor.gateway_id).filter(Home.disabled == False).first()
         if home:
-            homeuser = HomeUser.query.filter(HomeUser.home_id == home.id)
+            homeuser = HomeUser.query.filter(HomeUser.home_id == home.id).all()
             if g.role.name == 'homeuser':
                 if g.user.id not in[i.user_id for i in homeuser]:
                     return '权限不足', 301
