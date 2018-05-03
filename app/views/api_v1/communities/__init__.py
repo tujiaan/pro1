@@ -125,7 +125,7 @@ class CommunityView(Resource):
     def get(self, communityid):
         community = Community.query.filter(Community.id == communityid).filter(Community.disabled == False).first()
         if community:
-            ins = community.ins
+            ins = community.ins.all()
             _=[]
             for i in ins:
                 __={}
@@ -142,7 +142,8 @@ class CommunityView(Resource):
                 'eva_distance': float(community.eva_distance),
                 'location_id': community.location_id,
                 'community_picture': community.community_picture,
-                'ins_data': _
+                'ins_count': len(ins),
+                'ins_data':_
 
             }
             if g.role.name == 'propertyuser'or g.role.name == 'stationuser':
