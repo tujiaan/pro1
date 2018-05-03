@@ -8,7 +8,7 @@ from sqlalchemy import and_, or_
 from app.ext import db, getui
 from app.models import UserAlarmRecord, Community, Home, User, Sensor, UserRole, Role, HomeUser, Ins, MessageSend, \
     SensorAlarm, AlarmHandle
-from app.utils.auth import decode_jwt
+from app.utils.auth import decode_jwt, user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 #from app.utils.myutil.pushmessage import JPush2
@@ -154,44 +154,44 @@ class UserAlarmRecordView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['119user', 'propertyuser', 'stationuser', 'admin', 'superadmin'])
     @api.response(200, 'ok')
+    @user_require
     def put(self, useralarmrecordid):
         useralarmrecord = UserAlarmRecord.query.get_or_404(useralarmrecordid)
+        insuser = []
         if useralarmrecord.home_id:
             home = Home.query.filter(Home.id == useralarmrecord.home_id).filter(Home.disabled == False).first()
             if home:
                 community = home.community
                 ins = community.ins
-                insuser = []
                 for i in ins:
                     insuser.extend(i.user)
-            else:abort(404,message='家庭不存在')
+            else:abort(404, message='家庭不存在')
         else:
-            ins2 = Ins.query.filter(Ins.id == useralarmrecord.ins_id).filter(Ins.disabled==False).first()
+            ins2 = Ins.query.filter(Ins.id == useralarmrecord.ins_id).filter(Ins.disabled == False).first()
             if len(ins2) > 0:
-                _ = []
                 for i in ins2:
-                    _.extend(i.user.all())
+                    insuser.extend(i.user.all())
             else:abort(404)
-        try:
-            args = useralarmrecord1_parser.parse_args()
-            if args['note']:
-                useralarmrecord.note = args['note']
-            else:pass
-            if args['reference_alarm_id']:
-                useralarmrecord.reference_alarm_id = args['reference_alarm_id']
-            else:pass
-            if args['if_confirm']:
-                if g.role.name in ['propertyuser', 'stationuser']:
-                    if g.user.id in[i.id for i in insuser] or g.user.id in [i.id for i in _]:
-                        useralarmrecord.if_confirm = True
-                    else:pass
-                else: useralarmrecord.if_confirm = True
-            else:pass
-            alarmhandle = AlarmHandle(type='1', handle_time=datetime.datetime.now(), handle_type='203', user_id=g.uer.id, reference_message_id=useralarmrecordid,note = args['note'])
-            db.session.add(alarmhandle)
-            db.session.commit()
-            return '修改成功', 200
-        except:abort(401, message='信息有误')
+        args = useralarmrecord1_parser.parse_args()
+        if args['note']:
+            useralarmrecord.note = args['note']
+        else:pass
+        if args['reference_alarm_id']:
+            useralarmrecord.reference_alarm_id = args['reference_alarm_id']
+        else:pass
+        if args['if_confirm']:
+            useralarmrecord.if_confirm = True
+            if g.role.name in ['propertyuser', 'stationuser']:
+                if g.user.id in[i.id for i in insuser]:
+                    db.session.commit()
+                else:return '权限不足',201
+            else:  db.session.commit()
+        else:pass
+        user_id=g.user.id
+        alarmhandle = AlarmHandle(type='1', handle_time=datetime.datetime.now(), handle_type='203', user_id=user_id, reference_message_id=useralarmrecordid,note = args['note'])
+        db.session.add(alarmhandle)
+        db.session.commit()
+        return '修改成功', 200
 
     @api.doc('查询单条用户报警记录')
     @api.response(200, 'ok')
@@ -231,7 +231,7 @@ class UserAlarmRecordView(Resource):
                 user1 = User.query.filter(User.id.in_(i.user_id for i in homeuser)).all()  # 报警家庭成员
             else:abort(404, message='家庭不存在')
         else:
-            ins1 = Ins.query.filter(Ins.disabled==False).filter(Ins.id==useralarmrecord.ins_id).first()
+            ins1 = Ins.query.filter(Ins.disabled == False).filter(Ins.id==useralarmrecord.ins_id).first()
             if len(ins1) > 0:
                 community1 = ins1.community.all()
                 home2 = []

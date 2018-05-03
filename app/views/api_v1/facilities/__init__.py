@@ -94,6 +94,7 @@ class FacilityDataView(Resource):
         facility = Facility.query.filter(Facility.disabled == False).filter(Facility.id == facilityid).first()
         if facility:
             facility.disabled = True
+            db.session.commit()
         else:return '设施不存在', 201
         # knowledge = facility.knowledge
         # try:
