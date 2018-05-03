@@ -131,6 +131,7 @@ class CommunityView(Resource):
                 __={}
                 __['ins_id'] = i.id
                 __['ins_type'] = i.type
+                __['ins_name']=i.name
                 _.append(__)
             community = {
                 'community_id': community.id,
