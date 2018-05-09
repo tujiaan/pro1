@@ -222,7 +222,7 @@ class CommunityView(Resource):
 @api.route('/<communityid>/homes')
 class CommunityHome(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', '119user', 'insuser', 'superadmin'])
+    @role_require(['admin', '119user', 'propertyuser', 'stationuser', 'superadmin'])
     @page_format(code=0, msg='ok')
     @api.doc('查询社区覆盖的家庭')
     @api.marshal_with(home_model, as_list=True)
