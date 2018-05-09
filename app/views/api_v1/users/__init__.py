@@ -137,7 +137,7 @@ class UserHomeView1(Resource):
                     User.id == ins.admin_user_id).first().username,
                 __['admin_tel'] = User.query.filter(User.disabled == False).filter(
                     User.id == ins.admin_user_id).first().contract_tel,
-                __['type'] = ins.type,
+                __['ins_type'] = ins.type,
                 __['ins_name'] = ins.name,
                 __['ins_picture'] = ins.ins_picture,
                 __['ins_address'] = ins.ins_address,
@@ -145,7 +145,7 @@ class UserHomeView1(Resource):
                 __['location_district'] = Location.query.get_or_404(ins.location_id).district,
                 __['longitude'] = str(ins.longitude),
                 __['latitude'] = str(ins.latitude),
-                __['note'] = ins.note
+                __['ins_note'] = ins.note
                 _.append(__)
             return {
                        'code': 0,
@@ -409,7 +409,7 @@ class UserHomeView(Resource):
                     User.id == ins.admin_user_id).first().username,
                 __['admin_tel'] = User.query.filter(User.disabled == False).filter(
                     User.id == ins.admin_user_id).first().contract_tel,
-                __['type'] = ins.type,
+                __['ins_type'] = ins.type,
                 __['ins_name'] = ins.name,
                 __['ins_picture'] = ins.ins_picture,
                 __['ins_address'] = ins.ins_address,
@@ -417,7 +417,7 @@ class UserHomeView(Resource):
                 __['location_district'] = Location.query.get_or_404(ins.location_id).district,
                 __['longitude'] = str(ins.longitude),
                 __['latitude'] = str(ins.latitude),
-                __['note'] = ins.note
+                __['ins_note'] = ins.note
                 _.append(__)
             return {
                 'code': 0,
