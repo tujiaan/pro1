@@ -2,7 +2,7 @@ from flask import g, flash, request
 from flask_restplus import Namespace, Resource, abort
 from sqlalchemy import select, text, and_, Boolean, false, true
 from app.ext import db
-from app.models import User, Role, Ins, Home, HomeUser, UserRole
+from app.models import User, Role, Ins, Home, HomeUser, UserRole, Location
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.auth.jwt import encode_jwt, decode_jwt
@@ -120,18 +120,39 @@ class UserHomeView1(Resource):
 class UserHomeView1(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['stationuser', 'propertyuser', 'superadmin'])
-    @page_format(code='0', msg='success')
     @api.doc('查询自己关联的机构')
-    @api.marshal_with(institute_model, as_list=True)
-    @page_range()
     def get(self):
         ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.disabled == False)
         try:
             if g.role.name == 'propertyuser':
-                ins = ins.filter(Ins.type == '物业')
+                ins1 = ins.filter(Ins.type == '物业')
             else:
-                ins = ins.filter(Ins.type == '消防站')
-            return ins, 200
+                ins1 = ins.filter(Ins.type == '消防站')
+            _=[]
+            for ins in ins1.all():
+                __ = {}
+                __['ins_id'] = ins.id,
+                __['ins_admin'] = ins.admin_user_id,
+                __['admin_name'] = User.query.filter(User.disabled == False).filter(
+                    User.id == ins.admin_user_id).first().username,
+                __['admin_tel'] = User.query.filter(User.disabled == False).filter(
+                    User.id == ins.admin_user_id).first().contract_tel,
+                __['type'] = ins.type,
+                __['ins_name'] = ins.name,
+                __['ins_picture'] = ins.ins_picture,
+                __['ins_address'] = ins.ins_address,
+                __['location_id'] = ins.location_id,
+                __['location_district'] = Location.query.get_or_404(ins.location_id).district,
+                __['longitude'] = str(ins.longitude),
+                __['latitude'] = str(ins.latitude),
+                __['note'] = ins.note
+                _.append(__)
+            return {
+                       'code': 0,
+                       'message': 'ok',
+                       'total': len(_),
+                       'data': _
+                   }, 200
         except:return None, 201
 
 
@@ -374,15 +395,37 @@ class user(Resource):
 class UserHomeView(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', 'superadmin'])
-    @page_format(code=0, msg='ok')
     @api.doc('查询用户关联的机构')
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @api.marshal_with(institute_model, as_list=True)
-    @page_range()
     def get(self, userid):
         user = User.query.filter(User.disabled == False).filter(User.id == userid).first()
         if user:
-             return user.ins, 200
+            _ = []
+            for ins in user.ins.all():
+                __ = {}
+                __['ins_id'] = ins.id,
+                __['ins_admin'] = ins.admin_user_id,
+                __['admin_name'] = User.query.filter(User.disabled == False).filter(
+                    User.id == ins.admin_user_id).first().username,
+                __['admin_tel'] = User.query.filter(User.disabled == False).filter(
+                    User.id == ins.admin_user_id).first().contract_tel,
+                __['type'] = ins.type,
+                __['ins_name'] = ins.name,
+                __['ins_picture'] = ins.ins_picture,
+                __['ins_address'] = ins.ins_address,
+                __['location_id'] = ins.location_id,
+                __['location_district'] = Location.query.get_or_404(ins.location_id).district,
+                __['longitude'] = str(ins.longitude),
+                __['latitude'] = str(ins.latitude),
+                __['note'] = ins.note
+                _.append(__)
+            return {
+                'code': 0,
+                'message': 'ok',
+                'total': len(_),
+                'data': _
+            },200
+
         else:abort(404, message='用户不存在')
 
 

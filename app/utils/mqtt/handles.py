@@ -47,7 +47,6 @@ def gateway_info(client, userdata,message):
     mqtt.client.message_callback_add(f'{gateway_id}/data', gateway_data)
 
 
-
 def gateway_data(client,userdata, message):
     p = json.loads(message.payload)
     lst = p.get("sensors")
@@ -72,7 +71,7 @@ def gateway_data(client,userdata, message):
                 sensorhistory.sensor_value = i.get('value')
                 if int(sensorhistory.sensor_value) > 50:
                     sensorhistory.sensor_state = '异常'
-                    sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=1, var_type='温度', alarm_value=i.get('value'), unit='℃',alarm_time=time,gateway_id=Sensor.query.get(i['id']).gateway_id )
+                    sensoralarm = SensorAlarm(sensor_id=i['id'], sensor_type=1, var_type='温度', alarm_value=i.get('value'), unit='℃',alarm_time=time, gateway_id=Sensor.query.get(i['id']).gateway_id )
                     db.session.add(sensoralarm)
                     sm = SensorHistory.query.filter(SensorHistory.sensor_id == i['id']).filter(SensorHistory.time.between(time, time-timedelta(minutes=10)))
                     count = 1
