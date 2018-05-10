@@ -2,10 +2,11 @@ from flask import g
 from flask_restplus import Namespace, Resource
 
 from app.ext import db
-from app.models import Facility, FacilityData,Knowledge
+from app.models import*
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
 from app.views.api_v1.facilities.parser import facility_parser, facility_parser1, f_parser, f1_parser
+from app.views.api_v1.knowledges import knowledges_model
 
 api = Namespace('Facilities', description='设备相关接口')
 

@@ -4,255 +4,167 @@ from bson import ObjectId
 
 from app.ext import db
 
+
 def objectid():
     return str(ObjectId())
 
 
-t_user_role = db.Table(
-    'user_role',
-    db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
-    db.Column('role_id', db.String(24), db.ForeignKey('role.id')),
-    db.UniqueConstraint('user_id', 'role_id', name='uix_role_user')
+t_org_equ = db.Table(
+    'org_equ',
+    db.Column('org_id', db.ForeignKey('organization.id'), index=True),
+    db.Column('equ_id', db.ForeignKey('equipment.id'), index=True),
+    db.UniqueConstraint('org_id', 'equ_id', name='unix_org_equ')
 )
-
-t_role_menu = db.Table(
-    'role_menu',
-    db.Column('role_id', db.String(24), db.ForeignKey('role.id')),
-    db.Column('menu_id', db.String(24), db.ForeignKey('menu.id')),
-    db.UniqueConstraint('menu_id', 'role_id', name='uix_role_menu')
-
+t_user_org = db.Table(
+    'user_org',
+    db.Column('user_id', db.ForeignKey('user.id'), index=True),
+    db.Column('org_id', db.ForeignKey('organization.id'), index=True),
+    db.UniqueConstraint('user_id', 'org_id', name='unix_user_org')
 )
-
-t_facility_knowledge = db.Table(
-    'facility_knowledge',
-    db.Column('knowledge_id', db.String(24), db.ForeignKey('knowledge.id')),
-    db.Column('facility_id', db.String(24), db.ForeignKey('facility.id')),
-    db.UniqueConstraint('knowledge_id', 'facility_id', name='uix_facility_knowledge')
-)
-
-t_user_home = db.Table(
-    'user_home',
-    db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
-    db.Column('home_id', db.String(24), db.ForeignKey('home.id')),
-    db.UniqueConstraint('user_id', 'home_id', name='uix_home_user')
-)
-t_user_ins = db.Table(
-    'user_ins',
-    db.Column('user_id', db.String(24), db.ForeignKey('user.id')),
-    db.Column('ins_id', db.String(24), db.ForeignKey('ins.id')),
-    db.UniqueConstraint('user_id', 'ins_id', name='uix_ins_user')
+t_user_work = db.Table(
+    'user_work',
+    db.Column('user_id', db.ForeignKey('user.id'), index=True),
+    db.Column('workorder_id', db.ForeignKey('workorder.id'), index=True),
+    db.UniqueConstraint('user_id', 'workorder_id', name='unix_user_work')
 )
 
 
-
-class Ins(db.Model):
-    __tablename__ = 'ins'
-
-    id = db.Column(db.String(24), default=objectid, primary_key=True)
-    type = db.Column(db.String(255), comment='机构类型')
-    name = db.Column(db.String(50), comment='机构名称')
-    ins_picture = db.Column(db.LargeBinary, comment='机构图片')
-    location_id=db.Column(db.String(50),db.ForeignKey('location.id'),comment='位置')
-
-    ins_address = db.Column(db.String(255), comment='机构地址')
-    note = db.Column(db.Text, comment='备注')
-    latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
-    longitude = db.Column(db.Float(asdecimal=True), comment='经度')
-    # administrator_Id = db.Column(db.String(50),comment='管理员?????也用下面的方式吧')
-    admin_user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='管理员id')
-    community=db.relationship('Community')
-    user = db.relationship('User', secondary=t_user_ins,
-                          backref=db.backref('f_user', lazy='dynamic') , lazy='dynamic' )
-
-    class Location (db.Model):
-        __tablename__='location'
-        id = db.Column(db.String(24), default=objectid, primary_key=True)
-        province = db.Column(db.String(25), comment='省/市')
-        district = db.Column(db.String(50), comment='区')
-        street= db.Column(db.String(50), comment='街道')
-
-
-
-
-class Community(db.Model):
-    __tablename__ = 'community'
+class Alarm(db.Model):
+    __tablename__ = 'alarm'
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    name = db.Column(db.String(255), comment='社区名')
-    community_picture = db.Column(db.LargeBinary, comment='社区图片')
-    detail_address = db.Column(db.String(255), comment='详细地址')
-    save_distance = db.Column(db.Integer, comment='求救距离')
-    eva_distance = db.Column(db.Integer, comment='疏散距离')
-    longitude = db.Column(db.Float(asdecimal=True), comment='经度')
-    latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
-    ins_id = db.Column(db.String(24), db.ForeignKey('ins.id'), comment='机构id')
-    ins = db.relationship('Ins')
-    homes = db.relationship('Home', lazy='dynamic')
+    type = db.Column(db.Integer)
+    value = db.Column(db.Float)
+    time = db.Column(db.DateTime, default=datetime.datetime.now)
+    if_confirm = db.Column(db.Boolean, nullable=False, default=False)
+    note = db.Column(db.Text)
+    node_id = db.Column(db.String(24), db.ForeignKey('node.id'))
+    node = db.relationship('Node', backref=db.backref('f1_node', lazy='dynamic'), lazy='joined')
 
 
-class Facility(db.Model):
-    __tablename__ = 'facility'
-    id = db.Column(db.String(24), default=objectid, primary_key=True)
-    facility_id = db.Column(db.String(24), db.ForeignKey('facility_data.id'), comment='设施id')
-    facility = db.relationship('FacilityData')
-    ins_id = db.Column(db.String(24), db.ForeignKey('ins.id'), comment='机构id')
-    ins = db.relationship('Ins')
-    count = db.Column(db.Integer, comment='设施数量')
-    expire_time = db.Column(db.DateTime, comment='过期时间')
-    knowledges = db.relationship('Knowledge', secondary=t_facility_knowledge,
-                            backref=db.backref('f_knowledges', lazy='dynamic') , lazy='dynamic')
-
-
-class FacilityData(db.Model):
-    __tablename__ = 'facility_data'
+class Consume(db.Model):
+    __tablename__ = 'consume'
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    facility_name = db.Column(db.String(50), comment='设施名')
-    facility_picture = db.Column(db.LargeBinary, comment='设施图片')
+    reporter_id = db.Column(db.String(24))
+    report_time = db.Column(db.DateTime)
+    consume_name = db.Column(db.String(32))
+    count = db.Column(db.Integer)
+    work_id = db.Column(db.String(24), db.ForeignKey('workorder.id'))
+    work = db.relationship('Workorder', backref=db.backref('f_worker', lazy='dynamic'), lazy='joined')
 
 
+class Equipment(db.Model):
+    __tablename__ = 'equipment'
+
+    id = db.Column(db.String(24), default=objectid,  primary_key=True)
+    name = db.Column(db.String(50))
+    type = db.Column(db.Integer)
+    picture = db.Column(db.String(200))
+    note = db.Column(db.Text)
+    status = db.Column(db.Integer)
+    orgs = db.relationship('Organization', secondary='org_equ', backref=db.backref('f_equi_orgs', lazy='dynamic'), lazy='dynamic')
 
 
-
-class Gateway(db.Model):
-    __tablename__ = 'gateway'
-
-    id = db.Column(db.String(24), default=objectid, primary_key=True)
-    useable = db.Column(db.Boolean, default=True, comment='是否可用')
-    home_id = db.Column(db.String(24),  comment='家庭id')
-    #home = db.relationship('Home')
-    sensors = db.relationship('Sensor', lazy='dynamic')
-
-
-class Home(db.Model):
-    __tablename__ = 'home'
-
-    id = db.Column(db.String(24), default=objectid, primary_key=True)
-    name = db.Column(db.String(255), comment='家庭名称')
-    community_id = db.Column(db.String(24), db.ForeignKey('community.id'), comment='社区id')
-    community = db.relationship('Community')
-
-    user = db.relationship('User', secondary=t_user_home,
-                          backref=db.backref('f1_user', lazy='dynamic') , lazy='dynamic')
-    admin_user_id=db.Column(db.String(24), db.ForeignKey('user.id'), comment='创建者id')
-    detail_address = db.Column(db.String(255), comment='家庭地址')
-    link_name = db.Column(db.String(50), comment='主人姓名')
-    telephone = db.Column(db.String(50), comment='电话号码')
-    longitude = db.Column(db.Float(asdecimal=True), comment='经度')
-    latitude = db.Column(db.Float(asdecimal=True), comment='纬度')
-    alternate_phone = db.Column(db.String(50), comment='备用电话')
-    #gateways = db.relationship('Gateway', lazy='dynamic')
-    gateway_id=db.Column(db.String(50),db.ForeignKey('gateway.id'),comment='网关id')
-    sensor=db.relationship('Sensor',lazy='dynamic')
-
-
-class Knowledge(db.Model):
-    __tablename__ = 'knowledge'
+class Node(db.Model):
+    __tablename__ = 'node'
 
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    type = db.Column(db.String(50), comment='知识类型   (0.自救 1.逃生 2.灭火 3.新闻 4.其他)')
-    content = db.Column(db.Text, comment='知识正文')
-    title = db.Column(db.String(50), comment='知识标题')
-    facility=db.relationship('Facility',secondary=t_facility_knowledge,
-                       backref=db.backref('f_facility',lazy='dynamic') , lazy='dynamic')
+    name = db.Column(db.String(50))
+    type = db.Column(db.Integer)
+    status = db.Column(db.Integer)
+    value = db.Column(db.Float)
+    note = db.Column(db.Text)
+    equ_id = db.Column(db.String(24), db.ForeignKey('equipment.id'), index=True)
+    equ = db.relationship('Equipment', backref=db.backref('f_node_equ', lazy='dynamic'), lazy='joined')
 
 
-class Menu(db.Model):
-    __tablename__ = 'menu'
+class Organization(db.Model):
+    __tablename__ = 'organization'
 
-    id = db.Column(db.String(24), default=objectid, primary_key=True)
-    p_id = db.Column(db.String(24), db.ForeignKey('menu.id'), comment='父id')
-    children = db.relationship("Menu")
-    parent = db.relationship("Menu", remote_side=[id])
-    label = db.Column(db.String(20), nullable=False, comment='标签')
-    level = db.Column(db.SmallInteger, comment='层级')
-    type = db.Column(db.SmallInteger,  comment='类型')
-    style = db.Column(db.String(50), comment='样式')
-    disabled = db.Column(db.Boolean, default=False, comment='是否可用')
-    roles = db.relationship('Role', secondary=t_role_menu,
-                            backref=db.backref('menu_roles', lazy='dynamic') , lazy='dynamic')
-    path = db.Column(db.String(200), comment='和url什么区别???')
-    order = db.Column(db.SmallInteger, comment='?????')
-    url = db.Column(db.String(200), comment='和path什么区别???')
+    id = db.Column(db.String(24), default=objectid,  primary_key=True)
+    name = db.Column(db.String(50))
+    address = db.Column(db.String(255))
+    picture = db.Column(db.String(200))
+    telephone = db.Column(db.String(20))
+    admin_user_id = db.Column(db.String(24), db.ForeignKey('user.id'))
+    longitude = db.Column(db.Numeric(10, 7))
+    latitude = db.Column(db.Numeric(10, 7))
+    note = db.Column(db.Text)
+
+    users = db.relationship('User', secondary='user_org', backref=db.backref('f_org_user', lazy='dynamic'), lazy='dynamic')
 
 
 class Role(db.Model):
     __tablename__ = 'role'
-
-    id = db.Column(db.String(24), default=objectid, primary_key=True)
-    name = db.Column(db.String(30), nullable=False)
-    disabled = db.Column(db.Boolean, default=True, comment='是否可用')
-    description = db.Column(db.String(60), comment='权限描述')
-    #users = db.relationship('User', secondary=t_user_role,
-                           # backref=db.backref('user_roles', lazy='dynamic') , lazy='dynamic')
-    menus = db.relationship('Menu', secondary=t_role_menu,
-                            backref=db.backref('role_menus', lazy='dynamic') , lazy='dynamic')
-
-
-class Sensor(db.Model):
-    __tablename__ = 'sensor'
-
-    id = db.Column(db.String(24), default=objectid, primary_key=True)
-    gateway_id = db.Column(db.String(24), db.ForeignKey('gateway.id'), comment='网关id')
-    gateway = db.relationship('Gateway')
-    sensor_place = db.Column(db.String(255), comment='位置')
-    sensor_type = db.Column(db.Integer, comment='传感器类型   (0.烟雾 1.温度 2.燃气 3.电流)')
-    start_time=db.Column(db.DateTime,comment='开始时间')
-    end_time=db.Column(db.DateTime,comment='结束时间')
-    max_value=db.Column(db.Float,comment='阈值')
-    alarms_history = db.relationship('SensorAlarm', lazy='dynamic')
-    home_id=db.Column(db.String(24),db.ForeignKey('home.id'),comment='家庭id')
-
-
-class SensorAlarm(db.Model):
-    __tablename__ = 'sensor_alarm'
-
-    id = db.Column(db.String(24), default=objectid, primary_key=True, comment='')
-    sensor_id = db.Column(db.String(24), db.ForeignKey('sensor.id'), comment='网关id')
-    sensor = db.relationship('Sensor')
-    alarm_object = db.Column(db.String(50), comment='报警项目')
-    alarm_value = db.Column(db.Float, comment='报警数值')
-    alarm_time = db.Column(db.DateTime, comment='报警时间')
-    confirm_time = db.Column(db.DateTime, comment='确认时间')
-    is_timeout = db.Column(db.Boolean, default=False, comment='是否超时')
-    user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='确认人id')
-    user = db.relationship('User')
-    is_confirm = db.Column(db.Boolean, default=False, comment='是否确认')
+    id = db.Column(db.String(24), default=objectid,  primary_key=True)
+    name = db.Column(db.String(32))
+    disabled = db.Column(db.Boolean, nullable=False, default=True)
+    description = db.Column(db.String(60))
 
 
 class User(db.Model):
     __tablename__ = 'user'
 
+    id = db.Column(db.String(24), default=objectid,  primary_key=True)
+    username = db.Column(db.String(24))
+    real_name = db.Column(db.String(50))
+    password = db.Column(db.String(32))
+    email = db.Column(db.String(60))
+    user_tel = db.Column(db.String(20))
+    salt = db.Column(db.String(50))
+    disabled = db.Column(db.Boolean, nullable=False, default=False)
+    createtime = db.Column(db.DateTime, default=datetime.datetime.now)
+    lastTime = db.Column(db.DateTime)
+    works = db.relationship('Workorder', secondary='user_work', backref=db.backref('f_user_work', lazy='dynamic'), lazy='joined')
+
+
+class UserRole(db.Model):
+    __tablename__ = 'user_role'
+
+    id = db.Column(db.String(24), default=objectid,  primary_key=True)
+    user_id = db.Column(db.String(24), db.ForeignKey('user.id'), index=True)
+    role_id = db.Column(db.String(24), db.ForeignKey('role.id'), index=True)
+    disable = db.Column(db.Boolean, nullable=False, default=False)
+    role = db.relationship('Role', backref=db.backref('f1_role', lazy='dynamic'), lazy='joined')
+    user = db.relationship('User', backref=db.backref('f1_user', lazy='dynamic'), lazy='joined')
+
+
+class Workorder(db.Model):
+    __tablename__ = 'workorder'
+
+    id = db.Column(db.String(24), default=objectid,  primary_key=True)
+    createperson_id = db.Column(db.String(24), db.ForeignKey('user.id'))
+    equ_id = db.Column(db.String(24), db.ForeignKey('equipment.id'))
+    alarm_type = db.Column(db.Integer)
+    passperson_id = db.Column(db.String(255), db.ForeignKey('user.id'))
+    notiperson_id = db.Column(db.String(255), db.ForeignKey('user.id'))
+    mailtopass = db.Column(db.Boolean, nullable=False, default=False)
+    mailtonoti = db.Column(db.Boolean, nullable=False, default=False)
+    smstopass = db.Column(db.Boolean, nullable=False, default=False)
+    smstonoti = db.Column(db.Boolean, nullable=False, default=False)
+    problem = db.Column(db.Text)
+    picture = db.Column(db.String(200))
+
+
+class Currentrecord(db.Model):
+    __tablename__ = 'currentrecord'
+
     id = db.Column(db.String(24), default=objectid, primary_key=True)
-    disabled = db.Column(db.Boolean, default=False, comment='是否停用   (1、禁用 0、正常)')
-    contract_tel = db.Column(db.String(20), comment='用户电话')
-    username = db.Column(db.String(20), index=True, comment='用户名)')
-    password = db.Column(db.String(32), comment='密码')
-    email = db.Column(db.String(60), comment='email')
-    salt = db.Column(db.String(50), comment='加密盐')
-    createTime = db.Column(db.DateTime, default=datetime.datetime.now, comment='创建时间')
-    lastTime = db.Column(db.DateTime, comment='最后登陆时间')
-
-    real_name = db.Column(db.String(50), comment='姓名')
-    roles = db.relationship('Role', secondary=t_user_role,
-                            backref=db.backref('user_roles',
-                                               lazy='dynamic'), lazy='dynamic')
-
-    home = db.relationship('Home', secondary=t_user_home,
-                           backref=db.backref('f_home', lazy='dynamic'), lazy='dynamic')
-
-    ins = db.relationship('Ins', secondary=t_user_ins,
-                          backref=db.backref('f_ins', lazy='dynamic'), lazy='dynamic')
+    currentperson_id = db.Column(db.String(24), db.ForeignKey('user.id'))
+    currenttime = db.Column(db.DateTime, default=datetime.datetime.now)
+    currentcontent = db.Column(db.Text)
+    attachment = db.Column(db.String(200))
+    work_id = db.Column(db.String(24), db.ForeignKey('workorder.id'))
+    work = db.relationship('Workorder', backref=db.backref('f1_worker', lazy='dynamic'), lazy='joined')
 
 
 
-class UserAlarmRecord(db.Model):
-    __tablename__ = 'user_alarm_record'
 
-    id = db.Column(db.String(24), default=objectid, primary_key=True)
-    type = db.Column(db.Integer, default=0, comment='信息类型,0:消防,1,吧啦吧啦,2吧啦吧啦')
-    content = db.Column(db.String(50), comment='')
-    community_id = db.Column(db.String(24), db.ForeignKey('community.id'))
-    community = db.relationship('Community')
-    user_id = db.Column(db.String(24), db.ForeignKey('user.id'), comment='发布人id')
-    user = db.relationship('User')
+
+
+
+
+
+
+
