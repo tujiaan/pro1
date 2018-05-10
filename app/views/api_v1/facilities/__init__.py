@@ -26,7 +26,7 @@ class FacilitiesInsView(Resource):
         list = Facility.query.filter(Facility.disabled == False)
         try:
             return list, 200
-        except:return None,201
+        except:return None, 201
 
     @api.doc('新增设施')
     @api.header('jwt', 'JSON Web Token')

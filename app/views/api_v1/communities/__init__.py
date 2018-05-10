@@ -4,7 +4,7 @@ from flask import g, request
 from flask_restplus import Namespace, Resource, abort
 
 from app.ext import db
-from app.models import Community, Ins, Home, UserRole, Role, Location, UserAlarmRecord
+from app.models import Community, Ins, Home, UserRole, Role, Location, UserAlarmRecord, User
 from app.utils.auth import user_require
 from app.utils.auth.auth import role_require
 from app.utils.tools.page_range import page_range, page_format
@@ -224,19 +224,38 @@ class CommunityView(Resource):
 class CommunityHome(Resource):
     @api.header('jwt', 'JSON Web Token')
     @role_require(['admin', '119user', 'propertyuser', 'stationuser', 'superadmin'])
-    @page_format(code=0, msg='ok')
     @api.doc('查询社区覆盖的家庭')
-    @api.marshal_with(home_model, as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @api.response(200, 'ok')
-    @page_range()
     def get(self, communityid):
         community = Community.query.filter(Community.id == communityid).filter(Community.disabled == False).first()
         if community:
-            try:
-                homes=community.homes
-                return homes, 200
-            except:return None, 201
+                _ = []
+                for i in community.homes.all():
+                    __ = {}
+                    __['home_id'] = i.id
+                    __['home_name'] = i.name
+                    __['community_id'] = i.community_id
+                    __['community_name'] = Community.query.filter(Community.id == i.community_id).filter(
+                        Community.disabled == False).first().name
+                    __['detail_address'] = i.detail_address
+                    __['link_name'] = i.link_name
+                    __['tephone'] = i.telephone
+                    __['longitude'] = str(i.longitude)
+                    __['latitude'] = str(i.latitude)
+                    __['gateway_id'] = i.gateway_id
+                    __['alternate_phone'] = i.alternate_phone
+                    __['admin_user_id'] = i.admin_user_id
+                    __['admin_name'] = User.query.filter(User.disabled == False).filter(
+                        User.id == i.admin_user_id).first().username
+                    _.append(__)
+                result = {
+                    'code': 0,
+                    'msg': 'ok',
+                    'count': len(_),
+                    'data': _
+                }
+                return result, 200
         else:abort(404, message='社区不存在')
 
 

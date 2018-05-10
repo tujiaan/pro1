@@ -332,19 +332,36 @@ class InsUserView(Resource):
 
 @api.route('/<insid>/community')
 class InsCommunityView(Resource):
-    @page_format(code=0, msg='ok')
     @api.doc('查询机构覆盖的社区')
     @ api.header('jwt', 'JSON Web Token')
     @ role_require(['propertyuser', 'stationuser', 'admin', 'superadmin'])
-    @api.marshal_with(community_model, as_list=True)
     @api.response(200, 'ok')
     @api.doc(params={'page': '页数', 'limit': '数量'})
-    @page_range()
     def get(self, insid):
         ins = Ins.query.filter(Ins.disabled == False).filter(Ins.id == insid).first()
-        try:
-            return ins.community, 200
-        except: return None, 201
+        if ins:
+            _ = []
+            for i in ins.community.all():
+                __ = {}
+                __['id'] = i.id
+                __['name'] = i.name
+                __['detail_address'] = i.detail_address
+                __['save_distance'] = i.save_distance
+                __['eva_distance'] = i.eva_distance
+                __['longitude'] = str(i.longitude)
+                __['latitude'] = str(i.latitude)
+                __['location_id'] = i.location_id
+                __['location_district'] = Location.query.get_or_404(i.location_id).district
+                __['community_picture'] = i.community_picture
+                _.append(__)
+            result = {
+                'code': 0,
+                'message': 'ok',
+                'total': len(_),
+                'data': _
+            }
+            return result, 200
+        else: return '机构不存在', 201
 
 
 @api.route('/<insid>/subuseralarmrecord')
