@@ -307,7 +307,7 @@ class ProfileView(Resource):
 @api.route('/')
 class UserFindView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin'])
+    @role_require(['propertyuser', 'stationuser','admin', 'superadmin'])
     @page_format(code=0, msg='ok')
     @api.response(200, 'ok')
     @api.marshal_with(user_model, as_list=True)

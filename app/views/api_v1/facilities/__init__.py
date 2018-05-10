@@ -16,7 +16,7 @@ from .models import *
 @api.route('/')
 class FacilitiesInsView(Resource):
     @api.header('jwt', 'JSON Web Token')
-    @role_require(['admin', 'superadmin'])
+    @role_require(['propertyuser', 'stationuser','admin', 'superadmin'])
     @page_format(code=0, msg='ok')
     @api.doc('查询设施列表')
     @api.marshal_with(facility_data_model, as_list=True)

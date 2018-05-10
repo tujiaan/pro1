@@ -45,13 +45,14 @@ class CommunitiesView(Resource):
             __['location_id'] = i.location_id
             __['location_district'] = Location.query.get_or_404(i.location_id).district
             __['community_picture'] = i.community_picture
-            if g.role.name in['propertyuser', 'stationuser']:
-                for j in i.ins.all():
-                 if g.user.id == j.admin_user_id:
-                     _ .append(__)
-                 else:pass
-            else:
-                _.append(__)
+            _.append(__)
+            # if g.role.name in['propertyuser', 'stationuser']:
+            #     for j in i.ins.all():
+            #      if g.user.id == j.admin_user_id:
+            #          _ .append(__)
+            #      else:pass
+            # else:
+            #     _.append(__)
         result = {
             'code': 0,
             'message': 'ok',
