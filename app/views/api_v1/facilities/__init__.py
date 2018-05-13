@@ -158,7 +158,7 @@ class FacilitesInsView(Resource):
             __['ins_name'] = Ins.query.filter(Ins.disabled == False).filter(Ins.id == i.ins_id).first().name
             __['facility_id'] = i.facility_id
             __['facility_name'] = Facility.query.filter(Facility.disabled == False).\
-                filter(Facility.id == i.ins_id).first().facility_name
+                filter(Facility.id == i.facility_id).first().facility_name
             __['facility_picture'] = Facility.query.filter(Facility.disabled == False).\
                 filter(Facility.id == i.facility_id).first().facility_picture
             __['count'] = i.count
