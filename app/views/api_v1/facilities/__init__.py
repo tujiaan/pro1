@@ -167,7 +167,7 @@ class FacilitesInsView(Resource):
         result = {
             'code': 0,
             'msg': 'ok',
-            'count': total,
+            'count': len(_),
             'result': _
         }
         return result, 200
