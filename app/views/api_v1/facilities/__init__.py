@@ -220,6 +220,7 @@ class FacilitesView(Resource):
 class FacilityKnowledgesView(Resource):
     @page_format(code=0, msg='ok')
     @api.doc('查询设施的知识')
+    @role_require(['homeuser', 'propertyuser', 'stationuser', '119user', 'admin', 'superadmin'])
     @api.marshal_with(knowledges_model, as_list=True)
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @api.response(200, 'ok')

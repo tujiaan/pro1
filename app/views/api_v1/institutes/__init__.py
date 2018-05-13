@@ -164,7 +164,7 @@ class InstituteView(Resource):
             else:pass
             try:
                 if args['ins_picture']:
-                    institute.ins_picture =upload_file(args['ins_picture'])
+                    institute.ins_picture = upload_file(args['ins_picture'])
                 else:pass
             except:pass
             if g.role.name in ['propertyuser', 'stationuser']:
