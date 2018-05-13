@@ -145,8 +145,8 @@ class FacilitesInsView(Resource):
     @api.doc(params={'page': '页数', 'limit': '数量'})
     @api.response(200, 'ok')
     def get(self, insid):
-        page = request.args.get('page', 1)
-        limit = request.args.get('limit', 10)
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
         query = FacilityIns.query
         total = query.count()
         query = query.filter(FacilityIns.ins_id == insid).offset((int(page) - 1) * limit).limit(limit)
