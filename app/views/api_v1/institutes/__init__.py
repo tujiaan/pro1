@@ -263,7 +263,7 @@ class InsUsesrView(Resource):
         if g.role.name == 'propertyuser':
             ins = Ins.query.filter(Ins.id == insid).filter(Ins.disabled == False).filter(Ins.type == '物业').first()
         elif g.role.name == 'stationuser':
-            ins = Ins.query.filter(Ins.id == insid).filter(Ins.disabled == False).filter(Ins.type == '消防站').first()
+            ins = Ins.query.filter(Ins.id == insid).filter(Ins.disabled == False).filter(Ins.type == '微型消防站').first()
         else:
             ins = Ins.query.filter(Ins.disabled == False).filter(Ins.id == insid).first()
         if ins:
@@ -378,7 +378,7 @@ class InsUseralarmrecordViews(Resource):
                 if g.role.name == 'propertyuser':
                     ins = Ins.query.filter(Ins.type == '物业').filter(Ins.disabled == False).filter(Ins.id == insid).first()
                 elif g.role.name == 'stationuser':
-                    ins = Ins.query.filter(Ins.type == '消防站').filter(Ins.disabled == False).filter(Ins.id == insid).first()
+                    ins = Ins.query.filter(Ins.type == '微型消防站').filter(Ins.disabled == False).filter(Ins.id == insid).first()
                 else:ins = Ins.query.filter(Ins.disabled == False).filter(Ins.id == insid).first()
                 if ins:
                     community = ins.community.all()

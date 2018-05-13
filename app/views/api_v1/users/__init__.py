@@ -127,7 +127,7 @@ class UserHomeView1(Resource):
             if g.role.name == 'propertyuser':
                 ins1 = ins.filter(Ins.type == '物业')
             else:
-                ins1 = ins.filter(Ins.type == '消防站')
+                ins1 = ins.filter(Ins.type == '微型消防站')
             _=[]
             for ins in ins1.all():
                 __ = {}
@@ -154,7 +154,6 @@ class UserHomeView1(Resource):
                        'data': _
                    }, 200
         except:return None, 201
-
 
 
 @api.route('/password/')

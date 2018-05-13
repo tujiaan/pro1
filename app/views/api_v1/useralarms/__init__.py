@@ -50,7 +50,7 @@ class UserAlarmRecordsView(Resource):
                     else:pass
                 else:pass
             elif g.role.name == 'stationuser':
-                ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '消防站').filter(Ins.disabled == False).all()
+                ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '微型消防站').filter(Ins.disabled == False).all()
                 if len(ins) > 0:
                     community = []
                     for i in ins:
@@ -79,7 +79,7 @@ class UserAlarmRecordsView(Resource):
                     else:pass
                 else:pass
             elif g.role.name == 'stationuser':
-                ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '消防站').filter(Ins.disabled == False).all()
+                ins = Ins.query.filter(Ins.user.contains(g.user)).filter(Ins.type == '微型消防站').filter(Ins.disabled == False).all()
                 if len(ins) > 0:
                     community = []
                     for i in ins:
