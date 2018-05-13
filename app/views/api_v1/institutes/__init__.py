@@ -308,9 +308,9 @@ class InsUserView(Resource):
                     userrole.if_usable = True
                     db.session.commit()
                     return '添加成功', 200
-             else: return '权限不足', 200
+             else: return '权限不足', 201
          else:return '用户已存在', 301
-     else:return '信息有误', 201
+     else:return '信息有误', 401
 
     @api.doc('删除机构成员/解除用户绑定机构')
     @api.response(200, 'ok')
